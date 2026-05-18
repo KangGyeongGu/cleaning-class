@@ -234,8 +234,6 @@ GA4 Data API로 방문자, 세션, 전환 이벤트, 유입 경로를 조회해 
 
 <div align="center">
 
-**Private** — All rights reserved.
-
-© 청소클라쓰
+© 2026 NomadLabs. All rights reserved.
 
 </div>
