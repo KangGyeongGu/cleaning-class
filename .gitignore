@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -44,12 +42,8 @@ next-env.d.ts
 .idea/
 .vscode/
 
-# AI agent artifacts (Claude Code, Cursor 등)
-# 이미 트래킹된 파일(.claude/CLAUDE.md, .claude/agents/*)은 그대로 유지되고
-# 신규 파일만 무시됨. 모든 AI 에이전트 런타임 산출물은 git에서 제외
+# AI agent artifacts (Claude Code)
 .claude/
-.agents/
-AGENTS.md
 .mcp.json
 .playwright-mcp/
 
