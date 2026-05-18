@@ -33,10 +33,7 @@ export function MobilePhoneButton({
           <Phone size={14} aria-hidden="true" />
           청소 상담
         </a>
-        <span
-          className="my-2.5 w-px bg-slate-700"
-          aria-hidden="true"
-        />
+        <span className="my-2.5 w-px bg-slate-700" aria-hidden="true" />
         <a
           href={`tel:${movingPhone}`}
           className="flex flex-1 items-center justify-center gap-1.5 py-3.5 text-sm font-bold tracking-wide text-white active:bg-slate-800"

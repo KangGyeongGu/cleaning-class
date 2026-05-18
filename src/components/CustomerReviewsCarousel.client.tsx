@@ -23,7 +23,7 @@ function ReviewCard({ card }: { card: ReviewCardData }): React.ReactElement {
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <StarRating rating={card.rating} size={13} />
-            <span className="text-xs font-bold tabular-nums text-slate-900">
+            <span className="text-xs font-bold text-slate-900 tabular-nums">
               {card.rating.toFixed(1)}
             </span>
           </div>
@@ -38,7 +38,9 @@ function ReviewCard({ card }: { card: ReviewCardData }): React.ReactElement {
         <span className="text-xs font-medium text-slate-900">익명</span>
         {card.serviceType && (
           <>
-            <span className="text-slate-300" aria-hidden="true">·</span>
+            <span className="text-slate-300" aria-hidden="true">
+              ·
+            </span>
             <span className="text-xs text-slate-400">{card.serviceType}</span>
           </>
         )}
@@ -52,11 +54,8 @@ export function CustomerReviewsCarousel({
 }: CustomerReviewsCarouselProps): React.ReactElement {
   const [isPaused, setIsPaused] = useState(false);
 
-  // 카드를 2배로 복제하여 무한 루프
   const duplicated = [...cards, ...cards];
 
-  // 카드 너비(w-64=256px, md:w-72=288px) + gap(16px) 기반 총 이동 거리
-  // CSS 변수로 전달하여 @keyframes에서 사용
   const cardCount = cards.length;
 
   return (
@@ -78,10 +77,7 @@ export function CustomerReviewsCarousel({
         }}
       >
         {duplicated.map((card, i) => (
-          <div
-            key={`${card.id}-${i}`}
-            className="w-52 shrink-0 md:w-72"
-          >
+          <div key={`${card.id}-${i}`} className="w-52 shrink-0 md:w-72">
             <ReviewCard card={card} />
           </div>
         ))}

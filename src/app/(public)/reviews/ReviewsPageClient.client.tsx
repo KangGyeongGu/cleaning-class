@@ -48,7 +48,7 @@ function ReviewCard({ review }: { review: Review }) {
           ))}
         </div>
 
-        <h3 className="mb-1.5 line-clamp-2 text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-slate-700">
+        <h3 className="mb-1.5 line-clamp-2 text-sm leading-snug font-bold text-slate-900 transition-colors group-hover:text-slate-700">
           {review.title}
         </h3>
 
@@ -79,7 +79,7 @@ function ReviewCard({ review }: { review: Review }) {
           trackReviewCardClick({
             review_id: review.id,
             review_title: review.title,
-            // tags 첫 번째 항목을 서비스 유형으로 사용
+
             service_type: review.tags[0] ?? "",
             click_source: "reviews_page",
             destination_url: cardUrl,
@@ -111,13 +111,10 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
     currentPage * PER_PAGE,
   );
 
-  const goToPage = useCallback(
-    (page: number) => {
-      setCurrentPage(page);
-      listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    [],
-  );
+  const goToPage = useCallback((page: number) => {
+    setCurrentPage(page);
+    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const handleFilterChange = (filter: string | null) => {
     setActiveFilter(filter);
@@ -128,7 +125,6 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
     });
   };
 
-  // 페이지 번호 목록 생성 (최대 5개 표시)
   const getPageNumbers = (): number[] => {
     const maxVisible = 5;
     if (totalPages <= maxVisible) {

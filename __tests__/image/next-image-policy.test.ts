@@ -2,9 +2,6 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
-/**
- * 재귀적으로 디렉토리 내 모든 .tsx 파일을 찾는다
- */
 function findTsxFiles(dir: string): string[] {
   const results: string[] = [];
   const items = readdirSync(dir);
@@ -34,14 +31,11 @@ describe("next/image 정책", () => {
     for (const file of tsxFiles) {
       const content = readFileSync(file, "utf-8");
 
-      // <img 태그 검출 (단, next/image의 Image 컴포넌트는 제외)
-      // eslint-disable 주석으로 허용된 <img>는 예외 (blob URL 미리보기 등)
       const lines = content.split("\n");
       let hasViolation = false;
 
       for (let i = 0; i < lines.length; i++) {
         if (/<img\s+[^>]*>/.test(lines[i])) {
-          // 바로 윗줄에 eslint-disable 주석이 있으면 허용
           const prevLine = i > 0 ? lines[i - 1] : "";
           if (!prevLine.includes("eslint-disable")) {
             hasViolation = true;
@@ -65,17 +59,14 @@ describe("next/image 정책", () => {
     for (const file of tsxFiles) {
       const content = readFileSync(file, "utf-8");
 
-      // <Image ... fill ...> 패턴에서 sizes가 있는지 확인
-      // fill과 sizes를 모두 포함하는 Image 태그를 찾는다
       const imageWithFillRegex = /<Image[^>]*\bfill\b[^>]*>/g;
       const matches = content.match(imageWithFillRegex);
 
       if (matches) {
         for (const match of matches) {
-          // sizes 속성이 없으면 위반
           if (!match.includes("sizes=")) {
             violations.push(`${file}: <Image fill> 사용 시 sizes 속성 누락`);
-            break; // 파일당 한 번만 기록
+            break;
           }
         }
       }

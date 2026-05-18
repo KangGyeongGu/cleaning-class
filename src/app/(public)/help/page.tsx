@@ -3,6 +3,7 @@ import Link from "next/link";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/json-ld";
 import { getSiteConfig } from "@/shared/lib/site-config";
 import { FaqSection } from "@/components/FaqSection";
+import { JsonLdScript } from "@/components/JsonLdScript";
 
 export const revalidate = 3600;
 
@@ -50,14 +51,7 @@ export default async function HelpPage() {
 
   return (
     <>
-      {/* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml -- BreadcrumbList JSON-LD, 서버 생성 정적 데이터로 XSS 위험 없음 */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
-      {/* eslint-enable @eslint-react/dom/no-dangerously-set-innerhtml */}
+      <JsonLdScript data={breadcrumbJsonLd} />
 
       <div className="min-h-screen bg-white">
         <section className="bg-slate-50 pt-12 pb-10 md:pt-16 md:pb-12">

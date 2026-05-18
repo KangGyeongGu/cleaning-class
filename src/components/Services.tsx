@@ -6,9 +6,9 @@ import { generateServiceJsonLd } from "@/shared/lib/json-ld";
 import { ServiceGrid } from "@/components/ServiceGrid";
 import TrackedCtaLink from "@/components/analytics/TrackedCtaLink.client";
 import TrackedPhoneLink from "@/components/analytics/TrackedPhoneLink.client";
+import { JsonLdScript } from "@/components/JsonLdScript";
 
 export async function Services() {
-  // 서비스 목록과 사이트 설정을 병렬 조회 (React cache()로 getSiteConfig 중복 요청 방지)
   const [servicesWithImageUrls, siteConfig] = await Promise.all([
     getPublishedServicesWithImageUrls(),
     getSiteConfig(),
@@ -37,14 +37,8 @@ export async function Services() {
 
   return (
     <section id="services" className="relative bg-white py-16 md:py-32">
-      {/* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml -- Service JSON-LD, 서버 생성 DB 데이터로 XSS 위험 없음 */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(serviceJsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
-      {/* eslint-enable @eslint-react/dom/no-dangerously-set-innerhtml */}
+      <JsonLdScript data={serviceJsonLd} />
+
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
         <div className="mb-16 text-center">
           <h2 className="text-heading-1 mb-4">SERVICE</h2>
@@ -66,7 +60,6 @@ export async function Services() {
                 </h3>
               </div>
               <div className="flex items-center gap-3">
-                {/* 청소 서비스 문의하기 CTA 추적 */}
                 <TrackedCtaLink
                   href="/contact"
                   contentId="services_cleaning_contact"
@@ -74,7 +67,7 @@ export async function Services() {
                 >
                   문의하기 <ArrowUpRight size={12} aria-hidden="true" />
                 </TrackedCtaLink>
-                {/* 청소 서비스 전화문의 추적 */}
+
                 <TrackedPhoneLink
                   href={`tel:${cleaningPhone}`}
                   phoneType="cleaning"
@@ -109,7 +102,6 @@ export async function Services() {
                 </h3>
               </div>
               <div className="flex items-center gap-3">
-                {/* 이사 서비스 문의하기 CTA 추적 */}
                 <TrackedCtaLink
                   href="/contact"
                   contentId="services_moving_contact"
@@ -117,7 +109,7 @@ export async function Services() {
                 >
                   문의하기 <ArrowUpRight size={12} aria-hidden="true" />
                 </TrackedCtaLink>
-                {/* 이사 서비스 전화문의 추적 */}
+
                 <TrackedPhoneLink
                   href={`tel:${movingPhone}`}
                   phoneType="moving"

@@ -34,7 +34,6 @@ export default async function Image() {
         padding: "60px 80px",
       }}
     >
-      {/* 상단 얇은 라인 */}
       <div
         style={{
           position: "absolute",
@@ -47,7 +46,6 @@ export default async function Image() {
         }}
       />
 
-      {/* 브랜드명 */}
       <div
         style={{
           fontSize: 72,
@@ -61,7 +59,6 @@ export default async function Image() {
         청소클라쓰
       </div>
 
-      {/* 태그라인 */}
       <div
         style={{
           fontSize: 28,
@@ -73,7 +70,6 @@ export default async function Image() {
         전북 전주 전문 청소·이사 서비스
       </div>
 
-      {/* 구분선 */}
       <div
         style={{
           width: 64,
@@ -84,7 +80,6 @@ export default async function Image() {
         }}
       />
 
-      {/* 전화번호 영역 */}
       <div
         style={{
           display: "flex",
@@ -92,7 +87,6 @@ export default async function Image() {
           alignItems: "center",
         }}
       >
-        {/* 청소 상담 */}
         <div
           style={{
             display: "flex",
@@ -123,7 +117,6 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* 이사 상담 */}
         {movingPhone ? (
           <div
             style={{

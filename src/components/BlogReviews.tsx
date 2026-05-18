@@ -18,7 +18,7 @@ import {
   trackReviewFilter,
 } from "@/shared/lib/analytics";
 
-export interface ReviewWithUrl extends Review {
+interface ReviewWithUrl extends Review {
   imageUrl: string;
 }
 
@@ -81,7 +81,7 @@ function ReviewCard({ review }: { review: ReviewWithUrl }) {
           ))}
         </div>
 
-        <h3 className="mb-1.5 line-clamp-2 min-h-10 text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-slate-700 md:text-heading-3 md:mb-2 md:min-h-12">
+        <h3 className="md:text-heading-3 mb-1.5 line-clamp-2 min-h-10 text-sm leading-snug font-bold text-slate-900 transition-colors group-hover:text-slate-700 md:mb-2 md:min-h-12">
           {review.title}
         </h3>
 
@@ -90,8 +90,13 @@ function ReviewCard({ review }: { review: ReviewWithUrl }) {
         </p>
 
         <div className="mt-auto flex justify-end">
-          <div className="flex w-fit items-center gap-1.5 text-[10px] font-bold tracking-widest text-slate-900 uppercase md:text-label md:gap-2">
-            More <ArrowUpRight size={10} className="md:h-3 md:w-3" aria-hidden="true" />
+          <div className="md:text-label flex w-fit items-center gap-1.5 text-[10px] font-bold tracking-widest text-slate-900 uppercase md:gap-2">
+            More{" "}
+            <ArrowUpRight
+              size={10}
+              className="md:h-3 md:w-3"
+              aria-hidden="true"
+            />
           </div>
         </div>
       </div>
@@ -148,8 +153,8 @@ export function BlogReviews({
 }: BlogReviewsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<Slider>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  // null = 전체 (필터 미적용)
+  const [, setActiveIndex] = useState(0);
+
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const handleScroll = useCallback(() => {
@@ -157,7 +162,7 @@ export function BlogReviews({
     if (!el) return;
     const scrollLeft = el.scrollLeft;
     const cardWidth = el.firstElementChild?.clientWidth ?? 1;
-    const gap = 16; // gap-4
+    const gap = 16;
     const index = Math.round(scrollLeft / (cardWidth + gap));
     setActiveIndex(index);
   }, []);
@@ -173,7 +178,6 @@ export function BlogReviews({
     return null;
   }
 
-  // 청소 서비스 태그가 하나라도 있는 리뷰만 필터링
   const cleaningReviews = reviews.filter((r) =>
     r.tags.some((tag) =>
       (CLEANING_SERVICE_TYPES as readonly string[]).includes(tag),
@@ -194,8 +198,11 @@ export function BlogReviews({
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ left: 0, behavior: "instant" });
     }
-    // 필터 변경 이벤트 전송 — 카테고리별 리뷰 탐색 패턴 파악
-    trackReviewFilter({ filter_category: filter ?? "전체", filter_source: "home" });
+
+    trackReviewFilter({
+      filter_category: filter ?? "전체",
+      filter_source: "home",
+    });
   };
 
   const slickSettings = {
@@ -304,7 +311,10 @@ export function BlogReviews({
               className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 md:hidden"
             >
               {filteredReviews.map((review) => (
-                <div key={review.id} className="relative w-4/5 shrink-0 snap-center md:w-11/12">
+                <div
+                  key={review.id}
+                  className="relative w-4/5 shrink-0 snap-center md:w-11/12"
+                >
                   <ReviewCardWrapper review={review} blogUrl={blogUrl} />
                 </div>
               ))}

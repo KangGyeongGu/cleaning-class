@@ -10,6 +10,7 @@ import {
 } from "@/components/icons/SocialIcons";
 import TrackedPhoneLink from "@/components/analytics/TrackedPhoneLink.client";
 import TrackedSnsLink from "@/components/analytics/TrackedSnsLink.client";
+import { JsonLdScript } from "@/components/JsonLdScript";
 
 export const revalidate = 3600;
 
@@ -56,12 +57,7 @@ export default async function ContactPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
+      <JsonLdScript data={breadcrumbJsonLd} />
 
       <div className="min-h-screen bg-white">
         <section className="pt-12 pb-16 md:pt-16">
@@ -98,7 +94,7 @@ export default async function ContactPage() {
                       <p className="mb-1 text-sm font-medium text-slate-900">
                         청소 연락
                       </p>
-                      {/* 문의 페이지 사이드바 청소 전화 클릭 추적 */}
+
                       <TrackedPhoneLink
                         href={`tel:${phone.replace(/\D/g, "")}`}
                         phoneType="cleaning"
@@ -115,7 +111,7 @@ export default async function ContactPage() {
                       <p className="mb-1 text-sm font-medium text-slate-900">
                         이사 연락
                       </p>
-                      {/* 문의 페이지 사이드바 이사 전화 클릭 추적 */}
+
                       <TrackedPhoneLink
                         href={`tel:${movingPhone.replace(/\D/g, "")}`}
                         phoneType="moving"
@@ -130,7 +126,6 @@ export default async function ContactPage() {
                   <div className="border-t border-slate-100 pt-6">
                     <div className="flex justify-center gap-4">
                       {blogUrl && (
-                        /* 문의 페이지 사이드바 네이버 블로그 클릭 추적 */
                         <TrackedSnsLink
                           href={blogUrl}
                           platform="naver_blog"
@@ -142,7 +137,6 @@ export default async function ContactPage() {
                         </TrackedSnsLink>
                       )}
                       {instagramUrl && (
-                        /* 문의 페이지 사이드바 인스타그램 클릭 추적 */
                         <TrackedSnsLink
                           href={instagramUrl}
                           platform="instagram"
@@ -154,7 +148,6 @@ export default async function ContactPage() {
                         </TrackedSnsLink>
                       )}
                       {daangnUrl && (
-                        /* 문의 페이지 사이드바 당근마켓 클릭 추적 */
                         <TrackedSnsLink
                           href={daangnUrl}
                           platform="daangn"

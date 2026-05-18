@@ -11,6 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { data: reviewData, error: reviewError },
     { data: configData, error: configError },
     { data: faqData, error: faqError },
+    { data: priceData, error: priceError },
   ] = await Promise.all([
     supabase
       .from("services")
@@ -31,9 +32,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order("updated_at", { ascending: false })
       .limit(1)
       .single(),
+    supabase
+      .from("price_items")
+      .select("updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single(),
   ]);
 
-  // PGRST116은 빈 테이블에서 .single() 호출 시 발생 — 정상 케이스이므로 무시
   if (serviceError && serviceError.code !== "PGRST116")
     console.error("[sitemap] services 조회 실패:", serviceError);
   if (reviewError && reviewError.code !== "PGRST116")
@@ -42,6 +48,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] site_config 조회 실패:", configError);
   if (faqError && faqError.code !== "PGRST116")
     console.error("[sitemap] faqs 조회 실패:", faqError);
+  if (priceError && priceError.code !== "PGRST116")
+    console.error("[sitemap] price_items 조회 실패:", priceError);
 
   const dates = [
     serviceData?.updated_at,
@@ -105,6 +113,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         : new Date(),
       changeFrequency: "monthly",
       priority: 0.7,
+    },
+    {
+      url: "https://www.cleaningclass.co.kr/price",
+      lastModified: priceData?.updated_at
+        ? new Date(priceData.updated_at as string)
+        : new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
     },
   ];
 }

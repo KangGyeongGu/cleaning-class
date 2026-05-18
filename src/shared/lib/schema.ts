@@ -45,24 +45,15 @@ const movingContactSchema = z.object({
     .max(1000, "문의 내용은 1000자 이하로 작성해주세요"),
 });
 
-/**
- * 견적문의 폼 스키마 — inquiryType 기반 discriminated union
- * cleaning: 청소의뢰 (serviceType = 청소 카테고리, region 필드)
- * moving: 이사의뢰 (serviceType = 이사 카테고리, departure/destination 필드)
- */
 export const contactFormSchema = z.discriminatedUnion("inquiryType", [
   cleaningContactSchema,
   movingContactSchema,
 ]);
 
-export type ContactFormData = z.infer<typeof contactFormSchema>;
-
 export const loginFormSchema = z.object({
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
   password: z.string().min(6, "비밀번호는 최소 6자 이상이어야 합니다"),
 });
-
-export type LoginFormData = z.infer<typeof loginFormSchema>;
 
 export const reviewFormSchema = z.object({
   title: z
@@ -82,16 +73,15 @@ export const reviewFormSchema = z.object({
     })
     .or(z.literal(""))
     .optional(),
-  sort_order: z
-    .number()
-    .int("정렬 순서는 정수여야 합니다")
-    .min(0, "정렬 순서는 0 이상이어야 합니다"),
   is_published: z.boolean(),
 });
 
-export type ReviewFormData = z.infer<typeof reviewFormSchema>;
+export const reviewListSortSchema = z
+  .enum(["latest", "oldest"])
+  .catch("latest");
 
-// 허용 패턴: 02-XXXX-XXXX, 010-XXXX-XXXX, 031-XXX-XXXX, 0504-XXXX-XXXX 등
+export type ReviewListSort = z.infer<typeof reviewListSortSchema>;
+
 const PHONE_REGEX =
   /^(02|01[016-9]|0[3-9]\d{1,2})-\d{3,4}-\d{4}$|^0[5-9]0[4-9]-\d{4}-\d{4}$/;
 
@@ -152,11 +142,6 @@ export const siteConfigFormSchema = z.object({
   address: z.string().max(200, "주소는 200자 이하여야 합니다").optional(),
 });
 
-export type SiteConfigFormData = z.infer<typeof siteConfigFormSchema>;
-
-/**
- * 이사업체 정보 폼 스키마 — site_config moving_* 컬럼과 대응
- */
 export const movingSiteConfigSchema = z.object({
   moving_representative: z
     .string()
@@ -185,8 +170,6 @@ export const movingSiteConfigSchema = z.object({
     .default(""),
 });
 
-export type MovingSiteConfigData = z.infer<typeof movingSiteConfigSchema>;
-
 export const serviceFormSchema = z.object({
   title: z
     .string()
@@ -212,8 +195,6 @@ export const serviceFormSchema = z.object({
   image_after_focal_y: z.number().int().min(0).max(100).default(50),
 });
 
-export type ServiceFormData = z.infer<typeof serviceFormSchema>;
-
 export const faqFormSchema = z.object({
   question: z
     .string()
@@ -230,26 +211,24 @@ export const faqFormSchema = z.object({
   is_active: z.boolean(),
 });
 
-export type FaqFormData = z.infer<typeof faqFormSchema>;
-
-/** 고객 리뷰 제출 폼 스키마 — 토큰 기반 단회성 리뷰 등록 */
-export const customerReviewFormSchema = z.object({
-  token: z.string().uuid("유효하지 않은 토큰 형식입니다"),
-  rating: z
-    .number()
-    .min(1, "별점은 최소 1점이어야 합니다")
-    .max(5, "별점은 최대 5점이어야 합니다")
-    .refine((v) => v % 0.5 === 0, "별점은 0.5 단위여야 합니다"),
-  comment: z
+export const priceItemFormSchema = z.object({
+  name: z
     .string()
-    .min(1, "리뷰 내용을 입력해주세요")
-    .max(500, "리뷰 내용은 500자 이하로 작성해주세요"),
-  service_type: z
-    .enum([...CLEANING_SERVICE_TYPES] as [string, ...string[]])
-    .optional(),
+    .min(1, "항목명을 입력해주세요")
+    .max(100, "항목명은 100자 이하여야 합니다"),
+  price_won: z
+    .number()
+    .int("가격은 정수(원 단위)여야 합니다")
+    .min(0, "가격은 0 이상이어야 합니다")
+    .max(99_999_999, "가격이 너무 큽니다")
+    .nullable(),
+  sort_order: z
+    .number()
+    .int("정렬 순서는 정수여야 합니다")
+    .min(0, "정렬 순서는 0 이상이어야 합니다")
+    .max(9999, "정렬 순서는 9999 이하여야 합니다"),
+  is_published: z.boolean(),
 });
-
-export type CustomerReviewFormData = z.infer<typeof customerReviewFormSchema>;
 
 export const publicReviewFormSchema = z.object({
   rating: z
@@ -265,5 +244,3 @@ export const publicReviewFormSchema = z.object({
     .enum([...CLEANING_SERVICE_TYPES] as [string, ...string[]])
     .optional(),
 });
-
-export type PublicReviewFormData = z.infer<typeof publicReviewFormSchema>;

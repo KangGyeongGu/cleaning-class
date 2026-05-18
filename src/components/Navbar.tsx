@@ -26,6 +26,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { label: "서비스", href: "/services" },
+  { label: "가격표", href: "/price" },
   { label: "작업후기", href: "/reviews" },
   { label: "견적문의", href: "/contact" },
   { label: "자주묻는질문", href: "/help" },
@@ -67,7 +68,6 @@ export function Navbar({
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  /** 로고 클릭 — 홈이면 스크롤 top, 다른 페이지면 홈으로 이동 */
   const handleLogoClick = (): void => {
     if (isHome) {
       scrollToTop();
@@ -242,7 +242,6 @@ export function Navbar({
         </div>
       </nav>
 
-      {/* nav 외부에 배치하여 backdrop-blur 스태킹 컨텍스트 회피 */}
       <div
         ref={overlayRef}
         role="dialog"
@@ -262,7 +261,7 @@ export function Navbar({
             tabIndex={isOpen ? 0 : -1}
             onClick={() => {
               setIsOpen(false);
-              // 견적문의 클릭 시 CTA 이벤트 전송
+
               if (item.href === "/contact") {
                 trackSelectContent({
                   content_type: "cta_button",
@@ -285,7 +284,10 @@ export function Navbar({
                 tabIndex={isOpen ? 0 : -1}
                 onClick={() => {
                   setIsOpen(false);
-                  trackSnsClick({ sns_platform: "naver_blog", click_location: "navbar" });
+                  trackSnsClick({
+                    sns_platform: "naver_blog",
+                    click_location: "navbar",
+                  });
                 }}
                 aria-label="네이버 블로그"
                 className="text-slate-400 transition-colors hover:text-slate-900"
@@ -301,7 +303,10 @@ export function Navbar({
                 tabIndex={isOpen ? 0 : -1}
                 onClick={() => {
                   setIsOpen(false);
-                  trackSnsClick({ sns_platform: "instagram", click_location: "navbar" });
+                  trackSnsClick({
+                    sns_platform: "instagram",
+                    click_location: "navbar",
+                  });
                 }}
                 aria-label="인스타그램"
                 className="text-slate-400 transition-colors hover:text-slate-900"
@@ -317,7 +322,10 @@ export function Navbar({
                 tabIndex={isOpen ? 0 : -1}
                 onClick={() => {
                   setIsOpen(false);
-                  trackSnsClick({ sns_platform: "daangn", click_location: "navbar" });
+                  trackSnsClick({
+                    sns_platform: "daangn",
+                    click_location: "navbar",
+                  });
                 }}
                 aria-label="당근마켓"
                 className="text-slate-400 transition-colors hover:text-slate-900"

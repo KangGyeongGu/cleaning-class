@@ -50,7 +50,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // layout.tsx에서 현재 경로를 판단할 수 있도록 헤더 전달
   supabaseResponse.headers.set("x-pathname", request.nextUrl.pathname);
 
   return supabaseResponse;

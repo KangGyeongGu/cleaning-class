@@ -45,7 +45,6 @@ export function EditServiceForm({
   const [afterFocalX, setAfterFocalX] = useState(service.image_after_focal_x);
   const [afterFocalY, setAfterFocalY] = useState(service.image_after_focal_y);
 
-  // 언마운트 시 blob URL 해제를 위해 최신 URL을 ref로 추적
   const imagePreviewRef = useRef<string | null>(null);
   const afterImagePreviewRef = useRef<string | null>(null);
   const detailImagePreviewRef = useRef<string | null>(null);
@@ -70,9 +69,12 @@ export function EditServiceForm({
   useEffect(() => {
     return () => {
       if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
-      if (afterImagePreviewRef.current) URL.revokeObjectURL(afterImagePreviewRef.current);
-      if (detailImagePreviewRef.current) URL.revokeObjectURL(detailImagePreviewRef.current);
-      if (detailAfterImagePreviewRef.current) URL.revokeObjectURL(detailAfterImagePreviewRef.current);
+      if (afterImagePreviewRef.current)
+        URL.revokeObjectURL(afterImagePreviewRef.current);
+      if (detailImagePreviewRef.current)
+        URL.revokeObjectURL(detailImagePreviewRef.current);
+      if (detailAfterImagePreviewRef.current)
+        URL.revokeObjectURL(detailAfterImagePreviewRef.current);
     };
   }, []);
 
@@ -211,7 +213,7 @@ export function EditServiceForm({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                // 한글 조합 중 Enter 입력 무시
+
                 if (!e.nativeEvent.isComposing) {
                   handleAddTag();
                 }
@@ -397,7 +399,9 @@ export function EditServiceForm({
             {(detailAfterImagePreview ?? detailAfterImageUrl) && (
               <div className="relative mt-4 aspect-[4/3] w-full overflow-hidden border border-slate-200">
                 <Image
-                  src={(detailAfterImagePreview ?? detailAfterImageUrl) as string}
+                  src={
+                    (detailAfterImagePreview ?? detailAfterImageUrl) as string
+                  }
                   alt="상세 After 미리보기"
                   fill
                   unoptimized={!!detailAfterImagePreview}

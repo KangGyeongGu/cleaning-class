@@ -14,7 +14,7 @@ test.describe("홈페이지", () => {
 
   test("히어로 섹션이 렌더링된다", async ({ page }) => {
     await page.goto("/");
-    // Hero 컴포넌트는 section#hero 또는 첫 번째 section
+
     const heroSection = page.locator("section").first();
     await expect(heroSection).toBeVisible();
   });

@@ -11,7 +11,7 @@ export interface ServiceCardProps {
   service: {
     id: string;
     title: string;
-    /** 서비스 특징 태그 목록 (description 대체) */
+
     tags: string[];
     imageUrl: string;
     afterImageUrl?: string;
@@ -21,7 +21,7 @@ export interface ServiceCardProps {
     afterFocalY?: number;
   };
   priority: boolean;
-  /** 부모에서 동기화된 before/after 토글 (모바일 전용) */
+
   showAfter?: boolean;
 }
 

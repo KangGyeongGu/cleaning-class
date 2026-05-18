@@ -68,10 +68,7 @@ export async function CustomerReviewsSection(): Promise<React.ReactElement | nul
     >
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
         <div className="mb-12 flex flex-col items-center text-center md:mb-16">
-          <h2
-            id="customer-reviews-heading"
-            className="text-heading-1 mb-3"
-          >
+          <h2 id="customer-reviews-heading" className="text-heading-1 mb-3">
             고객 리뷰
           </h2>
           <p className="mb-8 text-sm tracking-wide text-slate-500 md:text-base">

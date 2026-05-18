@@ -242,7 +242,6 @@ const DEFAULT_FAQ_ITEMS: QuestionItem[] = [
 ];
 
 export function generateFaqPageJsonLd(items?: QuestionItem[]): FaqPageJsonLd {
-  // DB FAQ가 없을 때 정적 기본 항목을 fallback으로 사용
   const allItems = items && items.length > 0 ? items : DEFAULT_FAQ_ITEMS;
   return {
     "@context": "https://schema.org",
@@ -273,7 +272,36 @@ export function generateBreadcrumbListJsonLd(
   };
 }
 
-/** JSON-LD 직렬화 시 `</script>` 시퀀스를 이스케이프하여 XSS 방지 */
-export function safeJsonLdString(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c");
+interface PriceItemInput {
+  name: string;
+  price_won: number | null;
+}
+
+interface ItemListJsonLd {
+  "@context": "https://schema.org";
+  "@type": "ItemList";
+  itemListElement: {
+    "@type": "ListItem";
+    position: number;
+    name: string;
+    description: string;
+  }[];
+}
+
+export function generatePriceListJsonLd(
+  items: PriceItemInput[],
+): ItemListJsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      description:
+        item.price_won == null
+          ? "현장 견적"
+          : `${item.price_won.toLocaleString("ko-KR")}원~`,
+    })),
+  };
 }

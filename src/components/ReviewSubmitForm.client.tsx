@@ -3,10 +3,7 @@
 import { useActionState, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { motion } from "motion/react";
-import {
-  submitCustomerReview,
-  submitPublicReview,
-} from "@/shared/actions/customer-review";
+import { submitPublicReview } from "@/shared/actions/customer-review";
 import { StarRating } from "@/components/StarRating";
 import { CLEANING_SERVICE_TYPES } from "@/shared/lib/constants";
 
@@ -45,10 +42,6 @@ function AnimatedCheckIcon(): React.ReactElement {
   );
 }
 
-interface ReviewSubmitFormProps {
-  token?: string;
-}
-
 function StarRatingInput({
   value,
   onChange,
@@ -70,7 +63,6 @@ function StarRatingInput({
       {Array.from({ length: 10 }, (_, i) => {
         const starValue = (i + 1) * 0.5;
         const isLeft = i % 2 === 0;
-        const starIndex = Math.floor(i / 2);
         const filled = starValue <= displayRating;
 
         return (
@@ -116,9 +108,11 @@ function StarRatingInput({
   );
 }
 
-export function ReviewSubmitForm({ token }: ReviewSubmitFormProps) {
-  const action = token ? submitCustomerReview : submitPublicReview;
-  const [state, formAction, isPending] = useActionState(action, null);
+export function ReviewSubmitForm() {
+  const [state, formAction, isPending] = useActionState(
+    submitPublicReview,
+    null,
+  );
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [serviceType, setServiceType] = useState("");
@@ -157,7 +151,7 @@ export function ReviewSubmitForm({ token }: ReviewSubmitFormProps) {
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <StarRating rating={rating} size={13} />
-              <span className="text-xs font-bold tabular-nums text-slate-900">
+              <span className="text-xs font-bold text-slate-900 tabular-nums">
                 {rating.toFixed(1)}
               </span>
             </div>
@@ -168,7 +162,9 @@ export function ReviewSubmitForm({ token }: ReviewSubmitFormProps) {
             <span className="text-xs font-medium text-slate-900">익명</span>
             {serviceType && (
               <>
-                <span className="text-slate-300" aria-hidden="true">·</span>
+                <span className="text-slate-300" aria-hidden="true">
+                  ·
+                </span>
                 <span className="text-xs text-slate-400">{serviceType}</span>
               </>
             )}
@@ -180,56 +176,57 @@ export function ReviewSubmitForm({ token }: ReviewSubmitFormProps) {
 
   return (
     <>
-    <div className="mb-10 text-center">
-      <p className="text-xs font-medium tracking-widest text-slate-400 uppercase">
-        청소클라쓰
-      </p>
-      <p className="text-heading-1 mt-2" role="heading" aria-level={1}>고객 리뷰</p>
-      <p className="mt-3 text-sm font-light text-slate-500">
-        서비스 이용 소감을 솔직하게 남겨주세요.
-      </p>
-    </div>
-    <div className="border border-slate-100 bg-white p-8">
-      <form action={formAction} className="space-y-6">
-        {token && <input type="hidden" name="token" value={token} />}
-        <input type="hidden" name="rating" value={rating} />
+      <div className="mb-10 text-center">
+        <p className="text-xs font-medium tracking-widest text-slate-400 uppercase">
+          청소클라쓰
+        </p>
+        <p className="text-heading-1 mt-2" role="heading" aria-level={1}>
+          고객 리뷰
+        </p>
+        <p className="mt-3 text-sm font-light text-slate-500">
+          서비스 이용 소감을 솔직하게 남겨주세요.
+        </p>
+      </div>
+      <div className="border border-slate-100 bg-white p-8">
+        <form action={formAction} className="space-y-6">
+          <input type="hidden" name="rating" value={rating} />
 
-        <div>
-          <p
-            id="rating-label"
-            className="mb-3 block text-sm font-medium text-slate-900"
-          >
-            서비스 만족도
-            <span className="ml-1 text-red-500" aria-hidden="true">
-              *
-            </span>
-          </p>
-          <div aria-labelledby="rating-label">
-            <StarRatingInput value={rating} onChange={setRating} />
+          <div>
+            <p
+              id="rating-label"
+              className="mb-3 block text-sm font-medium text-slate-900"
+            >
+              서비스 만족도
+              <span className="ml-1 text-red-500" aria-hidden="true">
+                *
+              </span>
+            </p>
+            <div aria-labelledby="rating-label">
+              <StarRatingInput value={rating} onChange={setRating} />
+            </div>
+            {rating > 0 && (
+              <span className="mt-2 flex items-center text-xs text-slate-500">
+                <StarRating
+                  rating={rating}
+                  size={12}
+                  className="mr-1 inline-flex"
+                />
+                <span className="sr-only">선택된 별점:</span>
+                {rating}점
+              </span>
+            )}
+            {state?.errors?.rating && (
+              <p className="form-error mt-1">{state.errors.rating[0]}</p>
+            )}
           </div>
-          {rating > 0 && (
-            <span className="mt-2 flex items-center text-xs text-slate-500">
-              <StarRating
-                rating={rating}
-                size={12}
-                className="mr-1 inline-flex"
-              />
-              <span className="sr-only">선택된 별점:</span>
-              {rating}점
-            </span>
-          )}
-          {state?.errors?.rating && (
-            <p className="form-error mt-1">{state.errors.rating[0]}</p>
-          )}
-        </div>
 
-        <div>
-          <label
-            htmlFor="service_type"
-            className="mb-2 block text-sm font-medium text-slate-900"
-          >
-            이용 서비스
-          </label>
+          <div>
+            <label
+              htmlFor="service_type"
+              className="mb-2 block text-sm font-medium text-slate-900"
+            >
+              이용 서비스
+            </label>
             <select
               id="service_type"
               name="service_type"
@@ -246,58 +243,60 @@ export function ReviewSubmitForm({ token }: ReviewSubmitFormProps) {
                 </option>
               ))}
             </select>
-        </div>
-
-        <div>
-          <label
-            htmlFor="comment"
-            className="mb-2 block text-sm font-medium text-slate-900"
-          >
-            후기 내용
-            <span className="ml-1 text-red-500" aria-hidden="true">
-              *
-            </span>
-          </label>
-          <textarea
-            id="comment"
-            name="comment"
-            rows={5}
-            maxLength={500}
-            required
-            placeholder="서비스 이용 후기를 남겨주세요"
-            className="form-input scrollbar-thin resize-none overflow-y-auto"
-            onInput={(e) => setComment(e.currentTarget.value)}
-          />
-          <div className="mt-1 flex justify-end">
-            <span className="text-xs text-slate-400">{comment.length}/500</span>
           </div>
-          {state?.errors?.comment && (
-            <p className="form-error">{state.errors.comment[0]}</p>
-          )}
-        </div>
 
-        <div className="pt-2">
-          <button
-            type="submit"
-            disabled={isPending || rating === 0}
-            className="btn-primary w-full py-3"
-          >
-            {isPending ? (
-              <span className="flex items-center justify-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                등록 중...
+          <div>
+            <label
+              htmlFor="comment"
+              className="mb-2 block text-sm font-medium text-slate-900"
+            >
+              후기 내용
+              <span className="ml-1 text-red-500" aria-hidden="true">
+                *
               </span>
-            ) : (
-              "후기 등록하기"
+            </label>
+            <textarea
+              id="comment"
+              name="comment"
+              rows={5}
+              maxLength={500}
+              required
+              placeholder="서비스 이용 후기를 남겨주세요"
+              className="form-input scrollbar-thin resize-none overflow-y-auto"
+              onInput={(e) => setComment(e.currentTarget.value)}
+            />
+            <div className="mt-1 flex justify-end">
+              <span className="text-xs text-slate-400">
+                {comment.length}/500
+              </span>
+            </div>
+            {state?.errors?.comment && (
+              <p className="form-error">{state.errors.comment[0]}</p>
             )}
-          </button>
+          </div>
 
-          {state?.error && (
-            <p className="form-error mt-4 text-center">{state.error}</p>
-          )}
-        </div>
-      </form>
-    </div>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isPending || rating === 0}
+              className="btn-primary w-full py-3"
+            >
+              {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  등록 중...
+                </span>
+              ) : (
+                "후기 등록하기"
+              )}
+            </button>
+
+            {state?.error && (
+              <p className="form-error mt-4 text-center">{state.error}</p>
+            )}
+          </div>
+        </form>
+      </div>
     </>
   );
 }

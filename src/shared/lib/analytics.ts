@@ -61,9 +61,7 @@ type ReviewFilterParams = BaseEventParams & {
 };
 
 function canTrack(): boolean {
-  return (
-    typeof window !== "undefined" && typeof window.gtag === "function"
-  );
+  return typeof window !== "undefined" && typeof window.gtag === "function";
 }
 
 export function trackGenerateLead(params: GenerateLeadFormParams): void {
@@ -101,15 +99,4 @@ export function trackReviewFilter(params: ReviewFilterParams): void {
   window.gtag!("event", "review_filter", params);
 }
 
-// 호출 측에서 파라미터 타입을 명시적으로 사용할 수 있도록 재내보내기
-export type {
-  GenerateLeadFormParams,
-  GenerateLeadPhoneParams,
-  PhoneClickLocation,
-  SelectContentParams,
-  CtaButtonId,
-  ReviewCardClickParams,
-  SnsClickParams,
-  FaqOpenParams,
-  ReviewFilterParams,
-};
+export type { PhoneClickLocation, CtaButtonId, SnsClickParams };

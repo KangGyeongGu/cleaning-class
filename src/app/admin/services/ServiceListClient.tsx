@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import {
   toggleServicePublish,
   reorderServices,
 } from "@/shared/actions/service";
+import { useDragReorder } from "@/shared/lib/hooks/useDragReorder";
 import type { Service } from "@/shared/types/database";
 
 interface ServiceListClientProps {
@@ -20,15 +21,20 @@ export function ServiceListClient({
   services: initialServices,
 }: ServiceListClientProps) {
   const router = useRouter();
-  const [services, setServices] = useState(initialServices);
-  useEffect(() => setServices(initialServices), [initialServices]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const {
+    items: services,
+    isSaving,
+    dragIndex,
+    dragOverIndex,
+    onDragStart,
+    onDragEnter,
+    onDragEnd,
+  } = useDragReorder(initialServices, (updated) =>
+    reorderServices(updated.map((s) => s.id)),
+  );
 
   const handleDelete = async (serviceId: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -68,57 +74,6 @@ export function ServiceListClient({
     }
   };
 
-  const handleDragStart = (index: number) => {
-    dragItem.current = index;
-    setDragIndex(index);
-  };
-
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-    setDragOverIndex(index);
-  };
-
-  const handleDragEnd = async () => {
-    if (dragItem.current === null || dragOverItem.current === null) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    if (dragItem.current === dragOverItem.current) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const updated = [...services];
-    const [removed] = updated.splice(dragItem.current, 1);
-    updated.splice(dragOverItem.current, 0, removed);
-    setServices(updated);
-
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDragIndex(null);
-    setDragOverIndex(null);
-
-    setIsSaving(true);
-    try {
-      const result = await reorderServices(updated.map((s) => s.id));
-      if (!result.success) {
-        alert(result.error || "순서 변경 중 오류가 발생했습니다.");
-        setServices(initialServices);
-      } else {
-        router.refresh();
-      }
-    } catch (err) {
-      console.error("reorderServices error:", err);
-      alert("순서 변경 중 오류가 발생했습니다.");
-      setServices(initialServices);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <div className="border border-slate-200">
       {isSaving && (
@@ -149,9 +104,9 @@ export function ServiceListClient({
             key={service.id}
             role="listitem"
             draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragEnter={() => handleDragEnter(index)}
-            onDragEnd={handleDragEnd}
+            onDragStart={() => onDragStart(index)}
+            onDragEnter={() => onDragEnter(index)}
+            onDragEnd={onDragEnd}
             onDragOver={(e) => e.preventDefault()}
             className={`cursor-grab space-y-3 p-4 transition-colors active:cursor-grabbing md:grid md:grid-cols-12 md:items-center md:gap-4 md:space-y-0 ${
               dragIndex === index
@@ -161,7 +116,6 @@ export function ServiceListClient({
                   : ""
             }`}
           >
-            {/* 모바일 카드 */}
             <div className="flex items-start gap-3 md:hidden">
               <GripVertical
                 size={16}
@@ -245,7 +199,6 @@ export function ServiceListClient({
               </div>
             </div>
 
-            {/* 데스크톱 그리드 */}
             <div className="hidden md:col-span-1 md:flex md:items-center md:gap-2">
               <GripVertical
                 size={16}

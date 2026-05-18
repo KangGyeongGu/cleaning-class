@@ -7,7 +7,6 @@ import AnalyticsDashboard from "@/app/admin/dashboard/AnalyticsDashboard.client"
 
 export const metadata: Metadata = { title: "대시보드" };
 
-
 export default async function DashboardPage(): Promise<React.ReactElement> {
   const [analyticsData, dashboardData] = await Promise.all([
     getAnalyticsData(),

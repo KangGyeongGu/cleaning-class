@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Edit, Trash2, Eye, EyeOff, Loader2, GripVertical } from "lucide-react";
-import {
-  deleteReview,
-  toggleReviewPublish,
-  reorderReviews,
-} from "@/shared/actions/review";
+import { Edit, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { deleteReview, toggleReviewPublish } from "@/shared/actions/review";
 import type { Review } from "@/shared/types/database";
 
 interface ReviewListClientProps {
@@ -17,20 +13,13 @@ interface ReviewListClientProps {
 }
 
 export function ReviewListClient({
-  reviews: initialReviews,
-}: ReviewListClientProps) {
+  reviews,
+}: ReviewListClientProps): React.ReactElement {
   const router = useRouter();
-  const [reviews, setReviews] = useState(initialReviews);
-  useEffect(() => setReviews(initialReviews), [initialReviews]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  const handleDelete = async (reviewId: string) => {
+  const handleDelete = async (reviewId: string): Promise<void> => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
     setDeletingId(reviewId);
     try {
@@ -51,7 +40,7 @@ export function ReviewListClient({
   const handleTogglePublish = async (
     reviewId: string,
     currentStatus: boolean,
-  ) => {
+  ): Promise<void> => {
     setTogglingId(reviewId);
     try {
       const result = await toggleReviewPublish(reviewId, !currentStatus);
@@ -68,71 +57,12 @@ export function ReviewListClient({
     }
   };
 
-  const handleDragStart = (index: number) => {
-    dragItem.current = index;
-    setDragIndex(index);
-  };
-
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-    setDragOverIndex(index);
-  };
-
-  const handleDragEnd = async () => {
-    if (dragItem.current === null || dragOverItem.current === null) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    if (dragItem.current === dragOverItem.current) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const updated = [...reviews];
-    const [removed] = updated.splice(dragItem.current, 1);
-    updated.splice(dragOverItem.current, 0, removed);
-    setReviews(updated);
-
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDragIndex(null);
-    setDragOverIndex(null);
-
-    setIsSaving(true);
-    try {
-      const result = await reorderReviews(updated.map((r) => r.id));
-      if (!result.success) {
-        alert(result.error || "순서 변경 중 오류가 발생했습니다.");
-        setReviews(initialReviews);
-      } else {
-        router.refresh();
-      }
-    } catch (err) {
-      console.error("reorderReviews error:", err);
-      alert("순서 변경 중 오류가 발생했습니다.");
-      setReviews(initialReviews);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <div className="border border-slate-200">
-      {isSaving && (
-        <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500">
-          <Loader2 size={12} className="animate-spin" />
-          순서 저장 중...
-        </div>
-      )}
-
       <div className="hidden grid-cols-12 gap-4 border-b border-slate-200 bg-slate-50 p-4 md:grid">
-        <div className="text-label col-span-1 text-slate-500">순서</div>
         <div className="text-label col-span-1 text-slate-500">이미지</div>
         <div className="text-label col-span-3 text-slate-500">제목</div>
-        <div className="text-label col-span-2 text-slate-500">태그</div>
+        <div className="text-label col-span-3 text-slate-500">태그</div>
         <div className="text-label col-span-1 text-center text-slate-500">
           게시
         </div>
@@ -143,29 +73,13 @@ export function ReviewListClient({
       </div>
 
       <div className="divide-y divide-slate-200">
-        {reviews.map((review, index) => (
+        {reviews.map((review) => (
           <div
             key={review.id}
             role="listitem"
-            draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragEnter={() => handleDragEnter(index)}
-            onDragEnd={handleDragEnd}
-            onDragOver={(e) => e.preventDefault()}
-            className={`cursor-grab space-y-3 p-4 transition-colors active:cursor-grabbing md:grid md:grid-cols-12 md:items-center md:gap-4 md:space-y-0 ${
-              dragIndex === index
-                ? "bg-slate-50 opacity-50"
-                : dragOverIndex === index
-                  ? "border-t-2 border-t-slate-900"
-                  : ""
-            }`}
+            className="space-y-3 p-4 md:grid md:grid-cols-12 md:items-center md:gap-4 md:space-y-0"
           >
-            {/* 모바일 카드 레이아웃 */}
             <div className="flex items-start gap-3 md:hidden">
-              <GripVertical
-                size={16}
-                className="mt-1 shrink-0 text-slate-300"
-              />
               <div className="relative aspect-square h-12 w-12 shrink-0 border border-slate-200">
                 <Image
                   src={review.imageUrl}
@@ -235,15 +149,6 @@ export function ReviewListClient({
               </div>
             </div>
 
-            {/* 데스크톱 그리드 레이아웃 */}
-            <div className="hidden md:col-span-1 md:flex md:items-center md:gap-2">
-              <GripVertical
-                size={16}
-                className="shrink-0 text-slate-300 hover:text-slate-500"
-              />
-              <span className="text-xs text-slate-400">{index}</span>
-            </div>
-
             <div className="hidden md:col-span-1 md:block">
               <div className="relative aspect-square h-16 w-16 border border-slate-200">
                 <Image
@@ -265,7 +170,7 @@ export function ReviewListClient({
               </p>
             </div>
 
-            <div className="hidden md:col-span-2 md:block">
+            <div className="hidden md:col-span-3 md:block">
               <div className="flex flex-wrap gap-1">
                 {review.tags.map((tag) => (
                   <span

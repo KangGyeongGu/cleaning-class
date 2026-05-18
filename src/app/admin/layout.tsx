@@ -10,7 +10,6 @@ interface AdminLayoutProps {
 }
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
-  // 로그인 페이지는 미인증 사용자가 접근해야 하므로 인증 게이트 제외
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") ?? "";
   const isLoginPage = pathname === "/admin/login";

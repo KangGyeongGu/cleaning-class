@@ -42,17 +42,23 @@ const SLATE = {
 } as const;
 
 const CHART = {
-  primary: "#2563eb",    // blue-600 — 주요 지표 (방문자, 세션)
-  secondary: "#7c3aed",  // violet-600 — 보조 지표
-  success: "#059669",    // emerald-600 — 긍정 지표 (전환)
-  warning: "#d97706",    // amber-600 — 주의 지표
-  accent: "#0891b2",     // cyan-600 — 강조
-  muted: "#94a3b8",      // slate-400 — 비활성
-  area: "#2563eb",       // 영역 차트 기본색
-  areaLight: "#dbeafe",  // blue-100 — 영역 그라데이션
+  primary: "#2563eb", // blue-600 — 주요 지표 (방문자, 세션)
+  secondary: "#7c3aed", // violet-600 — 보조 지표
+  success: "#059669", // emerald-600 — 긍정 지표 (전환)
+  warning: "#d97706", // amber-600 — 주의 지표
+  accent: "#0891b2", // cyan-600 — 강조
+  muted: "#94a3b8", // slate-400 — 비활성
+  area: "#2563eb", // 영역 차트 기본색
+  areaLight: "#dbeafe", // blue-100 — 영역 그라데이션
 } as const;
 
-const PIE_COLORS = [CHART.primary, CHART.secondary, CHART.warning, CHART.accent, SLATE[300]];
+const PIE_COLORS = [
+  CHART.primary,
+  CHART.secondary,
+  CHART.warning,
+  CHART.accent,
+  SLATE[300],
+];
 
 function formatNumber(n: number): string {
   return n.toLocaleString("ko-KR");
@@ -99,13 +105,11 @@ function translateChannel(channel: string): string {
   return map[channel] ?? channel;
 }
 
-
-
 function formatRegionLabel(region: string, city: string): string {
   const r = region && region !== "(not set)" ? region : "";
   const c = city && city !== "(not set)" ? city : "";
   if (!r && !c) return "(미확인)";
-  // 시/도와 도시가 동일한 경우 (Seoul Seoul → Seoul)
+
   if (r === c) return r;
   if (!c) return r;
   if (!r) return c;
@@ -130,7 +134,7 @@ function HelpTip({ text }: { text: string }): React.ReactElement {
       {show && (
         <span
           role="tooltip"
-          className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded border border-slate-200 bg-white px-3 py-2 text-xs font-normal leading-relaxed text-slate-600 shadow-md"
+          className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded border border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed font-normal text-slate-600 shadow-md"
         >
           {text}
         </span>
@@ -202,7 +206,7 @@ function RefreshButton({
   return (
     <div className="ml-auto flex shrink-0 items-center gap-1.5">
       {updatedAt && (
-        <span className="tabular-nums text-xs text-slate-500">
+        <span className="text-xs text-slate-500 tabular-nums">
           {formatTime(updatedAt)}
         </span>
       )}
@@ -341,7 +345,6 @@ function DailyVisitorChart({
     세션: d.sessions,
   }));
 
-  // 30일 데이터에서 X축 라벨 간격 조절 (약 7일 간격)
   const tickInterval = Math.max(Math.floor(chartData.length / 5) - 1, 0);
 
   return (
@@ -490,9 +493,7 @@ function DeviceSection({
                 style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
               />
               <span className="text-slate-600">{d.name}</span>
-              <span className="ml-auto font-bold text-slate-900">
-                {d.pct}%
-              </span>
+              <span className="ml-auto font-bold text-slate-900">{d.pct}%</span>
             </li>
           ))}
         </ul>
@@ -583,7 +584,6 @@ function BrowserChart({
   );
 }
 
-/** 전환 이벤트 — 수평 바 차트 */
 function ConversionChart({
   data,
 }: {
@@ -632,10 +632,17 @@ export default function AnalyticsDashboard({
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [updatedAt, setUpdatedAt] = useState<Record<string, string>>(() => {
     const ts = initialData?.lastUpdated ?? "";
-    return { all: ts, summary: ts, daily: ts, traffic: ts, device: ts, pages: ts, region: ts };
+    return {
+      all: ts,
+      summary: ts,
+      daily: ts,
+      traffic: ts,
+      device: ts,
+      pages: ts,
+      region: ts,
+    };
   });
 
-  /** 특정 섹션의 로딩 상태 관리 + 에러 처리 래퍼 */
   const withLoading = useCallback(
     async <T,>(key: string, fn: () => Promise<T>): Promise<T | null> => {
       setLoading((prev) => ({ ...prev, [key]: true }));
@@ -650,7 +657,6 @@ export default function AnalyticsDashboard({
     [],
   );
 
-  /** 갱신 시각 기록 헬퍼 */
   const markUpdated = useCallback((...keys: string[]): void => {
     const ts = new Date().toISOString();
     setUpdatedAt((prev) => {
@@ -660,73 +666,101 @@ export default function AnalyticsDashboard({
     });
   }, []);
 
-  /** 전체 새로고침 */
   const handleRefreshAll = useCallback(async (): Promise<void> => {
     const result = await withLoading("all", refreshAllAnalytics);
     if (result) {
       setData(result);
-      markUpdated("all", "summary", "daily", "traffic", "device", "pages", "region");
+      markUpdated(
+        "all",
+        "summary",
+        "daily",
+        "traffic",
+        "device",
+        "pages",
+        "region",
+      );
     }
   }, [withLoading, markUpdated]);
 
-  /** KPI + 전환 이벤트 새로고침 */
   const handleRefreshSummary = useCallback(async (): Promise<void> => {
     const result = await withLoading("summary", refreshSummary);
     if (!result) return;
     setData((prev) =>
       prev
-        ? { ...prev, summary: result.summary, conversionEvents: result.conversionEvents, lastUpdated: result.lastUpdated }
+        ? {
+            ...prev,
+            summary: result.summary,
+            conversionEvents: result.conversionEvents,
+            lastUpdated: result.lastUpdated,
+          }
         : null,
     );
     markUpdated("summary");
   }, [withLoading, markUpdated]);
 
-  /** 일별 방문자 새로고침 */
   const handleRefreshDaily = useCallback(async (): Promise<void> => {
     const result = await withLoading("daily", refreshDailyVisitors);
     if (!result) return;
     setData((prev) =>
-      prev ? { ...prev, dailyVisitors: result, lastUpdated: new Date().toISOString() } : null,
+      prev
+        ? {
+            ...prev,
+            dailyVisitors: result,
+            lastUpdated: new Date().toISOString(),
+          }
+        : null,
     );
     markUpdated("daily");
   }, [withLoading, markUpdated]);
 
-  /** 유입 경로 새로고침 */
   const handleRefreshTraffic = useCallback(async (): Promise<void> => {
     const result = await withLoading("traffic", refreshTrafficSources);
     if (!result) return;
     setData((prev) =>
-      prev ? { ...prev, trafficSources: result, lastUpdated: new Date().toISOString() } : null,
+      prev
+        ? {
+            ...prev,
+            trafficSources: result,
+            lastUpdated: new Date().toISOString(),
+          }
+        : null,
     );
     markUpdated("traffic");
   }, [withLoading, markUpdated]);
 
-  /** 디바이스 + 브라우저 새로고침 */
   const handleRefreshDevice = useCallback(async (): Promise<void> => {
     const result = await withLoading("device", refreshDevice);
     if (!result) return;
     setData((prev) =>
-      prev ? { ...prev, ...result, lastUpdated: new Date().toISOString() } : null,
+      prev
+        ? { ...prev, ...result, lastUpdated: new Date().toISOString() }
+        : null,
     );
     markUpdated("device");
   }, [withLoading, markUpdated]);
 
-  /** 인기 페이지 새로고침 */
   const handleRefreshPages = useCallback(async (): Promise<void> => {
     const result = await withLoading("pages", refreshTopPages);
     if (!result) return;
     setData((prev) =>
-      prev ? { ...prev, topPages: result, lastUpdated: new Date().toISOString() } : null,
+      prev
+        ? { ...prev, topPages: result, lastUpdated: new Date().toISOString() }
+        : null,
     );
     markUpdated("pages");
   }, [withLoading, markUpdated]);
 
-  /** 지역별 방문자 새로고침 */
   const handleRefreshRegion = useCallback(async (): Promise<void> => {
     const result = await withLoading("region", refreshRegion);
     if (!result) return;
     setData((prev) =>
-      prev ? { ...prev, regionBreakdown: result, lastUpdated: new Date().toISOString() } : null,
+      prev
+        ? {
+            ...prev,
+            regionBreakdown: result,
+            lastUpdated: new Date().toISOString(),
+          }
+        : null,
     );
     markUpdated("region");
   }, [withLoading, markUpdated]);
@@ -744,8 +778,6 @@ export default function AnalyticsDashboard({
       ? ((totalConversions / data.summary.sessions) * 100).toFixed(1)
       : "0.0";
 
-  const isAnyLoading = Object.values(loading).some(Boolean);
-
   return (
     <div className="space-y-10">
       <div className="flex items-center justify-between">
@@ -762,13 +794,37 @@ export default function AnalyticsDashboard({
           >
             핵심 지표 (최근 30일)
           </SectionTitle>
-          <RefreshButton onClick={handleRefreshSummary} loading={!!loading.summary} updatedAt={updatedAt.summary} />
+          <RefreshButton
+            onClick={handleRefreshSummary}
+            loading={!!loading.summary}
+            updatedAt={updatedAt.summary}
+          />
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <KpiCard label="방문자 수" value={formatNumber(data.summary.activeUsers)} unit="명" help="최근 30일간 사이트를 방문한 고유 사용자 수입니다." />
-          <KpiCard label="세션 수" value={formatNumber(data.summary.sessions)} unit="회" help="방문자의 총 접속 횟수입니다. 한 사용자가 여러 번 방문하면 세션이 여러 개로 집계됩니다." />
-          <KpiCard label="전환 이벤트" value={formatNumber(totalConversions)} unit="건" help="견적 문의, 전화 클릭, 리뷰 조회, SNS 클릭 등 사이트에서 발생한 주요 상호작용 총 횟수입니다." />
-          <KpiCard label="전환율" value={conversionRate} unit="%" help="전체 세션 중 전환 이벤트가 발생한 비율입니다. 높을수록 방문자가 적극적으로 상호작용하고 있다는 의미입니다." />
+          <KpiCard
+            label="방문자 수"
+            value={formatNumber(data.summary.activeUsers)}
+            unit="명"
+            help="최근 30일간 사이트를 방문한 고유 사용자 수입니다."
+          />
+          <KpiCard
+            label="세션 수"
+            value={formatNumber(data.summary.sessions)}
+            unit="회"
+            help="방문자의 총 접속 횟수입니다. 한 사용자가 여러 번 방문하면 세션이 여러 개로 집계됩니다."
+          />
+          <KpiCard
+            label="전환 이벤트"
+            value={formatNumber(totalConversions)}
+            unit="건"
+            help="견적 문의, 전화 클릭, 리뷰 조회, SNS 클릭 등 사이트에서 발생한 주요 상호작용 총 횟수입니다."
+          />
+          <KpiCard
+            label="전환율"
+            value={conversionRate}
+            unit="%"
+            help="전체 세션 중 전환 이벤트가 발생한 비율입니다. 높을수록 방문자가 적극적으로 상호작용하고 있다는 의미입니다."
+          />
         </div>
       </section>
 
@@ -778,7 +834,11 @@ export default function AnalyticsDashboard({
             <SectionTitle help="최근 30일간 일별 방문자 수와 세션 수 추이입니다. 실선은 방문자, 점선은 세션입니다.">
               일별 방문자 추이
             </SectionTitle>
-            <RefreshButton onClick={handleRefreshDaily} loading={!!loading.daily} updatedAt={updatedAt.daily} />
+            <RefreshButton
+              onClick={handleRefreshDaily}
+              loading={!!loading.daily}
+              updatedAt={updatedAt.daily}
+            />
           </div>
           <DailyVisitorChart data={data.dailyVisitors} />
         </div>
@@ -791,7 +851,11 @@ export default function AnalyticsDashboard({
               <SectionTitle help="방문자가 어떤 경로로 사이트에 유입되었는지 보여줍니다. 자연 검색(구글/네이버), 직접 유입(URL 직접 입력), 소셜 미디어 등으로 구분됩니다.">
                 유입 경로
               </SectionTitle>
-              <RefreshButton onClick={handleRefreshTraffic} loading={!!loading.traffic} updatedAt={updatedAt.traffic} />
+              <RefreshButton
+                onClick={handleRefreshTraffic}
+                loading={!!loading.traffic}
+                updatedAt={updatedAt.traffic}
+              />
             </div>
             <TrafficSourceChart data={data.trafficSources} />
           </div>
@@ -801,9 +865,16 @@ export default function AnalyticsDashboard({
               <SectionTitle help="방문자가 사용한 기기 유형별 비율과 세션 수, 이탈률, 평균 체류 시간을 보여줍니다. 이탈률이 낮고 체류 시간이 길수록 좋습니다.">
                 디바이스 분류
               </SectionTitle>
-              <RefreshButton onClick={handleRefreshDevice} loading={!!loading.device} updatedAt={updatedAt.device} />
+              <RefreshButton
+                onClick={handleRefreshDevice}
+                loading={!!loading.device}
+                updatedAt={updatedAt.device}
+              />
             </div>
-            <DeviceSection breakdown={data.deviceBreakdown} detail={data.deviceDetail} />
+            <DeviceSection
+              breakdown={data.deviceBreakdown}
+              detail={data.deviceDetail}
+            />
           </div>
 
           <div className="border border-slate-200 p-6">
@@ -811,7 +882,11 @@ export default function AnalyticsDashboard({
               <SectionTitle help="방문자가 사용한 웹 브라우저별 사용자 수입니다. Chrome, Safari, Samsung Internet 등으로 구분됩니다.">
                 브라우저 분포
               </SectionTitle>
-              <RefreshButton onClick={handleRefreshDevice} loading={!!loading.device} updatedAt={updatedAt.device} />
+              <RefreshButton
+                onClick={handleRefreshDevice}
+                loading={!!loading.device}
+                updatedAt={updatedAt.device}
+              />
             </div>
             <BrowserChart data={data.browserBreakdown} />
           </div>
@@ -825,25 +900,37 @@ export default function AnalyticsDashboard({
               <SectionTitle help="방문자가 가장 많이 조회한 페이지 순위입니다. 어떤 페이지가 관심을 끄는지 파악할 수 있습니다.">
                 인기 페이지
               </SectionTitle>
-              <RefreshButton onClick={handleRefreshPages} loading={!!loading.pages} updatedAt={updatedAt.pages} />
+              <RefreshButton
+                onClick={handleRefreshPages}
+                loading={!!loading.pages}
+                updatedAt={updatedAt.pages}
+              />
             </div>
             {data.topPages.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="pb-2.5 text-left text-xs font-medium tracking-wider text-slate-400 uppercase">경로</th>
-                      <th className="pb-2.5 text-right text-xs font-medium tracking-wider text-slate-400 uppercase">조회수</th>
+                      <th className="pb-2.5 text-left text-xs font-medium tracking-wider text-slate-400 uppercase">
+                        경로
+                      </th>
+                      <th className="pb-2.5 text-right text-xs font-medium tracking-wider text-slate-400 uppercase">
+                        조회수
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {data.topPages.map((page, i) => (
                       <tr key={page.path}>
                         <td className="py-2.5 text-slate-600">
-                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500">{i + 1}</span>
+                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500">
+                            {i + 1}
+                          </span>
                           <span className="text-xs">{page.path}</span>
                         </td>
-                        <td className="py-2.5 text-right font-bold text-slate-900">{formatNumber(page.views)}</td>
+                        <td className="py-2.5 text-right font-bold text-slate-900">
+                          {formatNumber(page.views)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -859,25 +946,37 @@ export default function AnalyticsDashboard({
               <SectionTitle help="국내 방문자의 접속 지역(시/도·도시)별 분포입니다. 해외 트래픽은 제외됩니다.">
                 지역별 방문자
               </SectionTitle>
-              <RefreshButton onClick={handleRefreshRegion} loading={!!loading.region} updatedAt={updatedAt.region} />
+              <RefreshButton
+                onClick={handleRefreshRegion}
+                loading={!!loading.region}
+                updatedAt={updatedAt.region}
+              />
             </div>
             {data.regionBreakdown.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="pb-2.5 text-left text-xs font-medium tracking-wider text-slate-400 uppercase">지역</th>
-                      <th className="pb-2.5 text-right text-xs font-medium tracking-wider text-slate-400 uppercase">방문자</th>
+                      <th className="pb-2.5 text-left text-xs font-medium tracking-wider text-slate-400 uppercase">
+                        지역
+                      </th>
+                      <th className="pb-2.5 text-right text-xs font-medium tracking-wider text-slate-400 uppercase">
+                        방문자
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {data.regionBreakdown.map((r, i) => (
                       <tr key={`${r.region}-${r.city}-${i}`}>
                         <td className="py-2.5 text-slate-600">
-                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500">{i + 1}</span>
+                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500">
+                            {i + 1}
+                          </span>
                           {formatRegionLabel(r.region, r.city)}
                         </td>
-                        <td className="py-2.5 text-right font-bold text-slate-900">{formatNumber(r.users)}</td>
+                        <td className="py-2.5 text-right font-bold text-slate-900">
+                          {formatNumber(r.users)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -899,13 +998,16 @@ export default function AnalyticsDashboard({
           >
             전환 이벤트 상세
           </SectionTitle>
-          <RefreshButton onClick={handleRefreshSummary} loading={!!loading.summary} updatedAt={updatedAt.summary} />
+          <RefreshButton
+            onClick={handleRefreshSummary}
+            loading={!!loading.summary}
+            updatedAt={updatedAt.summary}
+          />
         </div>
         <div className="border border-slate-200 p-6">
           <ConversionChart data={data.conversionEvents} />
         </div>
       </section>
-
     </div>
   );
 }

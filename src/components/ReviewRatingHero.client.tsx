@@ -16,7 +16,11 @@ function GoldStarRating({ rating }: { rating: number }): React.ReactElement {
   const size = 28;
 
   return (
-    <div className="flex items-center gap-1" aria-label={`별점 ${rating}점`} role="img">
+    <div
+      className="flex items-center gap-1"
+      aria-label={`별점 ${rating}점`}
+      role="img"
+    >
       {Array.from({ length: 5 }, (_, i) => {
         const diff = rating - i;
         const fillType = diff >= 1 ? "full" : diff >= 0.5 ? "half" : "empty";
@@ -80,7 +84,6 @@ function GoldStarRating({ rating }: { rating: number }): React.ReactElement {
   );
 }
 
-/** easeOutCubic: 끝에서 감속 */
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
@@ -99,17 +102,17 @@ export function ReviewRatingHero({
     const el = ref.current;
     if (!el || hasAnimated) return;
 
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setHasAnimated(true);
           observer.disconnect();
 
-          // 1) n건의 리뷰 먼저 등장
           setShowCount(true);
 
-          // 2) 800ms 후 카운트업 시작
-          setTimeout(() => {
+          timer = setTimeout(() => {
             setStartCountUp(true);
           }, 800);
         }
@@ -118,7 +121,10 @@ export function ReviewRatingHero({
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timer) clearTimeout(timer);
+    };
   }, [avgRating, hasAnimated]);
 
   useEffect(() => {
@@ -147,7 +153,7 @@ export function ReviewRatingHero({
 
   return (
     <div ref={ref} className="flex flex-col items-center gap-2">
-      <span className="text-5xl font-black tabular-nums text-slate-900 md:text-6xl">
+      <span className="text-5xl font-black text-slate-900 tabular-nums md:text-6xl">
         {displayRating.toFixed(1)}
       </span>
       <span

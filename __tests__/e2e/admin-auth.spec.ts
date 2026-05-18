@@ -18,7 +18,7 @@ test.describe("관리자 인증", () => {
   test("/admin/login 페이지가 정상 렌더링된다", async ({ page }) => {
     await page.goto("/admin/login");
     await expect(page).toHaveURL(/\/admin\/login/);
-    // 로그인 폼 존재 확인
+
     await expect(
       page.locator('form, input[type="email"], input[type="password"]').first(),
     ).toBeVisible();

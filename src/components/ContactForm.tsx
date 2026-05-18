@@ -127,7 +127,6 @@ export function ContactForm({ phone }: ContactFormProps) {
   const isSuccess = state?.success === true;
   const showSuccess = isSuccess && !isReset;
 
-  // 언마운트 시 최신 URL을 참조하기 위한 ref — 클로저 stale 방지
   const previewUrlsRef = useRef(previewUrls);
 
   useEffect(() => {
@@ -158,7 +157,6 @@ export function ContactForm({ phone }: ContactFormProps) {
     return () => observer.disconnect();
   }, []);
 
-  // 전송 성공 시 GA4 리드 전환 이벤트 발화 — useRef로 단일 발화 보장
   const hasTrackedLead = useRef(false);
   useEffect(() => {
     if (isSuccess && !hasTrackedLead.current) {
@@ -176,7 +174,6 @@ export function ContactForm({ phone }: ContactFormProps) {
     }
   }, [isSuccess, serviceType, inquiryType]);
 
-  // 전송 성공 후 3초 뒤 폼 초기화 및 isReset 플래그 설정
   useEffect(() => {
     if (!isSuccess || isReset) return;
 
@@ -206,17 +203,14 @@ export function ContactForm({ phone }: ContactFormProps) {
     const phoneValue = phoneRef.current?.value.trim() ?? "";
     const message = messageRef.current?.value.trim() ?? "";
 
-    // 재입력 시작 시 isReset 해제하여 다음 전송 사이클 허용
     if (isReset) setIsReset(false);
 
     const baseValid =
       name !== "" && phoneValue !== "" && serviceType !== "" && message !== "";
 
     if (inquiryType === "cleaning") {
-      // 청소의뢰는 지역 필수
       setFormValid(baseValid && region !== "");
     } else {
-      // 이사의뢰는 출발지/도착지 선택 사항이므로 기본 필드만 검사
       setFormValid(baseValid);
     }
   };
@@ -227,7 +221,7 @@ export function ContactForm({ phone }: ContactFormProps) {
     setRegion("");
     if (departureRef.current) departureRef.current.value = "";
     if (destinationRef.current) destinationRef.current.value = "";
-    // setState 비동기 반영 후 유효성 재검사 — serviceType 초기화로 항상 false
+
     setTimeout(() => {
       const name = nameRef.current?.value.trim() ?? "";
       const phoneValue = phoneRef.current?.value.trim() ?? "";
@@ -508,7 +502,6 @@ export function ContactForm({ phone }: ContactFormProps) {
                     <div className="flex flex-wrap gap-2">
                       {images.map((file, index) => (
                         <div
-                          // eslint-disable-next-line @eslint-react/no-array-index-key -- 동일 파일 중복 첨부 시 name+lastModified만으로 유일성 보장 불가
                           key={`${file.name}-${file.lastModified}-${index}`}
                           className="group/image relative h-20 w-20"
                         >

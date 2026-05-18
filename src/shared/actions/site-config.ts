@@ -12,7 +12,6 @@ import { uploadImage, deleteImage } from "@/shared/lib/supabase/storage-server";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-/** 사이트 설정 변경 시 공통으로 revalidation 하는 경로 */
 const REVALIDATE_PATHS = ["/", "/admin/config"] as const;
 
 function revalidateSiteConfigPaths(): void {
@@ -29,7 +28,11 @@ const FIELD_REVALIDATE_MAP: Record<string, readonly string[]> = {
 };
 
 async function updateSiteConfigField(
-  field: "customer_review_description" | "faq_description" | "review_description" | "service_description",
+  field:
+    | "customer_review_description"
+    | "faq_description"
+    | "review_description"
+    | "service_description",
   value: string,
 ) {
   try {
@@ -64,7 +67,8 @@ async function updateSiteConfigField(
     }
 
     revalidatePath("/");
-    const extraPaths: readonly string[] | undefined = FIELD_REVALIDATE_MAP[field];
+    const extraPaths: readonly string[] | undefined =
+      FIELD_REVALIDATE_MAP[field];
     if (extraPaths) {
       for (const p of extraPaths) {
         revalidatePath(p);
@@ -101,7 +105,6 @@ export async function updateSiteConfig(prevState: unknown, formData: FormData) {
   try {
     await getUser();
 
-    // site_url, address_region, address_locality는 클라이언트 변조 방지를 위해 DB에서 직접 읽음
     const supabase = await createClient();
     const { data: current, error: fetchConfigError } = await supabase
       .from("site_config")
@@ -182,10 +185,6 @@ export async function updateSiteConfig(prevState: unknown, formData: FormData) {
   }
 }
 
-/**
- * 히어로 이미지 업로드/교체/삭제 — slot "1"(좌) 또는 "2"(우) 기반으로 분기
- * 새 파일: upload-first 패턴(업로드 → DB → 기존 삭제), delete_hero_image=true이면 초기화
- */
 export async function updateHeroImage(
   prevState: unknown,
   formData: FormData,
@@ -253,7 +252,6 @@ export async function updateHeroImage(
       };
     }
 
-    // 파일 없이 focal point만 저장하는 경우
     if (!(heroImageFile instanceof File) || heroImageFile.size === 0) {
       if (currentPath) {
         const { error: updateError } = await supabase
@@ -319,7 +317,6 @@ export async function updateHeroImage(
   }
 }
 
-/** 이사업체 정보(moving_* 컬럼) 업데이트 액션 */
 export async function updateMovingSiteConfig(
   prevState: unknown,
   formData: FormData,

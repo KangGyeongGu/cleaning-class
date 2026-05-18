@@ -39,7 +39,6 @@ export async function createReview(prevState: unknown, formData: FormData) {
       summary: formData.get("summary"),
       tags: parsedTags,
       link_url: formData.get("link_url") || "",
-      sort_order: Number(formData.get("sort_order") || 0),
       is_published: formData.get("is_published") === "true",
     };
 
@@ -71,7 +70,6 @@ export async function createReview(prevState: unknown, formData: FormData) {
     const { error } = await supabase.from("reviews").insert(reviewData);
 
     if (error) {
-      // DB 실패 시 이미 업로드된 이미지 롤백
       if (imagePath) {
         await deleteImage(BUCKET, imagePath);
       }
@@ -119,7 +117,6 @@ export async function updateReview(
       summary: formData.get("summary"),
       tags: parsedTagsUpdate,
       link_url: formData.get("link_url") || "",
-      sort_order: Number(formData.get("sort_order") || 0),
       is_published: formData.get("is_published") === "true",
     };
 
@@ -154,7 +151,7 @@ export async function updateReview(
       if (imageFile.size > MAX_FILE_SIZE) {
         return { success: false, error: "파일 크기는 10MB 이하여야 합니다" };
       }
-      // 새 이미지 업로드 먼저, 기존 이미지는 DB UPDATE 성공 후 삭제
+
       newImagePath = await uploadImage(BUCKET, imageFile);
     }
 
@@ -170,7 +167,6 @@ export async function updateReview(
       .eq("id", reviewId);
 
     if (updateError) {
-      // DB 실패 시 새로 업로드된 이미지만 롤백 (기존 이미지는 건드리지 않음)
       if (newImagePath !== existingImagePath) {
         await deleteImage(BUCKET, newImagePath);
       }
@@ -284,34 +280,5 @@ export async function toggleReviewPublish(
       success: false,
       error: "리뷰 처리 중 오류가 발생했습니다.",
     };
-  }
-}
-
-export async function reorderReviews(
-  orderedIds: string[],
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    await getUser();
-
-    const supabase = await createClient();
-
-    // 병렬로 일괄 업데이트 — 개별 순차 호출(N+1) 대비 DB 왕복 절감
-    const results = await Promise.all(
-      orderedIds.map((id, i) =>
-        supabase.from("reviews").update({ sort_order: i }).eq("id", id),
-      ),
-    );
-    const failed = results.find((r) => r.error);
-    if (failed?.error) {
-      console.error("reorderReviews DB error:", failed.error);
-      return { success: false, error: "순서 변경 중 오류가 발생했습니다." };
-    }
-
-    revalidateReviewPaths();
-
-    return { success: true };
-  } catch (error) {
-    console.error("reorderReviews error:", error);
-    return { success: false, error: "순서 변경 중 오류가 발생했습니다." };
   }
 }

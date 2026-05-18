@@ -79,7 +79,6 @@ export async function getNextServiceSortOrder(): Promise<number> {
     .single();
 
   if (error) {
-    // PGRST116: 레코드 없음으로 정상 케이스
     if (error.code !== "PGRST116") {
       console.error("[getNextServiceSortOrder] sort_order 조회 실패:", error);
     }

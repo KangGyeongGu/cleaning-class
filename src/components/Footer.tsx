@@ -37,14 +37,20 @@ export function Footer({ siteConfig }: FooterProps) {
   const hasDaangnUrl = daangnUrl && daangnUrl.trim() !== "";
 
   return (
-    <footer className="bg-white py-20 text-slate-900">
-      <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
+    <footer className="bg-white text-slate-900">
+      <div className="container mx-auto max-w-7xl px-4 py-20 md:px-8 lg:px-12">
         <p className="text-heading-1 mb-12 tracking-tighter">{businessName}</p>
 
         <div className="mb-16 grid grid-cols-1 gap-12 md:grid-cols-[auto_auto]">
           <div className="grid grid-cols-[auto_1fr] gap-x-8">
             <p className="text-label text-slate-900">Contact</p>
-            <div className={hasMovingInfo ? "grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-0" : ""}>
+            <div
+              className={
+                hasMovingInfo
+                  ? "grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-0"
+                  : ""
+              }
+            >
               <div>
                 <p className="mb-1.5 text-sm font-bold text-slate-900">청소</p>
                 <ul className="space-y-0.5 text-sm font-light whitespace-nowrap text-slate-600">
@@ -54,7 +60,6 @@ export function Footer({ siteConfig }: FooterProps) {
                   )}
                   {phone && (
                     <li>
-                      {/* 청소 전화번호 클릭 추적 */}
                       <TrackedPhoneLink
                         href={`tel:${phone}`}
                         phoneType="cleaning"
@@ -87,13 +92,10 @@ export function Footer({ siteConfig }: FooterProps) {
                   <ul className="space-y-0.5 text-sm font-light whitespace-nowrap text-slate-600">
                     <li>대표 {movingRepresentative}</li>
                     {movingBusinessRegistrationNumber && (
-                      <li>
-                        사업자등록번호 {movingBusinessRegistrationNumber}
-                      </li>
+                      <li>사업자등록번호 {movingBusinessRegistrationNumber}</li>
                     )}
                     {movingPhone && (
                       <li>
-                        {/* 이사 전화번호 클릭 추적 */}
                         <TrackedPhoneLink
                           href={`tel:${movingPhone}`}
                           phoneType="moving"
@@ -104,7 +106,9 @@ export function Footer({ siteConfig }: FooterProps) {
                         </TrackedPhoneLink>
                       </li>
                     )}
-                    {movingAddress && <li className="whitespace-normal">{movingAddress}</li>}
+                    {movingAddress && (
+                      <li className="whitespace-normal">{movingAddress}</li>
+                    )}
                   </ul>
                 </div>
               )}
@@ -116,7 +120,6 @@ export function Footer({ siteConfig }: FooterProps) {
             <ul className="space-y-3 text-sm font-light text-slate-600">
               {hasBlogUrl && (
                 <li>
-                  {/* 네이버 블로그 SNS 클릭 추적 */}
                   <TrackedSnsLink
                     href={blogUrl!}
                     platform="naver_blog"
@@ -133,7 +136,6 @@ export function Footer({ siteConfig }: FooterProps) {
               )}
               {hasInstagramUrl && (
                 <li>
-                  {/* 인스타그램 SNS 클릭 추적 */}
                   <TrackedSnsLink
                     href={instagramUrl!}
                     platform="instagram"
@@ -150,7 +152,6 @@ export function Footer({ siteConfig }: FooterProps) {
               )}
               {hasDaangnUrl && (
                 <li>
-                  {/* 당근마켓 SNS 클릭 추적 */}
                   <TrackedSnsLink
                     href={daangnUrl!}
                     platform="daangn"
@@ -190,6 +191,12 @@ export function Footer({ siteConfig }: FooterProps) {
             고객센터
           </Link>
         </div>
+      </div>
+
+      <div className="border-t border-slate-100 bg-slate-50 py-3">
+        <p className="text-center text-[10px] tracking-wider text-slate-400">
+          Designed by 노마드랩스
+        </p>
       </div>
     </footer>
   );
