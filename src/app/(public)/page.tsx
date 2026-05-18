@@ -10,7 +10,8 @@ import { buildDescription } from "@/shared/lib/format";
 export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const title = "전주 청소·이사업체 청소클라쓰 | 전북 전주 전문 청소·이사 서비스";
+  const title =
+    "전주 청소·이사업체 청소클라쓰 | 전북 전주 전문 청소·이사 서비스";
   const description = buildDescription();
 
   return {
@@ -84,7 +85,6 @@ function CustomerReviewsSkeleton() {
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-white font-sans text-slate-900 selection:bg-slate-900 selection:text-white">
-      {/* Hero는 h1 + LCP 요소이므로 Suspense 없이 렌더링 */}
       <Hero />
 
       <Suspense fallback={<ServicesSkeleton />}>

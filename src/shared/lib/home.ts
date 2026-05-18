@@ -25,13 +25,11 @@ export type ServiceWithImageUrls = {
   updated_at: string;
 };
 
-/** 홈페이지용: 카테고리별 최신 4개씩 (최대 20개) */
 export async function getPublishedReviews(): Promise<Review[]> {
   try {
     const supabase = createStaticClient();
     const PER_CATEGORY = 4;
 
-    // 카테고리별 최신 4개를 병렬 조회
     const queries = CLEANING_SERVICE_TYPES.map((type) =>
       supabase
         .from("reviews")
@@ -44,7 +42,6 @@ export async function getPublishedReviews(): Promise<Review[]> {
 
     const results = await Promise.all(queries);
 
-    // 중복 제거 (여러 태그를 가진 리뷰가 겹칠 수 있음)
     const seen = new Set<string>();
     const reviews: Review[] = [];
 
@@ -61,7 +58,6 @@ export async function getPublishedReviews(): Promise<Review[]> {
       }
     }
 
-    // 최신순 정렬
     reviews.sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
@@ -74,7 +70,6 @@ export async function getPublishedReviews(): Promise<Review[]> {
   }
 }
 
-/** 전체 리뷰 페이지용: 게시된 리뷰 전체 조회 */
 export async function getAllPublishedReviews(): Promise<Review[]> {
   try {
     const supabase = createStaticClient();
@@ -143,7 +138,6 @@ export async function getPublishedServicesWithImageUrls(): Promise<
   }
 }
 
-/** 고객 리뷰 전체 조회 — ISR 호환, 최신순 정렬 */
 export async function getCustomerReviews(): Promise<CustomerReviewRow[]> {
   try {
     const supabase = createStaticClient();

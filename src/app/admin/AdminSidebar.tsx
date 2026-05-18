@@ -14,6 +14,7 @@ import {
   ExternalLink,
   HelpCircle,
   Star,
+  Tag,
 } from "lucide-react";
 import { logout } from "@/shared/actions/auth";
 
@@ -23,13 +24,15 @@ const navItems = [
   { href: "/admin/reviews", label: "리뷰 관리", icon: Image },
   { href: "/admin/customer-reviews", label: "고객리뷰 관리", icon: Star },
   { href: "/admin/faq", label: "FAQ 관리", icon: HelpCircle },
+  { href: "/admin/price", label: "가격표 관리", icon: Tag },
   { href: "/admin/config", label: "업체 정보", icon: Settings },
 ];
 
 const navItemBase =
   "flex items-center gap-3 px-4 py-3 text-sm font-bold tracking-widest transition-colors";
 const navItemActive = "bg-slate-200/60 text-slate-900";
-const navItemInactive = "text-slate-500 hover:bg-slate-200/40 hover:text-slate-900";
+const navItemInactive =
+  "text-slate-500 hover:bg-slate-200/40 hover:text-slate-900";
 
 export function AdminSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -66,8 +69,7 @@ export function AdminSidebar() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + "/");
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.href}
@@ -108,8 +110,7 @@ export function AdminSidebar() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + "/");
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.href}

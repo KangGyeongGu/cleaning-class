@@ -6,23 +6,17 @@ interface ContactEmailData {
   name: string;
   phone: string;
   serviceType: string;
-  region?: string; // 청소의뢰 전용
-  departure?: string; // 이사의뢰 전용 — 출발지
-  destination?: string; // 이사의뢰 전용 — 도착지
+  region?: string;
+  departure?: string;
+  destination?: string;
   message: string;
   images?: Array<{ filename: string; content: Buffer }>;
 }
 
-/**
- * SMTP 헤더 인젝션 방지 — 개행문자 제거
- */
 function sanitizeHeader(str: string): string {
   return str.replace(/[\r\n]/g, " ");
 }
 
-/**
- * 첨부파일명 정규화 — 경로 구분자 및 헤더 인젝션 문자 제거
- */
 function sanitizeFilename(name: string): string {
   const sanitized = name
     .replace(/[/\\:*?"<>|\r\n]/g, "")
@@ -30,7 +24,6 @@ function sanitizeFilename(name: string): string {
   return sanitized || "attachment";
 }
 
-/** HTML 특수문자 이스케이프 — XSS 방지 */
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -40,11 +33,6 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/**
- * 모듈 레벨 싱글턴 transporter (lazy initialization)
- * - 서버리스 환경에서 warm 인스턴스 내 SMTP 연결 재사용
- * - 환경 변수는 런타임 주입이므로 첫 호출 시점에 생성
- */
 let cachedTransporter: Mail | null = null;
 
 function getTransporter(): Mail {
@@ -71,7 +59,6 @@ function getTransporter(): Mail {
   return cachedTransporter;
 }
 
-/** 청소의뢰 이메일 HTML 본문 생성 — 지역 필드 포함 */
 function buildCleaningHtml(data: ContactEmailData): string {
   return `
     <!DOCTYPE html>
@@ -121,7 +108,6 @@ function buildCleaningHtml(data: ContactEmailData): string {
   `;
 }
 
-/** 이사의뢰 이메일 HTML 본문 생성 — 출발지/도착지 필드 포함 */
 function buildMovingHtml(data: ContactEmailData): string {
   return `
     <!DOCTYPE html>
@@ -177,12 +163,6 @@ function buildMovingHtml(data: ContactEmailData): string {
   `;
 }
 
-/**
- * 견적문의 이메일 발송
- * inquiryType에 따라 제목과 본문 포맷을 분기:
- * - cleaning: 기존 청소의뢰 포맷 (지역 표시)
- * - moving: 이사의뢰 포맷 (출발지/도착지 표시, 별도 제목)
- */
 export async function sendContactEmail(data: ContactEmailData): Promise<void> {
   if (!process.env.ADMIN_EMAIL) {
     throw new Error("ADMIN_EMAIL 환경변수가 설정되지 않았습니다");

@@ -6,12 +6,14 @@ export interface ReviewWithImageUrl extends Review {
   imageUrl: string;
 }
 
-export async function getReviews(): Promise<ReviewWithImageUrl[]> {
+export async function getReviews(
+  ascending = false,
+): Promise<ReviewWithImageUrl[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reviews")
     .select("*")
-    .order("sort_order", { ascending: true });
+    .order("created_at", { ascending });
 
   if (error) {
     console.error("[getReviews] 리뷰 목록 조회 실패:", error);
@@ -46,24 +48,4 @@ export async function getReviewById(
     ...review,
     imageUrl: getReviewImageUrl(review.image_path),
   };
-}
-
-export async function getNextReviewSortOrder(): Promise<number> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error) {
-    // PGRST116: 레코드 없음으로 정상 케이스
-    if (error.code !== "PGRST116") {
-      console.error("[getNextReviewSortOrder] sort_order 조회 실패:", error);
-    }
-    return 0;
-  }
-
-  return (data?.sort_order ?? -1) + 1;
 }

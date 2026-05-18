@@ -25,8 +25,7 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Server Component에서는 쿠키 설정이 실패할 수 있음 (read-only)
-            // Server Action이나 Route Handler에서만 쓰기 가능
+            void 0;
           }
         },
       },

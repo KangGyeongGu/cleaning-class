@@ -9,7 +9,6 @@ import type { FaqInsert, FaqUpdate } from "@/shared/types/database";
 
 const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
-// 빈 문자열을 NaN으로 처리하여 Zod int 검증에 위임
 function parseDisplayOrder(formData: FormData): number {
   const raw = formData.get("display_order");
   if (raw === null || raw === "") return NaN;
@@ -208,7 +207,7 @@ export async function toggleFaqActive(
   }
 }
 
-export interface FaqOrderItem {
+interface FaqOrderItem {
   id: string;
   display_order: number;
 }
@@ -236,7 +235,6 @@ export async function reorderFaqs(
       }
     }
 
-    // 병렬로 일괄 업데이트 — 개별 순차 호출(N+1) 대비 DB 왕복 절감
     const supabase = await createClient();
     const now = new Date().toISOString();
 

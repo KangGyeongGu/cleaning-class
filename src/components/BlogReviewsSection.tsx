@@ -4,7 +4,6 @@ import { getReviewImageUrl } from "@/shared/lib/supabase/storage";
 import { BlogReviews } from "@/components/BlogReviews";
 
 export async function BlogReviewsSection() {
-  // 리뷰 목록과 사이트 설정을 병렬 조회 (React cache()로 getSiteConfig 중복 요청 방지)
   const [reviews, siteConfig] = await Promise.all([
     getPublishedReviews(),
     getSiteConfig(),

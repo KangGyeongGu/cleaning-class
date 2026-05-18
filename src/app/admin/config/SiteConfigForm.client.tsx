@@ -16,7 +16,6 @@ interface SiteConfigFormProps {
   config: SiteConfig;
 }
 
-/** 히어로 배너 표시 비율 — 50vh 배너에서의 대략적인 가로:세로 비 */
 const HERO_BANNER_RATIO = 2.5;
 
 interface HeroSlotFormProps {
@@ -27,7 +26,6 @@ interface HeroSlotFormProps {
   initialFocalY: number;
 }
 
-/** 개별 히어로 이미지 슬롯 폼 (좌/우) */
 function HeroSlotForm({
   slot,
   label,
@@ -44,7 +42,6 @@ function HeroSlotForm({
   const currentImageUrl =
     imagePath && imagePath.trim() ? getHeroImageUrl(imagePath) : null;
 
-  // 미리보기가 있으면 우선 표시, 없으면 저장된 이미지 URL 사용
   const displayImageUrl = previewUrl ?? currentImageUrl;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -160,15 +157,15 @@ function HeroImageForm({ config }: HeroImageFormProps) {
           slot="1"
           label="좌측 이미지"
           imagePath={config.hero_image_path ?? null}
-          initialFocalX={config.hero_image_focal_x}
-          initialFocalY={config.hero_image_focal_y}
+          initialFocalX={config.hero_image_focal_x ?? 50}
+          initialFocalY={config.hero_image_focal_y ?? 50}
         />
         <HeroSlotForm
           slot="2"
           label="우측 이미지"
           imagePath={config.hero_image_path_2 ?? null}
-          initialFocalX={config.hero_image_focal_x_2}
-          initialFocalY={config.hero_image_focal_y_2}
+          initialFocalX={config.hero_image_focal_x_2 ?? 50}
+          initialFocalY={config.hero_image_focal_y_2 ?? 50}
         />
       </div>
     </section>

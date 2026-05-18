@@ -31,7 +31,6 @@ export function NewServiceForm({ defaultSortOrder = 0 }: NewServiceFormProps) {
   const [afterFocalX, setAfterFocalX] = useState(50);
   const [afterFocalY, setAfterFocalY] = useState(50);
 
-  // 언마운트 시 blob URL 해제를 위해 최신 URL을 ref로 추적
   const imagePreviewRef = useRef<string | null>(null);
   const afterImagePreviewRef = useRef<string | null>(null);
   const detailImagePreviewRef = useRef<string | null>(null);
@@ -56,9 +55,12 @@ export function NewServiceForm({ defaultSortOrder = 0 }: NewServiceFormProps) {
   useEffect(() => {
     return () => {
       if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
-      if (afterImagePreviewRef.current) URL.revokeObjectURL(afterImagePreviewRef.current);
-      if (detailImagePreviewRef.current) URL.revokeObjectURL(detailImagePreviewRef.current);
-      if (detailAfterImagePreviewRef.current) URL.revokeObjectURL(detailAfterImagePreviewRef.current);
+      if (afterImagePreviewRef.current)
+        URL.revokeObjectURL(afterImagePreviewRef.current);
+      if (detailImagePreviewRef.current)
+        URL.revokeObjectURL(detailImagePreviewRef.current);
+      if (detailAfterImagePreviewRef.current)
+        URL.revokeObjectURL(detailAfterImagePreviewRef.current);
     };
   }, []);
 
@@ -192,7 +194,7 @@ export function NewServiceForm({ defaultSortOrder = 0 }: NewServiceFormProps) {
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                // 한글 조합 중 Enter 입력 무시
+
                 if (!e.nativeEvent.isComposing) {
                   handleAddTag();
                 }

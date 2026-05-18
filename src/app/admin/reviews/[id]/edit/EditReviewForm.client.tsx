@@ -29,7 +29,6 @@ export function EditReviewForm({ review, imageUrl }: EditReviewFormProps) {
     existingService || "",
   );
 
-  // 언마운트 시 blob URL 해제를 위해 최신 URL을 ref로 추적
   const imagePreviewRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -266,28 +265,6 @@ export function EditReviewForm({ review, imageUrl }: EditReviewFormProps) {
             unoptimized={!!imagePreview}
           />
         </div>
-      </div>
-
-      <div>
-        <label
-          htmlFor="sort_order"
-          className="mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase"
-        >
-          정렬 순서
-        </label>
-        <input
-          id="sort_order"
-          name="sort_order"
-          type="number"
-          min="0"
-          defaultValue={review.sort_order}
-          className="w-full border-b border-slate-200 bg-transparent pb-3 text-lg font-light transition-colors outline-none focus:border-slate-900"
-        />
-        {state && "errors" in state && state.errors?.sort_order && (
-          <p className="mt-1 text-xs text-red-500">
-            {state.errors.sort_order[0]}
-          </p>
-        )}
       </div>
 
       <div className="flex items-center gap-3">

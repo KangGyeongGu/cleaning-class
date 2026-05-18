@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "@/app/globals.css";
 import AnalyticsProvider from "@/components/analytics/AnalyticsProvider.client";
+import { JsonLdScript } from "@/components/JsonLdScript";
 import {
   generateBreadcrumbListJsonLd,
   generateLocalBusinessJsonLd,
@@ -9,7 +10,6 @@ import {
 } from "@/shared/lib/json-ld";
 import { getSiteConfig } from "@/shared/lib/site-config";
 
-// 스크립트 인젝션 방지: 영숫자와 하이픈만 허용
 const ANALYTICS_ID_PATTERN = /^[A-Za-z0-9-]+$/;
 const GA_ID = ANALYTICS_ID_PATTERN.test(process.env.NEXT_PUBLIC_GA_ID ?? "")
   ? (process.env.NEXT_PUBLIC_GA_ID ?? "")
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   verification: {
     google: "p_YMbf0LS_UF1H8XHrmiIYuU-qCfd4oCj6ue9YuY_Us",
     other: {
-      "naver-site-verification": "b5cac6e111205c041ca91df1b9a59e5fa81635fa",
+      "naver-site-verification": "45ce00e5f1089bd5d453dbd58132b37ed916ad3f",
     },
   },
   title: {
@@ -112,33 +112,13 @@ export default async function RootLayout({
   return (
     <html lang="ko" className="relative">
       <head>
-        {/* eslint-disable-next-line @next/next/no-css-tags -- public 셀프 호스팅 폰트, CSS 모듈 import 불가 */}
         <link rel="stylesheet" href="/fonts/pretendard/pretendard.css" />
       </head>
       <body className="relative font-sans antialiased">
-        {/* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml -- JSON-LD 구조화 데이터, < → \u003c 치환으로 XSS 방어 적용 */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(webSiteJsonLd).replace(/</g, "\\u003c"),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(breadcrumbListJsonLd).replace(
-              /</g,
-              "\\u003c",
-            ),
-          }}
-        />
-        {/* eslint-enable @eslint-react/dom/no-dangerously-set-innerhtml */}
+        <JsonLdScript data={jsonLd} />
+        <JsonLdScript data={webSiteJsonLd} />
+        <JsonLdScript data={breadcrumbListJsonLd} />
+
         <AnalyticsProvider />
         {children}
         {GA_ID && (

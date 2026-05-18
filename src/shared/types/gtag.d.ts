@@ -18,7 +18,6 @@ interface Gtag {
 
 declare global {
   interface Window {
-    // 스크립트 로드 전에는 undefined일 수 있음
     gtag?: Gtag;
     dataLayer?: Record<string, unknown>[];
   }

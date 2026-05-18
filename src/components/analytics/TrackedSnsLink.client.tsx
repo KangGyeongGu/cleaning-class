@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { trackSnsClick } from '@/shared/lib/analytics';
-import type { SnsClickParams } from '@/shared/lib/analytics';
+import { trackSnsClick } from "@/shared/lib/analytics";
+import type { SnsClickParams } from "@/shared/lib/analytics";
 
 interface TrackedSnsLinkProps {
   href: string;
-  platform: SnsClickParams['sns_platform'];
-  location: SnsClickParams['click_location'];
+  platform: SnsClickParams["sns_platform"];
+  location: SnsClickParams["click_location"];
   children: React.ReactNode;
   className?: string;
   ariaLabel?: string;
@@ -28,7 +28,6 @@ export default function TrackedSnsLink({
   }
 
   return (
-    // 외부 링크 보안을 위해 rel="noopener noreferrer" 고정 적용
     <a
       href={href}
       target="_blank"

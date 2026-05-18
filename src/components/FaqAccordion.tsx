@@ -1,6 +1,5 @@
 "use client";
 
-// FAQ 아코디언 — 접근성(aria-expanded/aria-controls) 준수, CSS 전환 애니메이션
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { FaqRow } from "@/shared/types/database";
@@ -22,7 +21,6 @@ export function FaqAccordion({ faqs }: FaqAccordionProps) {
   }
 
   function toggle(id: string, faq: FaqRow): void {
-    // 트래킹은 updater 바깥에서 1회만 실행 (Strict Mode 이중 호출 방지)
     if (!openIds.has(id)) {
       trackFaqOpen({ faq_id: String(faq.id), faq_question: faq.question });
     }
@@ -66,7 +64,6 @@ export function FaqAccordion({ faqs }: FaqAccordionProps) {
               </button>
             </h3>
 
-            {/* grid-rows 전환으로 높이 애니메이션 없이 부드러운 열기/닫기 구현 */}
             <div
               id={answerId}
               role="region"

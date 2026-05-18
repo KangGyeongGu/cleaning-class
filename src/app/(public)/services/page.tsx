@@ -8,6 +8,7 @@ import { ServiceBeforeAfter } from "@/components/ServiceBeforeAfter.client";
 import { HashHighlight } from "@/app/(public)/services/HashHighlight.client";
 import { BLUR_PLACEHOLDER } from "@/shared/lib/image";
 import TrackedCtaLink from "@/components/analytics/TrackedCtaLink.client";
+import { JsonLdScript } from "@/components/JsonLdScript";
 
 export const revalidate = 3600;
 
@@ -43,11 +44,11 @@ const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
   { name: "서비스 소개", url: "https://www.cleaningclass.co.kr/services" },
 ]);
 
-interface ServiceCardProps {
+interface ServiceTextCardProps {
   service: ServiceWithImageUrls;
 }
 
-function ServiceCard({ service }: ServiceCardProps) {
+function ServiceTextCard({ service }: ServiceTextCardProps) {
   return (
     <article
       id={`service-${service.id}`}
@@ -187,7 +188,7 @@ function ServiceCategorySection({
             {services
               .filter((s) => !s.detailImageUrl)
               .map((service) => (
-                <ServiceCard key={service.id} service={service} />
+                <ServiceTextCard key={service.id} service={service} />
               ))}
           </div>
         )}
@@ -205,14 +206,8 @@ export default async function ServicesPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-slate-900 selection:text-white">
       <HashHighlight />
-      {/* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml -- BreadcrumbList JSON-LD, 정적 데이터로 XSS 위험 없음 */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
-      {/* eslint-enable @eslint-react/dom/no-dangerously-set-innerhtml */}
+
+      <JsonLdScript data={breadcrumbJsonLd} />
 
       <section className="bg-slate-50 pt-12 pb-10 md:pt-16 md:pb-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -277,7 +272,7 @@ export default async function ServicesPage() {
             원하시는 서비스가 있으신가요? 부담 없이 연락 주시면 빠르게 안내해
             드립니다.
           </p>
-          {/* 서비스 소개 페이지 하단 견적 문의하기 CTA 추적 */}
+
           <TrackedCtaLink
             href="/contact"
             contentId="services_page_quote"

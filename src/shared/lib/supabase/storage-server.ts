@@ -19,7 +19,6 @@ const ALLOWED_EXTENSIONS = [
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
 
-/** 이미지 파일 매직 바이트 패턴 — MIME/확장자와 별개로 실제 파일 내용 검증 */
 const IMAGE_MAGIC_BYTES: Array<{ signature: number[]; offset: number }> = [
   { signature: [0xff, 0xd8, 0xff], offset: 0 }, // JPEG
   { signature: [0x89, 0x50, 0x4e, 0x47], offset: 0 }, // PNG
@@ -29,11 +28,12 @@ const IMAGE_MAGIC_BYTES: Array<{ signature: number[]; offset: number }> = [
 ];
 
 function isValidImageMagicBytes(header: Uint8Array): boolean {
-  // AVIF: bytes 4-7 = 'ftyp'
   if (
     header.length >= 12 &&
-    header[4] === 0x66 && header[5] === 0x74 &&
-    header[6] === 0x79 && header[7] === 0x70
+    header[4] === 0x66 &&
+    header[5] === 0x74 &&
+    header[6] === 0x79 &&
+    header[7] === 0x70
   ) {
     return true;
   }
@@ -75,7 +75,6 @@ export async function uploadImage(bucket: string, file: File): Promise<string> {
     );
   }
 
-  // 파일 매직 바이트 검증 — 클라이언트 위조 MIME/확장자 방어
   const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
   if (!isValidImageMagicBytes(header)) {
     throw new Error("파일 내용이 허용된 이미지 형식과 일치하지 않습니다.");
@@ -108,6 +107,5 @@ export async function deleteImage(
 
   if (error) {
     console.error("이미지 삭제 실패:", error.message);
-    // 이미지 삭제 실패는 치명적이지 않으므로 throw하지 않음
   }
 }

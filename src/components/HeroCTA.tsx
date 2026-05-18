@@ -3,11 +3,6 @@
 import Link from "next/link";
 import { trackSelectContent, trackPhoneClick } from "@/shared/lib/analytics";
 
-/**
- * HeroCTA 컴포넌트 변형
- * - "light": 흰 배경 위 다크 텍스트 (기본값)
- * - "dark": 어두운 배경이미지 위 흰 텍스트
- */
 export type HeroCTAVariant = "light" | "dark";
 
 interface HeroCTAProps {

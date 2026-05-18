@@ -54,11 +54,10 @@ export async function Hero(): Promise<React.JSX.Element> {
                     : "heroImageReveal 1.6s cubic-bezier(0.16,1,0.3,1) both",
                 }}
               >
-                {/* 모바일: 상하 분할, 데스크톱: 좌우 대각선 분할 */}
                 <div
                   className={
                     hasBothImages
-                      ? "absolute inset-0 [clip-path:polygon(0_0,100%_0,0_100%)] md:[clip-path:polygon(0_0,91.67%_0,75%_100%,0_100%)] md:w-[60%]"
+                      ? "absolute inset-0 [clip-path:polygon(0_0,100%_0,0_100%)] md:w-[60%] md:[clip-path:polygon(0_0,91.67%_0,75%_100%,0_100%)]"
                       : "absolute inset-0"
                   }
                 >
@@ -71,7 +70,9 @@ export async function Hero(): Promise<React.JSX.Element> {
                     alt={`${displayName} 청소 서비스`}
                     className="object-cover"
                     style={{ objectPosition: `${focal1.x}% ${focal1.y}%` }}
-                    sizes={hasBothImages ? "(max-width: 768px) 100vw, 60vw" : "100vw"}
+                    sizes={
+                      hasBothImages ? "(max-width: 768px) 100vw, 60vw" : "100vw"
+                    }
                   />
                 </div>
               </div>
@@ -89,7 +90,7 @@ export async function Hero(): Promise<React.JSX.Element> {
                 <div
                   className={
                     hasImage1
-                      ? "absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)] md:[clip-path:polygon(25%_0,100%_0,100%_100%,8.33%_100%)] md:absolute md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-[60%]"
+                      ? "absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)] md:absolute md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-[60%] md:[clip-path:polygon(25%_0,100%_0,100%_100%,8.33%_100%)]"
                       : "absolute inset-0"
                   }
                 >
@@ -102,14 +103,15 @@ export async function Hero(): Promise<React.JSX.Element> {
                     alt={`${displayName} 청소 서비스 현장`}
                     className="object-cover"
                     style={{ objectPosition: `${focal2.x}% ${focal2.y}%` }}
-                    sizes={hasImage1 ? "(max-width: 768px) 100vw, 60vw" : "100vw"}
+                    sizes={
+                      hasImage1 ? "(max-width: 768px) 100vw, 60vw" : "100vw"
+                    }
                   />
                 </div>
               </div>
             )}
           </div>
 
-          {/* 이미지 등장 완료 후 서서히 어두워지는 오버레이 */}
           <div
             className="absolute inset-0 bg-slate-900/55"
             style={{ animation: "heroOverlayFade 0.8s 1.2s ease-out both" }}

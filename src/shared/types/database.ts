@@ -1,5 +1,3 @@
-// supabase gen types 기반 자동 생성 — 수동 편집 금지
-
 export type Json =
   | string
   | number
@@ -23,7 +21,6 @@ export type Database = {
           nickname: string;
           rating: number;
           service_type: string | null;
-          token_id: string;
         };
         Insert: {
           comment: string;
@@ -33,7 +30,6 @@ export type Database = {
           nickname?: string;
           rating: number;
           service_type?: string | null;
-          token_id: string;
         };
         Update: {
           comment?: string;
@@ -43,17 +39,8 @@ export type Database = {
           nickname?: string;
           rating?: number;
           service_type?: string | null;
-          token_id?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "customer_reviews_token_id_fkey";
-            columns: ["token_id"];
-            isOneToOne: true;
-            referencedRelation: "review_tokens";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       faqs: {
         Row: {
@@ -85,27 +72,33 @@ export type Database = {
         };
         Relationships: [];
       };
-      review_tokens: {
+      price_items: {
         Row: {
           created_at: string;
-          expires_at: string;
           id: string;
-          is_used: boolean;
-          token: string;
+          is_published: boolean;
+          name: string;
+          price_won: number | null;
+          sort_order: number;
+          updated_at: string;
         };
         Insert: {
           created_at?: string;
-          expires_at: string;
           id?: string;
-          is_used?: boolean;
-          token: string;
+          is_published?: boolean;
+          name: string;
+          price_won?: number | null;
+          sort_order?: number;
+          updated_at?: string;
         };
         Update: {
           created_at?: string;
-          expires_at?: string;
           id?: string;
-          is_used?: boolean;
-          token?: string;
+          is_published?: boolean;
+          name?: string;
+          price_won?: number | null;
+          sort_order?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -116,7 +109,6 @@ export type Database = {
           image_path: string;
           is_published: boolean;
           link_url: string;
-          sort_order: number;
           summary: string;
           tags: string[];
           title: string;
@@ -128,7 +120,6 @@ export type Database = {
           image_path?: string;
           is_published?: boolean;
           link_url?: string;
-          sort_order?: number;
           summary: string;
           tags?: string[];
           title: string;
@@ -140,7 +131,6 @@ export type Database = {
           image_path?: string;
           is_published?: boolean;
           link_url?: string;
-          sort_order?: number;
           summary?: string;
           tags?: string[];
           title?: string;
@@ -216,15 +206,15 @@ export type Database = {
           blog_url: string;
           business_name: string;
           business_registration_number: string | null;
+          customer_review_description: string | null;
           daangn_url: string;
           description: string;
-          customer_review_description: string | null;
           email: string;
           faq_description: string | null;
-          hero_image_focal_x: number;
-          hero_image_focal_x_2: number;
-          hero_image_focal_y: number;
-          hero_image_focal_y_2: number;
+          hero_image_focal_x: number | null;
+          hero_image_focal_x_2: number | null;
+          hero_image_focal_y: number | null;
+          hero_image_focal_y_2: number | null;
           hero_image_path: string | null;
           hero_image_path_2: string | null;
           id: string;
@@ -247,15 +237,15 @@ export type Database = {
           blog_url?: string;
           business_name?: string;
           business_registration_number?: string | null;
+          customer_review_description?: string | null;
           daangn_url?: string;
           description?: string;
-          customer_review_description?: string | null;
           email?: string;
           faq_description?: string | null;
-          hero_image_focal_x?: number;
-          hero_image_focal_x_2?: number;
-          hero_image_focal_y?: number;
-          hero_image_focal_y_2?: number;
+          hero_image_focal_x?: number | null;
+          hero_image_focal_x_2?: number | null;
+          hero_image_focal_y?: number | null;
+          hero_image_focal_y_2?: number | null;
           hero_image_path?: string | null;
           hero_image_path_2?: string | null;
           id?: string;
@@ -283,10 +273,10 @@ export type Database = {
           description?: string;
           email?: string;
           faq_description?: string | null;
-          hero_image_focal_x?: number;
-          hero_image_focal_x_2?: number;
-          hero_image_focal_y?: number;
-          hero_image_focal_y_2?: number;
+          hero_image_focal_x?: number | null;
+          hero_image_focal_x_2?: number | null;
+          hero_image_focal_y?: number | null;
+          hero_image_focal_y_2?: number | null;
           hero_image_path?: string | null;
           hero_image_path_2?: string | null;
           id?: string;
@@ -309,16 +299,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      submit_customer_review: {
-        Args: { p_comment: string; p_rating: number; p_token: string };
-        Returns: string;
-      };
       submit_public_review: {
         Args: {
-          p_rating: number;
           p_comment: string;
           p_nickname?: string;
-          p_service_type?: string | null;
+          p_rating: number;
+          p_service_type?: string;
         };
         Returns: string;
       };
@@ -333,8 +319,6 @@ export type Database = {
 };
 
 export type SiteConfigRow = Database["public"]["Tables"]["site_config"]["Row"];
-export type SiteConfigInsert =
-  Database["public"]["Tables"]["site_config"]["Insert"];
 export type SiteConfigUpdate =
   Database["public"]["Tables"]["site_config"]["Update"];
 
@@ -354,12 +338,13 @@ export type FaqRow = Database["public"]["Tables"]["faqs"]["Row"];
 export type FaqInsert = Database["public"]["Tables"]["faqs"]["Insert"];
 export type FaqUpdate = Database["public"]["Tables"]["faqs"]["Update"];
 
-export type ReviewTokenRow =
-  Database["public"]["Tables"]["review_tokens"]["Row"];
-export type ReviewTokenInsert =
-  Database["public"]["Tables"]["review_tokens"]["Insert"];
-
 export type CustomerReviewRow =
   Database["public"]["Tables"]["customer_reviews"]["Row"];
 export type CustomerReviewInsert =
   Database["public"]["Tables"]["customer_reviews"]["Insert"];
+
+export type PriceItemRow = Database["public"]["Tables"]["price_items"]["Row"];
+export type PriceItemInsert =
+  Database["public"]["Tables"]["price_items"]["Insert"];
+export type PriceItemUpdate =
+  Database["public"]["Tables"]["price_items"]["Update"];

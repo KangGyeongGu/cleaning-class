@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Edit, Trash2, Eye, EyeOff, Loader2, GripVertical } from "lucide-react";
 import { deleteFaq, toggleFaqActive, reorderFaqs } from "@/shared/actions/faq";
+import { useDragReorder } from "@/shared/lib/hooks/useDragReorder";
 import type { FaqRow } from "@/shared/types/database";
 
 interface FaqListClientProps {
@@ -13,15 +14,20 @@ interface FaqListClientProps {
 
 export function FaqListClient({ faqs: initialFaqs }: FaqListClientProps) {
   const router = useRouter();
-  const [faqs, setFaqs] = useState(initialFaqs);
-  useEffect(() => setFaqs(initialFaqs), [initialFaqs]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const {
+    items: faqs,
+    isSaving,
+    dragIndex,
+    dragOverIndex,
+    onDragStart,
+    onDragEnter,
+    onDragEnd,
+  } = useDragReorder(initialFaqs, (updated) =>
+    reorderFaqs(updated.map((faq, i) => ({ id: faq.id, display_order: i }))),
+  );
 
   const handleDelete = async (faqId: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -58,61 +64,6 @@ export function FaqListClient({ faqs: initialFaqs }: FaqListClientProps) {
     }
   };
 
-  const handleDragStart = (index: number) => {
-    dragItem.current = index;
-    setDragIndex(index);
-  };
-
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-    setDragOverIndex(index);
-  };
-
-  const handleDragEnd = async () => {
-    if (dragItem.current === null || dragOverItem.current === null) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    if (dragItem.current === dragOverItem.current) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const updated = [...faqs];
-    const [removed] = updated.splice(dragItem.current, 1);
-    updated.splice(dragOverItem.current, 0, removed);
-    setFaqs(updated);
-
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDragIndex(null);
-    setDragOverIndex(null);
-
-    setIsSaving(true);
-    try {
-      const result = await reorderFaqs(
-        updated.map((faq, i) => ({ id: faq.id, display_order: i })),
-      );
-      if (!result.success) {
-        alert(result.error ?? "순서 변경 중 오류가 발생했습니다.");
-        setFaqs(initialFaqs);
-        router.refresh();
-      } else {
-        router.refresh();
-      }
-    } catch (err) {
-      console.error("reorderFaqs error:", err);
-      alert("순서 변경 중 오류가 발생했습니다.");
-      setFaqs(initialFaqs);
-      router.refresh();
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <div className="border border-slate-200">
       {isSaving && (
@@ -142,9 +93,9 @@ export function FaqListClient({ faqs: initialFaqs }: FaqListClientProps) {
           <li
             key={faq.id}
             draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragEnter={() => handleDragEnter(index)}
-            onDragEnd={handleDragEnd}
+            onDragStart={() => onDragStart(index)}
+            onDragEnter={() => onDragEnter(index)}
+            onDragEnd={onDragEnd}
             onDragOver={(e) => e.preventDefault()}
             className={`cursor-grab space-y-3 p-4 transition-colors active:cursor-grabbing md:grid md:grid-cols-12 md:items-center md:gap-4 md:space-y-0 ${
               dragIndex === index
@@ -154,7 +105,6 @@ export function FaqListClient({ faqs: initialFaqs }: FaqListClientProps) {
                   : ""
             }`}
           >
-            {/* 모바일 카드 */}
             <div className="flex items-start gap-3 md:hidden">
               <GripVertical
                 size={16}
@@ -211,7 +161,6 @@ export function FaqListClient({ faqs: initialFaqs }: FaqListClientProps) {
               </div>
             </div>
 
-            {/* 데스크톱 그리드 */}
             <div className="hidden md:col-span-1 md:flex md:items-center md:gap-2">
               <GripVertical
                 size={16}

@@ -1,4 +1,4 @@
-export interface ImageTransformOptions {
+interface ImageTransformOptions {
   width?: number;
   quality?: number;
   format?: "webp" | "avif" | "jpeg" | "png" | "origin";
@@ -14,10 +14,12 @@ function buildTransformUrl(
     "/storage/v1/render/image/public/",
   );
 
-  if (options.width !== undefined) url.searchParams.set("width", String(options.width));
+  if (options.width !== undefined)
+    url.searchParams.set("width", String(options.width));
   if (options.quality !== undefined)
     url.searchParams.set("quality", String(options.quality));
-  if (options.format !== undefined) url.searchParams.set("format", options.format);
+  if (options.format !== undefined)
+    url.searchParams.set("format", options.format);
 
   return url.toString();
 }
@@ -50,7 +52,6 @@ export function getServiceImageUrl(
   return transform ? buildTransformUrl(rawUrl, transform) : rawUrl;
 }
 
-/** 히어로 이미지 URL 반환 — imagePath 없으면 빈 문자열, 폴백은 호출부에서 처리 */
 export function getHeroImageUrl(
   imagePath: string,
   transform?: ImageTransformOptions,

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/json-ld";
+import { JsonLdScript } from "@/components/JsonLdScript";
 
 export const revalidate = false;
 
-// 모듈 스코프에서 생성 — 정적 데이터이므로 매 렌더마다 재계산할 필요 없음
 const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
   { name: "홈", url: "https://www.cleaningclass.co.kr" },
   {
@@ -38,14 +38,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <article className="mx-auto max-w-3xl px-6 pt-16 pb-20 md:pt-20 md:pb-24">
-      {/* eslint-disable @eslint-react/dom/no-dangerously-set-innerhtml -- BreadcrumbList JSON-LD, 서버 생성 정적 데이터로 XSS 위험 없음 */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
-      {/* eslint-enable @eslint-react/dom/no-dangerously-set-innerhtml */}
+      <JsonLdScript data={breadcrumbJsonLd} />
 
       <header className="mb-12">
         <h1 className="text-heading-1 mb-4 tracking-tighter">

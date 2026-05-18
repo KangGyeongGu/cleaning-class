@@ -7,11 +7,7 @@ import { Loader2, X, Plus } from "lucide-react";
 import Image from "next/image";
 import { SERVICE_TYPES } from "@/shared/lib/constants";
 
-interface NewReviewFormProps {
-  defaultSortOrder?: number;
-}
-
-export function NewReviewForm({ defaultSortOrder = 0 }: NewReviewFormProps) {
+export function NewReviewForm() {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(createReview, null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -19,7 +15,6 @@ export function NewReviewForm({ defaultSortOrder = 0 }: NewReviewFormProps) {
   const [tagInput, setTagInput] = useState("");
   const [selectedService, setSelectedService] = useState<string>("");
 
-  // 언마운트 시 blob URL 해제를 위해 최신 URL을 ref로 추적
   const imagePreviewRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -235,23 +230,6 @@ export function NewReviewForm({ defaultSortOrder = 0 }: NewReviewFormProps) {
               sizes="(max-width: 768px) 100vw, 448px"
             />
           </div>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="sort_order" className="form-label">
-          정렬 순서
-        </label>
-        <input
-          id="sort_order"
-          name="sort_order"
-          type="number"
-          min="0"
-          defaultValue={defaultSortOrder}
-          className="form-input-lg"
-        />
-        {state && "errors" in state && state.errors?.sort_order && (
-          <p className="form-error">{state.errors.sort_order[0]}</p>
         )}
       </div>
 

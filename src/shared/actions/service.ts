@@ -244,7 +244,7 @@ export async function updateService(
           try {
             await deleteImage(BUCKET, newImagePath);
           } catch {
-            /* noop */
+            void 0;
           }
         }
         return { success: false, error: "서비스 수정 중 오류가 발생했습니다." };
@@ -293,19 +293,34 @@ export async function updateService(
 
     if (updateError) {
       console.error("updateService DB error:", updateError);
-      // DB 실패 시 새로 업로드된 이미지를 모두 롤백 — orphan 파일 방지
+
       const rollbackTargets = [
         { newPath: newImagePath, oldPath: existing.image_path, label: "image" },
-        { newPath: newImageAfterPath, oldPath: existing.image_after_path, label: "after-image" },
-        { newPath: newDetailImagePath, oldPath: existing.detail_image_path, label: "detail-image" },
-        { newPath: newDetailAfterImagePath, oldPath: existing.detail_image_after_path, label: "detail-after-image" },
+        {
+          newPath: newImageAfterPath,
+          oldPath: existing.image_after_path,
+          label: "after-image",
+        },
+        {
+          newPath: newDetailImagePath,
+          oldPath: existing.detail_image_path,
+          label: "detail-image",
+        },
+        {
+          newPath: newDetailAfterImagePath,
+          oldPath: existing.detail_image_after_path,
+          label: "detail-after-image",
+        },
       ];
       for (const { newPath, oldPath, label } of rollbackTargets) {
         if (newPath !== oldPath) {
           try {
             await deleteImage(BUCKET, newPath);
           } catch (rollbackErr) {
-            console.error(`updateService: ${label} rollback failed:`, rollbackErr);
+            console.error(
+              `updateService: ${label} rollback failed:`,
+              rollbackErr,
+            );
           }
         }
       }
@@ -314,7 +329,6 @@ export async function updateService(
 
     revalidateServicePaths();
 
-    // DB 업데이트 성공 후 기존 이미지 정리 — 실패해도 사용자 응답에는 영향 없음
     const oldPaths: Array<{ oldPath: string; newPath: string }> = [
       { oldPath: existing.image_path, newPath: newImagePath },
       { oldPath: existing.image_after_path, newPath: newImageAfterPath },
@@ -459,7 +473,6 @@ export async function reorderServices(
 
     const supabase = await createClient();
 
-    // 병렬로 일괄 업데이트 — 개별 순차 호출(N+1) 대비 DB 왕복 절감
     const results = await Promise.all(
       orderedIds.map((id, i) =>
         supabase.from("services").update({ sort_order: i }).eq("id", id),

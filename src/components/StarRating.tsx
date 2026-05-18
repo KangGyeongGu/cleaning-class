@@ -1,5 +1,3 @@
-// 아이콘 라이브러리 미사용 — 서버 컴포넌트로 동작
-
 interface StarRatingProps {
   rating: number;
   size?: number;
@@ -22,7 +20,7 @@ export function StarRating({
     >
       {Array.from({ length: 5 }, (_, i) => {
         const diff = rating - i;
-        // 1 이상: 꽉 찬 별, 0.5: 반 별, 그 외: 빈 별
+
         const fillType = diff >= 1 ? "full" : diff >= 0.5 ? "half" : "empty";
         const clipId = `half-star-${i}-${size}`;
 
@@ -44,7 +42,6 @@ export function StarRating({
               </defs>
             )}
 
-            {/* 빈 별 배경 (반별, 빈별 공통) */}
             {fillType !== "full" && (
               <path
                 d={STAR_PATH}
@@ -56,7 +53,6 @@ export function StarRating({
               />
             )}
 
-            {/* 꽉 찬 별 */}
             {fillType === "full" && (
               <path
                 d={STAR_PATH}
@@ -68,7 +64,6 @@ export function StarRating({
               />
             )}
 
-            {/* 반 별: 왼쪽 절반만 채움 */}
             {fillType === "half" && (
               <path
                 d={STAR_PATH}

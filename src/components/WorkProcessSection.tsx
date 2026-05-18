@@ -24,8 +24,7 @@ const PROCESS_STEPS = [
   {
     number: "03",
     title: "예약 확정",
-    description:
-      "진행 일자 및 비용을 확정하고 예약이 완료합니다.",
+    description: "진행 일자 및 비용을 확정하고 예약이 완료합니다.",
     note: null,
     icon: Calendar,
   },
@@ -74,7 +73,13 @@ function useStepAnimation(index: number, progress: Progress) {
   };
 }
 
-function PulseRings({ opacity, size }: { opacity: ReturnType<typeof useTransform<number, number>>; size: string }) {
+function PulseRings({
+  opacity,
+  size,
+}: {
+  opacity: ReturnType<typeof useTransform<number, number>>;
+  size: string;
+}) {
   return (
     <motion.div className="absolute inset-0 z-0" style={{ opacity }}>
       <span
@@ -83,13 +88,23 @@ function PulseRings({ opacity, size }: { opacity: ReturnType<typeof useTransform
       />
       <span
         className={`absolute inset-0 rounded-full bg-green-400/20 ${size}`}
-        style={{ animation: "pulseRing 2s 0.5s cubic-bezier(0,0,0.2,1) infinite" }}
+        style={{
+          animation: "pulseRing 2s 0.5s cubic-bezier(0,0,0.2,1) infinite",
+        }}
       />
     </motion.div>
   );
 }
 
-function MobileStep({ step, index, progress }: { step: Step; index: number; progress: Progress }) {
+function MobileStep({
+  step,
+  index,
+  progress,
+}: {
+  step: Step;
+  index: number;
+  progress: Progress;
+}) {
   const Icon = step.icon;
   const anim = useStepAnimation(index, progress);
 
@@ -104,8 +119,13 @@ function MobileStep({ step, index, progress }: { step: Step; index: number; prog
             backgroundColor: anim.bgColor,
           }}
         >
-          {anim.isLast && <PulseRings opacity={anim.pulseOpacity} size="h-9 w-9" />}
-          <motion.div className="relative z-10" style={{ color: anim.iconColor }}>
+          {anim.isLast && (
+            <PulseRings opacity={anim.pulseOpacity} size="h-9 w-9" />
+          )}
+          <motion.div
+            className="relative z-10"
+            style={{ color: anim.iconColor }}
+          >
             <Icon size={16} />
           </motion.div>
         </motion.div>
@@ -121,7 +141,9 @@ function MobileStep({ step, index, progress }: { step: Step; index: number; prog
         <h3 className="mb-1 flex items-baseline gap-1.5 text-sm font-bold text-slate-900">
           {step.title}
           {step.note && (
-            <span className="text-[10px] font-medium text-slate-400">{step.note}</span>
+            <span className="text-[10px] font-medium text-slate-400">
+              {step.note}
+            </span>
           )}
         </h3>
         <p className="text-xs leading-relaxed font-light text-slate-600">
@@ -132,7 +154,15 @@ function MobileStep({ step, index, progress }: { step: Step; index: number; prog
   );
 }
 
-function DesktopStep({ step, index, progress }: { step: Step; index: number; progress: Progress }) {
+function DesktopStep({
+  step,
+  index,
+  progress,
+}: {
+  step: Step;
+  index: number;
+  progress: Progress;
+}) {
   const Icon = step.icon;
   const anim = useStepAnimation(index, progress);
 
@@ -146,7 +176,9 @@ function DesktopStep({ step, index, progress }: { step: Step; index: number; pro
           backgroundColor: anim.bgColor,
         }}
       >
-        {anim.isLast && <PulseRings opacity={anim.pulseOpacity} size="h-12 w-12" />}
+        {anim.isLast && (
+          <PulseRings opacity={anim.pulseOpacity} size="h-12 w-12" />
+        )}
         <motion.div className="relative z-10" style={{ color: anim.iconColor }}>
           <Icon size={20} />
         </motion.div>
@@ -159,7 +191,9 @@ function DesktopStep({ step, index, progress }: { step: Step; index: number; pro
         <h3 className="mb-2 flex items-baseline justify-center gap-1.5 text-lg font-bold text-slate-900">
           {step.title}
           {step.note && (
-            <span className="text-xs font-medium text-slate-400">{step.note}</span>
+            <span className="text-xs font-medium text-slate-400">
+              {step.note}
+            </span>
           )}
         </h3>
         <p className="mx-auto max-w-52 text-sm leading-relaxed font-light text-slate-600">
@@ -198,24 +232,38 @@ export function WorkProcessSection(): React.ReactElement {
           </p>
         </div>
 
-        {/* 모바일: 세로 타임라인 */}
         <div className="relative md:hidden">
           <div className="absolute top-0 left-[17px] h-full w-px bg-slate-200">
-            <motion.div className="w-full bg-slate-900" style={{ height: lineHeight }} />
+            <motion.div
+              className="w-full bg-slate-900"
+              style={{ height: lineHeight }}
+            />
           </div>
           {PROCESS_STEPS.map((step, index) => (
-            <MobileStep key={step.number} step={step} index={index} progress={scrollYProgress} />
+            <MobileStep
+              key={step.number}
+              step={step}
+              index={index}
+              progress={scrollYProgress}
+            />
           ))}
         </div>
 
-        {/* 데스크톱: 가로 타임라인 */}
         <div className="relative hidden md:block">
           <div className="absolute top-[23px] right-0 left-0 mx-auto h-px w-[calc(100%-4rem)] bg-slate-200">
-            <motion.div className="h-full bg-slate-900" style={{ width: lineWidth }} />
+            <motion.div
+              className="h-full bg-slate-900"
+              style={{ width: lineWidth }}
+            />
           </div>
           <div className="grid grid-cols-4 gap-6">
             {PROCESS_STEPS.map((step, index) => (
-              <DesktopStep key={step.number} step={step} index={index} progress={scrollYProgress} />
+              <DesktopStep
+                key={step.number}
+                step={step}
+                index={index}
+                progress={scrollYProgress}
+              />
             ))}
           </div>
         </div>

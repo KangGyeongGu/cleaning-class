@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAllPublishedReviews } from "@/shared/lib/home";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/json-ld";
 import { ReviewsPageClient } from "@/app/(public)/reviews/ReviewsPageClient.client";
+import { JsonLdScript } from "@/components/JsonLdScript";
 
 export const revalidate = 3600;
 
@@ -44,12 +45,7 @@ export default async function ReviewsPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
+      <JsonLdScript data={breadcrumbJsonLd} />
 
       <div className="min-h-screen bg-white">
         <section className="bg-slate-50 pt-12 pb-10 md:pt-16 md:pb-12">

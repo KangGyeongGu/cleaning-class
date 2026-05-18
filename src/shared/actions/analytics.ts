@@ -12,7 +12,6 @@ import {
 import type { AnalyticsData } from "@/shared/lib/queries/analytics";
 import { getUser } from "@/shared/lib/supabase/auth";
 
-// 인증 실패 또는 API 오류 시 null을 반환하는 래퍼
 async function safeAction<T>(fn: () => Promise<T>): Promise<T | null> {
   try {
     await getUser();
@@ -37,11 +36,15 @@ export async function refreshSummary(): Promise<Pick<
   return safeAction(getAnalyticsSummary);
 }
 
-export async function refreshDailyVisitors(): Promise<AnalyticsData["dailyVisitors"] | null> {
+export async function refreshDailyVisitors(): Promise<
+  AnalyticsData["dailyVisitors"] | null
+> {
   return safeAction(getAnalyticsDailyVisitors);
 }
 
-export async function refreshTrafficSources(): Promise<AnalyticsData["trafficSources"] | null> {
+export async function refreshTrafficSources(): Promise<
+  AnalyticsData["trafficSources"] | null
+> {
   return safeAction(getAnalyticsTrafficSources);
 }
 
@@ -52,10 +55,14 @@ export async function refreshDevice(): Promise<Pick<
   return safeAction(getAnalyticsDevice);
 }
 
-export async function refreshTopPages(): Promise<AnalyticsData["topPages"] | null> {
+export async function refreshTopPages(): Promise<
+  AnalyticsData["topPages"] | null
+> {
   return safeAction(getAnalyticsTopPages);
 }
 
-export async function refreshRegion(): Promise<AnalyticsData["regionBreakdown"] | null> {
+export async function refreshRegion(): Promise<
+  AnalyticsData["regionBreakdown"] | null
+> {
   return safeAction(getAnalyticsRegion);
 }

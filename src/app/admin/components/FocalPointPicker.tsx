@@ -9,17 +9,12 @@ interface FocalPointPickerProps {
   focalY: number;
   onChange: (x: number, y: number) => void;
   label?: string;
-  /** 표시 영역의 목표 비율 (width/height). 기본값 3/4 (세로) */
+
   targetRatio?: number;
 }
 
-const DEFAULT_targetRatio = 3 / 4; // 3:4 세로
+const DEFAULT_targetRatio = 3 / 4;
 
-/**
- * imageUrl 변경 시 naturalSize 리셋이 필요합니다.
- * 부모 컴포넌트에서 key={imageUrl}을 전달하면 컴포넌트가 리마운트되어
- * naturalSize가 자동으로 null로 초기화됩니다.
- */
 export function FocalPointPicker({
   imageUrl,
   focalX,
@@ -54,23 +49,19 @@ export function FocalPointPicker({
 
     const imageRatio = naturalSize.w / naturalSize.h;
 
-    let guideW: number; // 0~1 비율
+    let guideW: number;
     let guideH: number;
 
     if (imageRatio > targetRatio) {
-      // 이미지가 더 넓음 → 세로 꽉참, 가로만 잘림
       guideH = 1;
       guideW = targetRatio / imageRatio;
     } else if (imageRatio < targetRatio) {
-      // 이미지가 더 높음 → 가로 꽉참, 세로만 잘림
       guideW = 1;
       guideH = imageRatio / targetRatio;
     } else {
-      // 정확히 3:4 → 잘림 없음
       return { x: 0, y: 0, w: 1, h: 1, canDragX: false, canDragY: false };
     }
 
-    // focalX/Y (0~100) → 가이드 직사각형 위치 계산
     const maxOffsetX = 1 - guideW;
     const maxOffsetY = 1 - guideH;
     const x = (focalX / 100) * maxOffsetX;
@@ -200,7 +191,6 @@ export function FocalPointPicker({
         </p>
       )}
 
-      {/* aspect-square로 CLS 방지: next/image의 fill 모드에서 컨테이너가 공간을 확보해야 함 */}
       <div
         ref={containerRef}
         className="relative aspect-square max-w-xs overflow-hidden select-none"
@@ -212,9 +202,6 @@ export function FocalPointPicker({
           fill
           className="object-contain"
           sizes="320px"
-          // unoptimized: 관리자 전용 미리보기 이미지로 blob URL 또는
-          // 아직 최적화 파이프라인을 거치지 않은 원본을 표시해야 하므로
-          // next/image 최적화를 비활성화합니다.
           unoptimized
           onLoad={handleImageLoad}
         />
@@ -300,7 +287,6 @@ export function FocalPointPicker({
             sizes="128px"
             className="object-cover"
             style={{ objectPosition: `${focalX}% ${focalY}%` }}
-            // unoptimized: 관리자 전용 미리보기 (blob URL 지원)
             unoptimized
           />
         </div>
