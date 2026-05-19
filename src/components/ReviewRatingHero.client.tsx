@@ -93,25 +93,21 @@ export function ReviewRatingHero({
   totalCount,
 }: ReviewRatingHeroProps): React.ReactElement {
   const [displayRating, setDisplayRating] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const [showCount, setShowCount] = useState(false);
+  const [triggered, setTriggered] = useState(false);
   const [startCountUp, setStartCountUp] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || hasAnimated) return;
+    if (!el) return;
 
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setHasAnimated(true);
           observer.disconnect();
-
-          setShowCount(true);
-
+          setTriggered(true);
           timer = setTimeout(() => {
             setStartCountUp(true);
           }, 800);
@@ -125,7 +121,7 @@ export function ReviewRatingHero({
       observer.disconnect();
       if (timer) clearTimeout(timer);
     };
-  }, [avgRating, hasAnimated]);
+  }, []);
 
   useEffect(() => {
     if (!startCountUp) return;
@@ -159,13 +155,13 @@ export function ReviewRatingHero({
       <span
         className="text-sm text-slate-500 transition-all duration-500 ease-out"
         style={{
-          opacity: showCount ? 1 : 0,
-          transform: showCount ? "translateY(0)" : "translateY(-4px)",
+          opacity: triggered ? 1 : 0,
+          transform: triggered ? "translateY(0)" : "translateY(-4px)",
         }}
       >
         {totalCount}건의 리뷰
       </span>
-      <GoldStarRating rating={hasAnimated ? avgRating : 0} />
+      <GoldStarRating rating={triggered ? avgRating : 0} />
     </div>
   );
 }
