@@ -14,6 +14,7 @@ const commitlintConfig = {
         "chore",
         "perf",
         "ci",
+        "build",
       ],
     ],
     "subject-max-length": [2, "always", 50],

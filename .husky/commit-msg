@@ -1,1 +1,5 @@
-npx --no -- commitlint --edit $1
+if grep -qi 'co-authored-by' "$1"; then
+  echo "❌ commit-msg: Co-Authored-By 라인은 사용 금지 — 메시지에서 제거 후 다시 시도하세요." >&2
+  exit 1
+fi
+npx --no -- commitlint --edit "$1"
