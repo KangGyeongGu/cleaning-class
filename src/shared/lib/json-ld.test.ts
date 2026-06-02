@@ -39,6 +39,7 @@ const FULL_CONFIG: SiteConfig = {
   hero_image_focal_x_2: null,
   hero_image_focal_y_2: null,
   customer_review_description: null,
+  price_description: null,
 };
 
 describe("generateWebSiteJsonLd", () => {

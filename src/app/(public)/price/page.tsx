@@ -5,6 +5,7 @@ import {
   generatePriceListJsonLd,
 } from "@/shared/lib/json-ld";
 import { getPublishedPriceItems } from "@/shared/lib/queries/price";
+import { getSiteConfig } from "@/shared/lib/site-config";
 import { PriceSection } from "@/components/PriceSection";
 import { JsonLdScript } from "@/components/JsonLdScript";
 
@@ -43,8 +44,14 @@ const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
 ]);
 
 export default async function PricePage() {
-  const items = await getPublishedPriceItems();
+  const [items, siteConfig] = await Promise.all([
+    getPublishedPriceItems(),
+    getSiteConfig(),
+  ]);
   const priceListJsonLd = generatePriceListJsonLd(items);
+  const priceDescription =
+    siteConfig?.price_description ||
+    "서비스별 기준 요금을 안내합니다. 실제 금액은 현장 상태 및 면적에 따라 달라질 수 있습니다.";
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-slate-900 selection:text-white">
@@ -73,9 +80,7 @@ export default async function PricePage() {
 
           <h1 className="text-heading-1 mb-4">가격표</h1>
           <p className="text-body-sm max-w-lg text-slate-500">
-            서비스별 기준 요금을 안내합니다.
-            <br className="hidden sm:block" />
-            실제 금액은 현장 상태 및 면적에 따라 달라질 수 있습니다.
+            {priceDescription}
           </p>
         </div>
       </section>

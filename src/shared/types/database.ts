@@ -224,6 +224,7 @@ export type Database = {
           moving_phone: string;
           moving_representative: string;
           phone: string;
+          price_description: string | null;
           representative: string;
           review_description: string | null;
           service_description: string | null;
@@ -255,6 +256,7 @@ export type Database = {
           moving_phone?: string;
           moving_representative?: string;
           phone?: string;
+          price_description?: string | null;
           representative?: string;
           review_description?: string | null;
           service_description?: string | null;
@@ -286,6 +288,7 @@ export type Database = {
           moving_phone?: string;
           moving_representative?: string;
           phone?: string;
+          price_description?: string | null;
           representative?: string;
           review_description?: string | null;
           service_description?: string | null;

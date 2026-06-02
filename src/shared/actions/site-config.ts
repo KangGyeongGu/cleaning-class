@@ -23,6 +23,7 @@ function revalidateSiteConfigPaths(): void {
 const FIELD_REVALIDATE_MAP: Record<string, readonly string[]> = {
   customer_review_description: ["/", "/admin/customer-reviews"],
   faq_description: ["/help", "/admin/faq"],
+  price_description: ["/price", "/admin/price"],
   review_description: ["/reviews", "/admin/reviews"],
   service_description: ["/services", "/admin/services"],
 };
@@ -31,6 +32,7 @@ async function updateSiteConfigField(
   field:
     | "customer_review_description"
     | "faq_description"
+    | "price_description"
     | "review_description"
     | "service_description",
   value: string,
@@ -91,6 +93,10 @@ export async function updateCustomerReviewDescription(description: string) {
 
 export async function updateFaqDescription(description: string) {
   return updateSiteConfigField("faq_description", description);
+}
+
+export async function updatePriceDescription(description: string) {
+  return updateSiteConfigField("price_description", description);
 }
 
 export async function updateReviewDescription(description: string) {

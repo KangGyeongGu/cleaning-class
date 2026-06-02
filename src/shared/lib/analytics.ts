@@ -35,6 +35,7 @@ type CtaButtonId =
   | "services_moving_contact"
   | "services_page_quote"
   | "navbar_contact"
+  | "home_price_banner"
   | `service_card_${string}`;
 
 type ReviewCardClickParams = BaseEventParams & {

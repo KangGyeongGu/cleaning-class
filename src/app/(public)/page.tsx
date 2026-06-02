@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Hero } from "@/components/Hero";
+import { PriceBanner } from "@/components/PriceBanner";
 import { Services } from "@/components/Services";
 import { WorkProcessSection } from "@/components/WorkProcessSection";
 import { BlogReviewsSection } from "@/components/BlogReviewsSection";
@@ -86,6 +87,8 @@ export default function Home() {
   return (
     <div className="relative min-h-screen bg-white font-sans text-slate-900 selection:bg-slate-900 selection:text-white">
       <Hero />
+
+      <PriceBanner />
 
       <Suspense fallback={<ServicesSkeleton />}>
         <Services />
