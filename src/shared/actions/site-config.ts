@@ -20,7 +20,14 @@ function revalidateSiteConfigPaths(): void {
   }
 }
 
-const FIELD_REVALIDATE_MAP: Record<string, readonly string[]> = {
+type DescriptionField =
+  | "customer_review_description"
+  | "faq_description"
+  | "price_description"
+  | "review_description"
+  | "service_description";
+
+const FIELD_REVALIDATE_MAP: Record<DescriptionField, readonly string[]> = {
   customer_review_description: ["/", "/admin/customer-reviews"],
   faq_description: ["/help", "/admin/faq"],
   price_description: ["/price", "/admin/price"],
@@ -28,15 +35,7 @@ const FIELD_REVALIDATE_MAP: Record<string, readonly string[]> = {
   service_description: ["/services", "/admin/services"],
 };
 
-async function updateSiteConfigField(
-  field:
-    | "customer_review_description"
-    | "faq_description"
-    | "price_description"
-    | "review_description"
-    | "service_description",
-  value: string,
-) {
+async function updateSiteConfigField(field: DescriptionField, value: string) {
   try {
     await getUser();
 
@@ -69,12 +68,8 @@ async function updateSiteConfigField(
     }
 
     revalidatePath("/");
-    const extraPaths: readonly string[] | undefined =
-      FIELD_REVALIDATE_MAP[field];
-    if (extraPaths) {
-      for (const p of extraPaths) {
-        revalidatePath(p);
-      }
+    for (const p of FIELD_REVALIDATE_MAP[field]) {
+      revalidatePath(p);
     }
 
     return { success: true };

@@ -24,9 +24,9 @@ export async function createService(prevState: unknown, formData: FormData) {
 
     const tagsRaw = formData.get("tags");
     let parsedTags: string[] = [];
-    if (typeof tagsRaw === "string") {
+    if (tagsRaw) {
       try {
-        parsedTags = JSON.parse(tagsRaw) as string[];
+        parsedTags = JSON.parse(tagsRaw as string) as string[];
       } catch {
         parsedTags = [];
       }
@@ -159,9 +159,9 @@ export async function updateService(
 
     const tagsRaw = formData.get("tags");
     let parsedTags: string[] = [];
-    if (typeof tagsRaw === "string") {
+    if (tagsRaw) {
       try {
-        parsedTags = JSON.parse(tagsRaw) as string[];
+        parsedTags = JSON.parse(tagsRaw as string) as string[];
       } catch {
         parsedTags = [];
       }

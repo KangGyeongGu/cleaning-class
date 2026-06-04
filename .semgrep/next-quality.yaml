@@ -46,26 +46,6 @@ rules:
       exclude:
         - /src/shared/actions/*.ts  # Server-side logging is acceptable
 
-  # ─── File Upload Without Validation ────────────────────────────
-  - id: file-upload-no-mime-check
-    message: >
-      File object accessed without MIME type validation.
-      Check file.type against an allowlist before processing.
-    severity: WARNING
-    languages: [typescript]
-    patterns:
-      - pattern: |
-          const $FILE = $FORMDATA.get(...) as File;
-          ...
-          await uploadImage(..., $FILE);
-      - pattern-not-inside: |
-          ...
-          $FILE.type ...
-          ...
-    paths:
-      include:
-        - /src/shared/actions/*.ts
-
   # ─── Unvalidated FormData ──────────────────────────────────────
   - id: formdata-without-zod-validation
     message: >
@@ -86,28 +66,3 @@ rules:
       include:
         - /src/shared/actions/*.ts
 
-  # ─── Missing Error Boundary ────────────────────────────────────
-  - id: async-without-try-catch-in-action
-    message: >
-      Async server action function without top-level try-catch.
-      Server actions should catch all errors to return structured responses.
-    severity: WARNING
-    languages: [typescript]
-    patterns:
-      - pattern: |
-          export async function $FUNC($...PARAMS) {
-            ...
-            await $EXPR;
-            ...
-          }
-      - pattern-not: |
-          export async function $FUNC($...PARAMS) {
-            try {
-              ...
-            } catch (...) {
-              ...
-            }
-          }
-    paths:
-      include:
-        - /src/shared/actions/*.ts

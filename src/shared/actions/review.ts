@@ -57,9 +57,7 @@ export async function createReview(prevState: unknown, formData: FormData) {
     if (imageFile.size > MAX_FILE_SIZE) {
       return { success: false, error: "파일 크기는 10MB 이하여야 합니다" };
     }
-    let imagePath = "";
-
-    imagePath = await uploadImage(BUCKET, imageFile);
+    const imagePath = await uploadImage(BUCKET, imageFile);
 
     const supabase = await createClient();
     const reviewData: ReviewInsert = {
@@ -70,9 +68,7 @@ export async function createReview(prevState: unknown, formData: FormData) {
     const { error } = await supabase.from("reviews").insert(reviewData);
 
     if (error) {
-      if (imagePath) {
-        await deleteImage(BUCKET, imagePath);
-      }
+      await deleteImage(BUCKET, imagePath);
       console.error("createReview DB error:", error);
       return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
     }

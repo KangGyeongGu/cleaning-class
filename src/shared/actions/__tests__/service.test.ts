@@ -107,6 +107,13 @@ describe("createService", () => {
     expect((await createService(null, fd)).success).toBe(true);
   });
 
+  it("treats missing tags as empty (Zod fails on min(1))", async () => {
+    const { createService } = await import("@/shared/actions/service");
+    const fd = buildForm();
+    fd.delete("tags");
+    expect((await createService(null, fd)).success).toBe(false);
+  });
+
   it("returns success when all 4 images present", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: null }),
@@ -284,6 +291,13 @@ describe("updateService", () => {
     ).toBe(false);
   });
 
+  it("treats missing tags as empty (Zod fails on min(1))", async () => {
+    const { updateService } = await import("@/shared/actions/service");
+    const fd = buildForm();
+    fd.delete("tags");
+    expect((await updateService(VALID_ID, null, fd)).success).toBe(false);
+  });
+
   it("rejects when Zod fails", async () => {
     const { updateService } = await import("@/shared/actions/service");
     expect(
@@ -363,6 +377,19 @@ describe("updateService", () => {
     const fd = buildForm();
     fd.set("image_after", makeFile("after.jpg", 1000));
     expect((await updateService(VALID_ID, null, fd)).success).toBe(false);
+    consoleSpy.mockRestore();
+  });
+
+  it("preserves main image when after-image upload fails without main change", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockFrom.mockImplementation(() => makePromiseChain(existingChain()));
+    mockUploadImage.mockRejectedValueOnce(new Error("upload fail"));
+    const { updateService } = await import("@/shared/actions/service");
+    const fd = buildForm();
+    fd.set("image", makeFile("empty.jpg", 0));
+    fd.set("image_after", makeFile("after.jpg", 1000));
+    expect((await updateService(VALID_ID, null, fd)).success).toBe(false);
+    expect(mockDeleteImage).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 

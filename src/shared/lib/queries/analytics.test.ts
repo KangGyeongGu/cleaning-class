@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const mockRunReport = vi.hoisted(() => vi.fn());
 
 vi.mock("@google-analytics/data", () => ({
-  BetaAnalyticsDataClient: vi.fn().mockImplementation(() => ({
-    runReport: mockRunReport,
-  })),
+  BetaAnalyticsDataClient: class {
+    runReport = mockRunReport;
+  },
 }));
 
 const ORIGINAL_ENV = { ...process.env };

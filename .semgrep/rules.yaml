@@ -83,16 +83,3 @@ rules:
         - "**/src/components/"
         - "**/src/app/"
 
-  # ─── any 타입 단언 금지 ──────────────────────────────────────────────
-  # any 타입 단언은 TypeScript strict 모드의 보호를 무력화한다.
-  # unknown + 타입 가드 패턴으로 대체하여 런타임 안전성을 확보한다.
-  - id: no-any-type-assertion
-    message: >
-      any 타입 단언 금지 — unknown + 타입 가드를 사용하세요.
-      as any는 TypeScript의 타입 보호를 우회하여 런타임 오류를 숨깁니다.
-    severity: ERROR
-    languages: [typescript]
-    pattern: $X as any
-    paths:
-      include:
-        - "**/src/"

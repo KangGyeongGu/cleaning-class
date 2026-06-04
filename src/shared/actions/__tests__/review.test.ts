@@ -279,6 +279,24 @@ describe("updateReview", () => {
     );
     consoleSpy.mockRestore();
   });
+
+  it("preserves existing image when update fails without new image", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    let call = 0;
+    mockFrom.mockImplementation(() =>
+      makePromiseChain(
+        call++ === 0
+          ? { data: { image_path: "old.jpg" }, error: null }
+          : { data: null, error: { message: "x" } },
+      ),
+    );
+    const { updateReview } = await import("@/shared/actions/review");
+    const fd = buildForm();
+    fd.set("image", makeFile("empty.jpg", 0));
+    expect((await updateReview(VALID_ID, null, fd)).success).toBe(false);
+    expect(mockDeleteImage).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
 });
 
 describe("deleteReview", () => {

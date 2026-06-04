@@ -49,3 +49,7 @@ next-env.d.ts
 
 # Lighthouse CI output
 .lighthouseci/
+
+
+llm-refactor.md
+project-refactor.md

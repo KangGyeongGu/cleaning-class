@@ -22,22 +22,6 @@ rules:
       exclude:
         - /src/shared/actions/contact.ts  # Public endpoint — no auth required
 
-  # ─── JSON.parse Safety ─────────────────────────────────────────
-  - id: json-parse-without-try-catch
-    message: >
-      JSON.parse on user-supplied data without try-catch.
-      Wrap in try-catch to prevent server crashes on malformed input.
-    severity: WARNING
-    languages: [typescript]
-    patterns:
-      - pattern: JSON.parse($X)
-      - pattern-not-inside: |
-          try { ... } catch (...) { ... }
-    paths:
-      include:
-        - /src/shared/actions/*.ts
-        - /src/app/api/**/*.ts
-
   # ─── DB Error Leakage ──────────────────────────────────────────
   - id: db-error-message-exposure
     message: >

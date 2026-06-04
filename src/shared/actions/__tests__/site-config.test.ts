@@ -113,6 +113,21 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
     expect(mockRevalidatePath).toHaveBeenCalledWith("/services");
   });
 
+  it("updatePriceDescription succeeds and revalidates price path", async () => {
+    let call = 0;
+    mockFrom.mockImplementation(() =>
+      makePromiseChain(
+        call++ === 0
+          ? { data: { id: "cfg-1" }, error: null }
+          : { data: null, error: null },
+      ),
+    );
+    const { updatePriceDescription } =
+      await import("@/shared/actions/site-config");
+    expect((await updatePriceDescription("d")).success).toBe(true);
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/price");
+  });
+
   it("returns failure when fetch fails", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
@@ -304,6 +319,50 @@ describe("updateHeroImage", () => {
     const fd = buildForm({ hero_image: makeFile("new.jpg", 1000) });
     expect((await updateHeroImage(null, fd)).success).toBe(true);
     expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-1.jpg");
+  });
+
+  it("uploads first image without deleting when no existing path", async () => {
+    let call = 0;
+    mockFrom.mockImplementation(() =>
+      makePromiseChain(
+        call++ === 0
+          ? {
+              data: {
+                id: "cfg-1",
+                hero_image_path: "",
+                hero_image_path_2: "",
+              },
+              error: null,
+            }
+          : { data: null, error: null },
+      ),
+    );
+    const { updateHeroImage } = await import("@/shared/actions/site-config");
+    const fd = buildForm({ hero_image: makeFile("first.jpg", 1000) });
+    expect((await updateHeroImage(null, fd)).success).toBe(true);
+    expect(mockDeleteImage).not.toHaveBeenCalled();
+  });
+
+  it("skips deleteImage on delete request when path already empty", async () => {
+    let call = 0;
+    mockFrom.mockImplementation(() =>
+      makePromiseChain(
+        call++ === 0
+          ? {
+              data: {
+                id: "cfg-1",
+                hero_image_path: "",
+                hero_image_path_2: "",
+              },
+              error: null,
+            }
+          : { data: null, error: null },
+      ),
+    );
+    const { updateHeroImage } = await import("@/shared/actions/site-config");
+    const fd = buildForm({ delete_hero_image: "true" });
+    expect((await updateHeroImage(null, fd)).success).toBe(true);
+    expect(mockDeleteImage).not.toHaveBeenCalled();
   });
 
   it("uses slot 2 for hero_image_path_2", async () => {
