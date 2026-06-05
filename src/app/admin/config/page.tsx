@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getSiteConfig } from "@/shared/lib/domain/site-config";
-import { SiteConfigForm } from "@/app/admin/config/SiteConfigForm.client";
+import { BusinessInfoCard } from "@/app/admin/config/BusinessInfoCard.client";
+import { MovingInfoCard } from "@/app/admin/config/MovingInfoCard.client";
+import { HeroImageCard } from "@/app/admin/config/HeroImageCard.client";
 
 export const metadata: Metadata = {
   title: "업체 정보",
@@ -20,7 +22,11 @@ export default async function SiteConfigPage() {
           </p>
         </div>
       ) : (
-        <SiteConfigForm config={config} />
+        <div className="space-y-6">
+          <BusinessInfoCard config={config} />
+          <MovingInfoCard config={config} />
+          <HeroImageCard config={config} />
+        </div>
       )}
     </div>
   );
