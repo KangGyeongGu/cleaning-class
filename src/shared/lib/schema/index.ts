@@ -22,7 +22,8 @@ const cleaningContactSchema = z.object({
     .min(1, "연락처를 입력해주세요")
     .regex(/^[0-9-]+$/, "올바른 전화번호 형식이 아닙니다"),
   serviceType: cleaningServiceTypeEnum,
-  region: z.string().min(1, "지역을 선택해주세요"),
+  address: z.string().min(1, "주소를 입력해주세요"),
+  addressDetail: z.string().optional().default(""),
   message: z
     .string()
     .min(1, "문의 내용을 입력해주세요")
@@ -37,8 +38,10 @@ const movingContactSchema = z.object({
     .min(1, "연락처를 입력해주세요")
     .regex(/^[0-9-]+$/, "올바른 전화번호 형식이 아닙니다"),
   serviceType: movingServiceTypeEnum,
-  departure: z.string().optional(),
-  destination: z.string().optional(),
+  departureAddress: z.string().optional().default(""),
+  departureDetail: z.string().optional().default(""),
+  destinationAddress: z.string().optional().default(""),
+  destinationDetail: z.string().optional().default(""),
   message: z
     .string()
     .min(1, "문의 내용을 입력해주세요")

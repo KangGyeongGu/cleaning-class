@@ -21,7 +21,8 @@ function buildCleaningForm(
   fd.set("name", "홍길동");
   fd.set("phone", "010-1234-5678");
   fd.set("serviceType", "거주청소");
-  fd.set("region", "전주시");
+  fd.set("address", "전북 전주시 효자로 1");
+  fd.set("addressDetail", "101동 101호");
   fd.set("message", "문의합니다");
   for (const [k, v] of Object.entries(overrides)) {
     fd.set(k, String(v));
@@ -35,8 +36,10 @@ function buildMovingForm(): FormData {
   fd.set("name", "이사남");
   fd.set("phone", "010-1234-5678");
   fd.set("serviceType", "원룸이사");
-  fd.set("departure", "서울");
-  fd.set("destination", "전주");
+  fd.set("departureAddress", "서울 강남구 테헤란로");
+  fd.set("departureDetail", "1층");
+  fd.set("destinationAddress", "전북 전주시 효자로");
+  fd.set("destinationDetail", "");
   fd.set("message", "이사 문의");
   return fd;
 }
@@ -73,31 +76,44 @@ describe("submitContactForm — validation", () => {
 });
 
 describe("submitContactForm — cleaning path", () => {
-  it("sends email with region for cleaning inquiry", async () => {
+  it("sends email with merged address for cleaning inquiry", async () => {
     const { submitContactForm } = await import("@/shared/actions/contact");
     const result = await submitContactForm(null, buildCleaningForm());
     expect(result.success).toBe(true);
     expect(mockSendContactEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         inquiryType: "cleaning",
-        region: "전주시",
-        departure: undefined,
+        address: "전북 전주시 효자로 1 101동 101호",
+        departureAddress: undefined,
+        destinationAddress: undefined,
       }),
+    );
+  });
+
+  it("omits detail when blank", async () => {
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    const result = await submitContactForm(
+      null,
+      buildCleaningForm({ addressDetail: "" }),
+    );
+    expect(result.success).toBe(true);
+    expect(mockSendContactEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ address: "전북 전주시 효자로 1" }),
     );
   });
 });
 
 describe("submitContactForm — moving path", () => {
-  it("sends email with departure/destination for moving inquiry", async () => {
+  it("sends email with merged departure/destination for moving inquiry", async () => {
     const { submitContactForm } = await import("@/shared/actions/contact");
     const result = await submitContactForm(null, buildMovingForm());
     expect(result.success).toBe(true);
     expect(mockSendContactEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         inquiryType: "moving",
-        departure: "서울",
-        destination: "전주",
-        region: undefined,
+        departureAddress: "서울 강남구 테헤란로 1층",
+        destinationAddress: "전북 전주시 효자로",
+        address: undefined,
       }),
     );
   });

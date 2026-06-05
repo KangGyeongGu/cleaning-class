@@ -22,6 +22,11 @@ export function ContactImageGallery({
 }: ContactImageGalleryProps): React.ReactElement {
   return (
     <div className="mt-4">
+      <p className="mb-2 text-xs leading-relaxed text-slate-500">
+        선택입니다. 현재 상태가 보이는 사진을 함께 보내주시면
+        <br className="hidden sm:block" /> 더 정확한 견적을 빠르게 드릴 수
+        있어요. (전체 공간 + 특히 신경 쓰이는 부분)
+      </p>
       <div className="flex items-center gap-4">
         {images.length > 0 && (
           <div className="flex flex-wrap gap-2">

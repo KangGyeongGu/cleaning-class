@@ -22,9 +22,12 @@ export async function submitContactForm(
     name: formData.get("name"),
     phone: formData.get("phone"),
     serviceType: formData.get("serviceType"),
-    region: formData.get("region"),
-    departure: formData.get("departure"),
-    destination: formData.get("destination"),
+    address: formData.get("address"),
+    addressDetail: formData.get("addressDetail"),
+    departureAddress: formData.get("departureAddress"),
+    departureDetail: formData.get("departureDetail"),
+    destinationAddress: formData.get("destinationAddress"),
+    destinationDetail: formData.get("destinationDetail"),
     message: formData.get("message"),
   };
 
@@ -94,14 +97,28 @@ export async function submitContactForm(
 
     const data = validationResult.data;
 
+    function joinAddress(main: string, detail?: string): string {
+      const d = detail?.trim();
+      return d ? `${main} ${d}` : main;
+    }
+
     await sendContactEmail({
       inquiryType: data.inquiryType,
       name: data.name,
       phone: data.phone,
       serviceType: data.serviceType,
-      region: data.inquiryType === "cleaning" ? data.region : undefined,
-      departure: data.inquiryType === "moving" ? data.departure : undefined,
-      destination: data.inquiryType === "moving" ? data.destination : undefined,
+      address:
+        data.inquiryType === "cleaning"
+          ? joinAddress(data.address, data.addressDetail)
+          : undefined,
+      departureAddress:
+        data.inquiryType === "moving"
+          ? joinAddress(data.departureAddress, data.departureDetail)
+          : undefined,
+      destinationAddress:
+        data.inquiryType === "moving"
+          ? joinAddress(data.destinationAddress, data.destinationDetail)
+          : undefined,
       message: data.message,
       images: imageAttachments.length > 0 ? imageAttachments : undefined,
     });

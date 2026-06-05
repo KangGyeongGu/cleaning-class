@@ -7,11 +7,11 @@ import { track, currentPath } from "@/shared/lib/infra/track";
 import { formatPhoneNumber } from "@/shared/lib/pure/format";
 import {
   CLEANING_INQUIRY_OPTIONS,
-  CLEANING_REGIONS,
   MOVING_INQUIRY_OPTIONS,
 } from "@/shared/lib/pure/constants";
 import { CustomDropdown } from "@/components/form/CustomDropdown.client";
 import { ContactImageGallery } from "@/components/form/ContactImageGallery.client";
+import { AddressInput } from "@/components/form/AddressInput.client";
 import { useInViewport } from "@/shared/lib/hooks/useInViewport";
 import { useImageUpload } from "@/shared/lib/hooks/useImageUpload";
 
@@ -42,10 +42,11 @@ export function ContactForm({ phone }: ContactFormProps) {
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
-  const departureRef = useRef<HTMLInputElement>(null);
-  const destinationRef = useRef<HTMLInputElement>(null);
   const [serviceType, setServiceType] = useState("");
-  const [region, setRegion] = useState("");
+  const [cleaningAddress, setCleaningAddress] = useState("");
+  const [movingDeparture, setMovingDeparture] = useState("");
+  const [movingDestination, setMovingDestination] = useState("");
+  const [addressResetKey, setAddressResetKey] = useState(0);
   const [isReset, setIsReset] = useState(false);
   const { ref: sectionRef, isVisible } = useInViewport();
 
@@ -105,14 +106,15 @@ export function ContactForm({ phone }: ContactFormProps) {
       setMessageLength(0);
       setFormValid(false);
       setServiceType("");
-      setRegion("");
+      setCleaningAddress("");
+      setMovingDeparture("");
+      setMovingDestination("");
+      setAddressResetKey((k) => k + 1);
       setIsReset(true);
 
       if (nameRef.current) nameRef.current.value = "";
       if (phoneRef.current) phoneRef.current.value = "";
       if (messageRef.current) messageRef.current.value = "";
-      if (departureRef.current) departureRef.current.value = "";
-      if (destinationRef.current) destinationRef.current.value = "";
       if (fileInputRef.current) fileInputRef.current.value = "";
     }, 3000);
 
@@ -130,18 +132,21 @@ export function ContactForm({ phone }: ContactFormProps) {
       name !== "" && phoneValue !== "" && serviceType !== "" && message !== "";
 
     if (inquiryType === "cleaning") {
-      setFormValid(baseValid && region !== "");
+      setFormValid(baseValid && cleaningAddress.trim() !== "");
     } else {
-      setFormValid(baseValid);
+      const eitherAddress =
+        movingDeparture.trim() !== "" || movingDestination.trim() !== "";
+      setFormValid(baseValid && eitherAddress);
     }
   };
 
   const handleInquiryTypeChange = (type: InquiryType) => {
     setInquiryType(type);
     setServiceType("");
-    setRegion("");
-    if (departureRef.current) departureRef.current.value = "";
-    if (destinationRef.current) destinationRef.current.value = "";
+    setCleaningAddress("");
+    setMovingDeparture("");
+    setMovingDestination("");
+    setAddressResetKey((k) => k + 1);
 
     setTimeout(() => {
       const name = nameRef.current?.value.trim() ?? "";
@@ -306,57 +311,44 @@ export function ContactForm({ phone }: ContactFormProps) {
             />
 
             {inquiryType === "cleaning" && (
-              <CustomDropdown
-                label="지역"
-                name="region"
-                options={CLEANING_REGIONS}
-                placeholder="지역을 선택해주세요"
+              <AddressInput
+                key={`cleaning-${addressResetKey}`}
+                label="주소"
                 required
-                error={state?.errors?.region?.[0]}
-                value={region}
-                onChange={(value) => {
-                  setRegion(value);
+                addressName="address"
+                detailName="addressDetail"
+                error={state?.errors?.address?.[0]}
+                onChange={(addr) => {
+                  setCleaningAddress(addr);
                   setTimeout(checkFormValidity, 0);
                 }}
               />
             )}
 
             {inquiryType === "moving" && (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div className="group">
-                  <label htmlFor="departure" className="form-label-sm">
-                    출발지
-                  </label>
-                  <input
-                    ref={departureRef}
-                    id="departure"
-                    name="departure"
-                    type="text"
-                    className="form-input"
-                    placeholder="출발지"
-                    onInput={checkFormValidity}
-                  />
-                  {state?.errors?.departure && (
-                    <p className="form-error">{state.errors.departure[0]}</p>
-                  )}
-                </div>
-                <div className="group">
-                  <label htmlFor="destination" className="form-label-sm">
-                    도착지
-                  </label>
-                  <input
-                    ref={destinationRef}
-                    id="destination"
-                    name="destination"
-                    type="text"
-                    className="form-input"
-                    placeholder="도착지"
-                    onInput={checkFormValidity}
-                  />
-                  {state?.errors?.destination && (
-                    <p className="form-error">{state.errors.destination[0]}</p>
-                  )}
-                </div>
+              <div className="grid grid-cols-1 gap-5">
+                <AddressInput
+                  key={`moving-from-${addressResetKey}`}
+                  label="출발지"
+                  addressName="departureAddress"
+                  detailName="departureDetail"
+                  error={state?.errors?.departureAddress?.[0]}
+                  onChange={(addr) => {
+                    setMovingDeparture(addr);
+                    setTimeout(checkFormValidity, 0);
+                  }}
+                />
+                <AddressInput
+                  key={`moving-to-${addressResetKey}`}
+                  label="도착지"
+                  addressName="destinationAddress"
+                  detailName="destinationDetail"
+                  error={state?.errors?.destinationAddress?.[0]}
+                  onChange={(addr) => {
+                    setMovingDestination(addr);
+                    setTimeout(checkFormValidity, 0);
+                  }}
+                />
               </div>
             )}
 
@@ -369,11 +361,11 @@ export function ContactForm({ phone }: ContactFormProps) {
                 ref={messageRef}
                 id="message"
                 name="message"
-                rows={3}
+                rows={5}
                 maxLength={1000}
                 required
                 className="scrollbar-thin form-input resize-none overflow-y-auto"
-                placeholder="문의 내용을 자유롭게 작성해주세요"
+                placeholder={`예) 25평 아파트 거주청소\n· 화장실 곰팡이 제거 필요\n· 11/15 또는 16일 오전 가능`}
                 onInput={(e) => {
                   setMessageLength(e.currentTarget.value.length);
                   checkFormValidity();

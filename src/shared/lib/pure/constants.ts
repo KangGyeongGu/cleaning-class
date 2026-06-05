@@ -34,21 +34,3 @@ export const MOVING_INQUIRY_OPTIONS: string[] = [
 export const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 export const DEFAULT_FOCAL_POINT = 50;
 export const SUPABASE_NOT_FOUND_CODE = "PGRST116";
-
-export const CLEANING_REGIONS: readonly string[] = [
-  "전주시 완산구",
-  "전주시 덕진구",
-  "군산시",
-  "익산시",
-  "정읍시",
-  "남원시",
-  "김제시",
-  "완주군",
-  "진안군",
-  "무주군",
-  "장수군",
-  "임실군",
-  "순창군",
-  "고창군",
-  "부안군",
-] as const;

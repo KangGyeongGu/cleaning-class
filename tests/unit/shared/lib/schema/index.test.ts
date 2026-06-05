@@ -19,7 +19,7 @@ describe("contactFormSchema", () => {
       name: "홍길동",
       phone: "010-1234-5678",
       serviceType: "거주청소",
-      region: "전주시",
+      address: "전북 전주시 효자로 1",
       message: "거주 청소 견적 문의드립니다.",
     });
     expect(result.success).toBe(true);
@@ -31,7 +31,7 @@ describe("contactFormSchema", () => {
       name: "홍길동",
       phone: "010-abcd-5678",
       serviceType: "거주청소",
-      region: "전주시",
+      address: "전북 전주시 효자로 1",
       message: "테스트",
     });
     expect(result.success).toBe(false);
@@ -48,13 +48,25 @@ describe("contactFormSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("rejects cleaning inquiry without address", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "cleaning",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "거주청소",
+      address: "",
+      message: "test",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("rejects message longer than 1000 chars", () => {
     const result = contactFormSchema.safeParse({
       inquiryType: "cleaning",
       name: "홍길동",
       phone: "010-1234-5678",
       serviceType: "거주청소",
-      region: "전주시",
+      address: "전북 전주시 효자로 1",
       message: "x".repeat(1001),
     });
     expect(result.success).toBe(false);
