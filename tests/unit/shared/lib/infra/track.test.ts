@@ -1,6 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
+function setLocation(hostname: string, pathname = "/"): void {
+  Object.defineProperty(window, "location", {
+    value: {
+      ...window.location,
+      hostname,
+      pathname,
+      host: hostname,
+      href: `https://${hostname}${pathname}`,
+    },
+    configurable: true,
+  });
+}
+
 describe("track", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
@@ -8,6 +21,7 @@ describe("track", () => {
     fetchSpy = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(null, { status: 204 }));
+    setLocation("cleaning-class.com", "/");
   });
 
   afterEach(() => {
@@ -75,6 +89,33 @@ describe("track", () => {
         configurable: true,
       });
     }
+  });
+
+  it.each(["localhost", "127.0.0.1", "::1"])(
+    "should be no-op on local host %s",
+    (host) => {
+      setLocation(host, "/");
+      track({
+        event_type: "cta_click",
+        event_payload: { content_id: "navbar_contact" },
+        path: "/",
+      });
+      expect(fetchSpy).not.toHaveBeenCalled();
+    },
+  );
+
+  it("should be no-op on /admin paths", () => {
+    setLocation("cleaning-class.com", "/admin/dashboard");
+    track({
+      event_type: "page_landing",
+      event_payload: {
+        source: "google",
+        referrer_host: "google.com",
+        landing_path: "/admin/dashboard",
+      },
+      path: "/admin/dashboard",
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
 

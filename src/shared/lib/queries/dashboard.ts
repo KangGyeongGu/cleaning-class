@@ -1,18 +1,23 @@
 import { createClient } from "@/shared/lib/supabase/server";
-import type { EventType } from "@/shared/lib/schema/analytics";
 
-export interface TodayStats {
-  landings: number;
-  quoteClicks: number;
-  quoteSuccess: number;
-  phoneClicks: number;
+export interface SegmentedCount {
+  cleaning: number;
+  moving: number;
 }
 
-export interface QuoteFunnelRow {
+export interface TodayStats {
+  visitors: number;
+  quoteSubmissions: SegmentedCount;
+  phoneClicks: SegmentedCount;
+}
+
+export interface DailyTrendRow {
   date: string;
-  landings: number;
-  clicks: number;
-  success: number;
+  visitors: number;
+  quoteCleaning: number;
+  quoteMoving: number;
+  phoneCleaning: number;
+  phoneMoving: number;
 }
 
 export interface TrafficSourceRow {
@@ -20,9 +25,11 @@ export interface TrafficSourceRow {
   count: number;
 }
 
-export interface EventCountRow {
-  event_type: EventType;
-  count: number;
+export interface CustomerActionTotals {
+  quoteCleaning: number;
+  quoteMoving: number;
+  phoneCleaning: number;
+  phoneMoving: number;
 }
 
 function todayKstDate(): string {
@@ -38,65 +45,108 @@ function nDaysAgoKst(n: number): string {
   return kst.toISOString().slice(0, 10);
 }
 
+function kstDateFromIso(iso: string): string {
+  const d = new Date(iso);
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0, 10);
+}
+
+type EventRow = {
+  event_type: string;
+  event_payload: Record<string, unknown> | null;
+  created_at: string;
+};
+
+function extractSegment(
+  payload: Record<string, unknown> | null,
+  key: string,
+): "cleaning" | "moving" | null {
+  const value = payload?.[key];
+  if (value === "cleaning" || value === "moving") return value;
+  return null;
+}
+
 export async function getTodayStats(): Promise<TodayStats> {
   const supabase = await createClient();
   const startOfTodayKst = `${todayKstDate()}T00:00:00+09:00`;
 
   const { data, error } = await supabase
     .from("analytics_events")
-    .select("event_type")
+    .select("event_type, event_payload")
     .gte("created_at", startOfTodayKst);
+
+  const empty: TodayStats = {
+    visitors: 0,
+    quoteSubmissions: { cleaning: 0, moving: 0 },
+    phoneClicks: { cleaning: 0, moving: 0 },
+  };
 
   if (error) {
     console.error("[getTodayStats]", error);
-    return { landings: 0, quoteClicks: 0, quoteSuccess: 0, phoneClicks: 0 };
+    return empty;
   }
 
-  const counts = (data ?? []).reduce<Record<string, number>>((acc, row) => {
-    acc[row.event_type] = (acc[row.event_type] ?? 0) + 1;
-    return acc;
-  }, {});
+  const result = empty;
+  for (const row of (data as
+    | Pick<EventRow, "event_type" | "event_payload">[]
+    | null) ?? []) {
+    if (row.event_type === "page_landing") {
+      result.visitors += 1;
+    } else if (row.event_type === "quote_form_success") {
+      const seg = extractSegment(row.event_payload, "inquiry_type");
+      if (seg) result.quoteSubmissions[seg] += 1;
+    } else if (row.event_type === "phone_click") {
+      const seg = extractSegment(row.event_payload, "phone_type");
+      if (seg) result.phoneClicks[seg] += 1;
+    }
+  }
 
-  return {
-    landings: counts.page_landing ?? 0,
-    quoteClicks: counts.quote_form_click ?? 0,
-    quoteSuccess: counts.quote_form_success ?? 0,
-    phoneClicks: counts.phone_click ?? 0,
-  };
+  return result;
 }
 
-export async function getQuoteFunnel7d(): Promise<QuoteFunnelRow[]> {
+export async function getDailyTrend7d(): Promise<DailyTrendRow[]> {
   const supabase = await createClient();
-  const start = nDaysAgoKst(6);
+  const startDate = nDaysAgoKst(6);
+  const startIso = `${startDate}T00:00:00+09:00`;
 
   const { data, error } = await supabase
-    .from("analytics_daily")
-    .select("date, event_type, count")
-    .gte("date", start)
-    .in("event_type", [
-      "page_landing",
-      "quote_form_click",
-      "quote_form_success",
-    ]);
+    .from("analytics_events")
+    .select("event_type, event_payload, created_at")
+    .gte("created_at", startIso)
+    .in("event_type", ["page_landing", "quote_form_success", "phone_click"]);
 
   if (error) {
-    console.error("[getQuoteFunnel7d]", error);
+    console.error("[getDailyTrend7d]", error);
     return [];
   }
 
-  const byDate = new Map<string, QuoteFunnelRow>();
+  const byDate = new Map<string, DailyTrendRow>();
   for (let i = 6; i >= 0; i -= 1) {
     const d = nDaysAgoKst(i);
-    byDate.set(d, { date: d, landings: 0, clicks: 0, success: 0 });
+    byDate.set(d, {
+      date: d,
+      visitors: 0,
+      quoteCleaning: 0,
+      quoteMoving: 0,
+      phoneCleaning: 0,
+      phoneMoving: 0,
+    });
   }
 
-  for (const row of data ?? []) {
-    const target = byDate.get(row.date);
+  for (const row of (data as EventRow[] | null) ?? []) {
+    const target = byDate.get(kstDateFromIso(row.created_at));
     if (!target) continue;
-    if (row.event_type === "page_landing") target.landings += row.count;
-    else if (row.event_type === "quote_form_click") target.clicks += row.count;
-    else if (row.event_type === "quote_form_success")
-      target.success += row.count;
+    if (row.event_type === "page_landing") {
+      target.visitors += 1;
+    } else if (row.event_type === "quote_form_success") {
+      const seg = extractSegment(row.event_payload, "inquiry_type");
+      if (seg === "cleaning") target.quoteCleaning += 1;
+      else if (seg === "moving") target.quoteMoving += 1;
+    } else if (row.event_type === "phone_click") {
+      const seg = extractSegment(row.event_payload, "phone_type");
+      if (seg === "cleaning") target.phoneCleaning += 1;
+      else if (seg === "moving") target.phoneMoving += 1;
+    }
   }
 
   return Array.from(byDate.values());
@@ -104,22 +154,28 @@ export async function getQuoteFunnel7d(): Promise<QuoteFunnelRow[]> {
 
 export async function getTrafficSources30d(): Promise<TrafficSourceRow[]> {
   const supabase = await createClient();
-  const start = nDaysAgoKst(29);
+  const startIso = `${nDaysAgoKst(29)}T00:00:00+09:00`;
 
   const { data, error } = await supabase
-    .from("analytics_daily")
-    .select("dimension, count")
+    .from("analytics_events")
+    .select("event_payload")
     .eq("event_type", "page_landing")
-    .gte("date", start);
+    .gte("created_at", startIso);
 
   if (error) {
     console.error("[getTrafficSources30d]", error);
     return [];
   }
 
-  const totals = (data ?? []).reduce<Record<string, number>>((acc, row) => {
-    const key = row.dimension || "direct";
-    acc[key] = (acc[key] ?? 0) + row.count;
+  const totals = (
+    (data as Pick<EventRow, "event_payload">[] | null) ?? []
+  ).reduce<Record<string, number>>((acc, row) => {
+    const source =
+      typeof row.event_payload?.source === "string"
+        ? row.event_payload.source
+        : "";
+    const key = source || "direct";
+    acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
 
@@ -128,29 +184,42 @@ export async function getTrafficSources30d(): Promise<TrafficSourceRow[]> {
     .sort((a, b) => b.count - a.count);
 }
 
-export async function getEventCounts30d(): Promise<EventCountRow[]> {
+export async function getCustomerActions30d(): Promise<CustomerActionTotals> {
   const supabase = await createClient();
-  const start = nDaysAgoKst(29);
+  const startIso = `${nDaysAgoKst(29)}T00:00:00+09:00`;
 
   const { data, error } = await supabase
-    .from("analytics_daily")
-    .select("event_type, count")
-    .gte("date", start);
+    .from("analytics_events")
+    .select("event_type, event_payload")
+    .in("event_type", ["quote_form_success", "phone_click"])
+    .gte("created_at", startIso);
+
+  const empty: CustomerActionTotals = {
+    quoteCleaning: 0,
+    quoteMoving: 0,
+    phoneCleaning: 0,
+    phoneMoving: 0,
+  };
 
   if (error) {
-    console.error("[getEventCounts30d]", error);
-    return [];
+    console.error("[getCustomerActions30d]", error);
+    return empty;
   }
 
-  const totals = (data ?? []).reduce<Record<string, number>>((acc, row) => {
-    acc[row.event_type] = (acc[row.event_type] ?? 0) + row.count;
-    return acc;
-  }, {});
+  const result = empty;
+  for (const row of (data as
+    | Pick<EventRow, "event_type" | "event_payload">[]
+    | null) ?? []) {
+    if (row.event_type === "quote_form_success") {
+      const seg = extractSegment(row.event_payload, "inquiry_type");
+      if (seg === "cleaning") result.quoteCleaning += 1;
+      else if (seg === "moving") result.quoteMoving += 1;
+    } else if (row.event_type === "phone_click") {
+      const seg = extractSegment(row.event_payload, "phone_type");
+      if (seg === "cleaning") result.phoneCleaning += 1;
+      else if (seg === "moving") result.phoneMoving += 1;
+    }
+  }
 
-  return Object.entries(totals)
-    .map(([event_type, count]) => ({
-      event_type: event_type as EventType,
-      count,
-    }))
-    .sort((a, b) => b.count - a.count);
+  return result;
 }

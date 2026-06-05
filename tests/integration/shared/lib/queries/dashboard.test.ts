@@ -38,6 +38,10 @@ function fixDateTo(iso: string): void {
   vi.setSystemTime(new REAL_DATE(iso));
 }
 
+function kstCreatedAt(date: string, hour = 10): string {
+  return `${date}T${String(hour).padStart(2, "0")}:00:00+09:00`;
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
@@ -50,26 +54,64 @@ afterEach(() => {
 });
 
 describe("getTodayStats", () => {
-  it("aggregates today's event counts", async () => {
+  it("aggregates today's events with cleaning/moving segmentation", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
-        { event_type: "page_landing" },
-        { event_type: "page_landing" },
-        { event_type: "quote_form_click" },
-        { event_type: "quote_form_success" },
-        { event_type: "phone_click" },
-        { event_type: "phone_click" },
-        { event_type: "phone_click" },
+        { event_type: "page_landing", event_payload: { source: "naver" } },
+        { event_type: "page_landing", event_payload: null },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "cleaning" },
+        },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "moving" },
+        },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "cleaning" },
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "cleaning" },
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "moving" },
+        },
+        { event_type: "cta_click", event_payload: { content_id: "x" } },
       ],
       error: null,
     });
     const { getTodayStats } = await import("@/shared/lib/queries/dashboard");
     expect(await getTodayStats()).toEqual({
-      landings: 2,
-      quoteClicks: 1,
-      quoteSuccess: 1,
-      phoneClicks: 3,
+      visitors: 2,
+      quoteSubmissions: { cleaning: 2, moving: 1 },
+      phoneClicks: { cleaning: 1, moving: 1 },
+    });
+  });
+
+  it("ignores unknown segment values", async () => {
+    fixDateTo("2026-06-05T05:00:00.000Z");
+    mockFinal.mockResolvedValueOnce({
+      data: [
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "other" },
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "other" },
+        },
+      ],
+      error: null,
+    });
+    const { getTodayStats } = await import("@/shared/lib/queries/dashboard");
+    expect(await getTodayStats()).toEqual({
+      visitors: 0,
+      quoteSubmissions: { cleaning: 0, moving: 0 },
+      phoneClicks: { cleaning: 0, moving: 0 },
     });
   });
 
@@ -78,10 +120,9 @@ describe("getTodayStats", () => {
     mockFinal.mockResolvedValueOnce({ data: null, error: null });
     const { getTodayStats } = await import("@/shared/lib/queries/dashboard");
     expect(await getTodayStats()).toEqual({
-      landings: 0,
-      quoteClicks: 0,
-      quoteSuccess: 0,
-      phoneClicks: 0,
+      visitors: 0,
+      quoteSubmissions: { cleaning: 0, moving: 0 },
+      phoneClicks: { cleaning: 0, moving: 0 },
     });
   });
 
@@ -91,95 +132,163 @@ describe("getTodayStats", () => {
     mockFinal.mockResolvedValueOnce({ data: null, error: { message: "x" } });
     const { getTodayStats } = await import("@/shared/lib/queries/dashboard");
     const r = await getTodayStats();
-    expect(r).toEqual({
-      landings: 0,
-      quoteClicks: 0,
-      quoteSuccess: 0,
-      phoneClicks: 0,
-    });
+    expect(r.visitors).toBe(0);
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
   });
 });
 
-describe("getQuoteFunnel7d", () => {
-  it("merges 7 days with zero defaults and accumulates by event_type", async () => {
+describe("getDailyTrend7d", () => {
+  it("groups raw events by KST date with cleaning/moving segmentation", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
-        { date: "2026-06-05", event_type: "page_landing", count: 30 },
-        { date: "2026-06-05", event_type: "quote_form_click", count: 5 },
-        { date: "2026-06-05", event_type: "quote_form_success", count: 2 },
-        { date: "2026-06-04", event_type: "page_landing", count: 20 },
-        { date: "2026-06-04", event_type: "quote_form_click", count: 3 },
-        { date: "2026-06-03", event_type: "unmatched_event", count: 7 },
-        { date: "2099-12-31", event_type: "page_landing", count: 999 },
+        {
+          event_type: "page_landing",
+          event_payload: { source: "naver" },
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "page_landing",
+          event_payload: null,
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "cleaning" },
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "moving" },
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "cleaning" },
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "moving" },
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "cleaning" },
+          created_at: kstCreatedAt("2026-06-04"),
+        },
+        {
+          event_type: "unmatched_event",
+          event_payload: null,
+          created_at: kstCreatedAt("2026-06-04"),
+        },
       ],
       error: null,
     });
-    const { getQuoteFunnel7d } = await import("@/shared/lib/queries/dashboard");
-    const rows = await getQuoteFunnel7d();
+    const { getDailyTrend7d } = await import("@/shared/lib/queries/dashboard");
+    const rows = await getDailyTrend7d();
     expect(rows).toHaveLength(7);
     const today = rows.find((r) => r.date === "2026-06-05");
     expect(today).toEqual({
       date: "2026-06-05",
-      landings: 30,
-      clicks: 5,
-      success: 2,
+      visitors: 2,
+      quoteCleaning: 1,
+      quoteMoving: 1,
+      phoneCleaning: 1,
+      phoneMoving: 1,
     });
     const yesterday = rows.find((r) => r.date === "2026-06-04");
     expect(yesterday).toEqual({
       date: "2026-06-04",
-      landings: 20,
-      clicks: 3,
-      success: 0,
-    });
-    const empty = rows.find((r) => r.date === "2026-06-01");
-    expect(empty).toEqual({
-      date: "2026-06-01",
-      landings: 0,
-      clicks: 0,
-      success: 0,
+      visitors: 0,
+      quoteCleaning: 1,
+      quoteMoving: 0,
+      phoneCleaning: 0,
+      phoneMoving: 0,
     });
   });
 
-  it("returns empty array on error", async () => {
+  it("ignores unknown segments and dates outside the 7-day window", async () => {
+    fixDateTo("2026-06-05T05:00:00.000Z");
+    mockFinal.mockResolvedValueOnce({
+      data: [
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "unknown" },
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "unknown" },
+          created_at: kstCreatedAt("2026-06-05"),
+        },
+        {
+          event_type: "page_landing",
+          event_payload: null,
+          created_at: kstCreatedAt("2099-12-31"),
+        },
+      ],
+      error: null,
+    });
+    const { getDailyTrend7d } = await import("@/shared/lib/queries/dashboard");
+    const today = (await getDailyTrend7d()).find(
+      (r) => r.date === "2026-06-05",
+    );
+    expect(today).toEqual({
+      date: "2026-06-05",
+      visitors: 0,
+      quoteCleaning: 0,
+      quoteMoving: 0,
+      phoneCleaning: 0,
+      phoneMoving: 0,
+    });
+  });
+
+  it("returns [] on error", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFinal.mockResolvedValueOnce({ data: null, error: { message: "x" } });
-    const { getQuoteFunnel7d } = await import("@/shared/lib/queries/dashboard");
-    expect(await getQuoteFunnel7d()).toEqual([]);
+    const { getDailyTrend7d } = await import("@/shared/lib/queries/dashboard");
+    expect(await getDailyTrend7d()).toEqual([]);
     spy.mockRestore();
   });
 
   it("handles null data without throwing", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({ data: null, error: null });
-    const { getQuoteFunnel7d } = await import("@/shared/lib/queries/dashboard");
-    const rows = await getQuoteFunnel7d();
+    const { getDailyTrend7d } = await import("@/shared/lib/queries/dashboard");
+    const rows = await getDailyTrend7d();
     expect(rows).toHaveLength(7);
-    expect(rows.every((r) => r.landings === 0)).toBe(true);
+    expect(rows.every((r) => r.visitors === 0)).toBe(true);
   });
 });
 
 describe("getTrafficSources30d", () => {
-  it("sums dimension counts and sorts desc", async () => {
+  it("counts raw page_landing events by source and sorts desc", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
-        { dimension: "google", count: 10 },
-        { dimension: "naver", count: 25 },
-        { dimension: "google", count: 5 },
-        { dimension: "", count: 3 },
+        { event_payload: { source: "google" } },
+        { event_payload: { source: "naver" } },
+        { event_payload: { source: "naver" } },
+        { event_payload: { source: "naver" } },
+        { event_payload: { source: "google" } },
+        { event_payload: { source: "" } },
+        { event_payload: null },
       ],
       error: null,
     });
     const { getTrafficSources30d } =
       await import("@/shared/lib/queries/dashboard");
     const rows = await getTrafficSources30d();
-    expect(rows[0]).toEqual({ source: "naver", count: 25 });
-    expect(rows[1]).toEqual({ source: "google", count: 15 });
-    expect(rows[2]).toEqual({ source: "direct", count: 3 });
+    expect(rows[0]).toEqual({ source: "naver", count: 3 });
+    expect(rows.slice(1)).toEqual(
+      expect.arrayContaining([
+        { source: "direct", count: 2 },
+        { source: "google", count: 2 },
+      ]),
+    );
   });
 
   it("returns [] on error", async () => {
@@ -201,41 +310,81 @@ describe("getTrafficSources30d", () => {
   });
 });
 
-describe("getEventCounts30d", () => {
-  it("sums by event_type and sorts desc", async () => {
+describe("getCustomerActions30d", () => {
+  it("counts raw events by event_type x segment", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
-        { event_type: "page_landing", count: 50 },
-        { event_type: "page_landing", count: 30 },
-        { event_type: "phone_click", count: 12 },
-        { event_type: "quote_form_click", count: 5 },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "cleaning" },
+        },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "moving" },
+        },
+        {
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "unknown" },
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "cleaning" },
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "cleaning" },
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "moving" },
+        },
+        {
+          event_type: "phone_click",
+          event_payload: { phone_type: "unknown" },
+        },
+        {
+          event_type: "unmatched_event",
+          event_payload: null,
+        },
       ],
       error: null,
     });
-    const { getEventCounts30d } =
+    const { getCustomerActions30d } =
       await import("@/shared/lib/queries/dashboard");
-    const rows = await getEventCounts30d();
-    expect(rows[0]).toEqual({ event_type: "page_landing", count: 80 });
-    expect(rows[1]).toEqual({ event_type: "phone_click", count: 12 });
-    expect(rows[2]).toEqual({ event_type: "quote_form_click", count: 5 });
+    expect(await getCustomerActions30d()).toEqual({
+      quoteCleaning: 1,
+      quoteMoving: 1,
+      phoneCleaning: 2,
+      phoneMoving: 1,
+    });
   });
 
-  it("returns [] on error", async () => {
+  it("returns zeros on error", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFinal.mockResolvedValueOnce({ data: null, error: { message: "x" } });
-    const { getEventCounts30d } =
+    const { getCustomerActions30d } =
       await import("@/shared/lib/queries/dashboard");
-    expect(await getEventCounts30d()).toEqual([]);
+    expect(await getCustomerActions30d()).toEqual({
+      quoteCleaning: 0,
+      quoteMoving: 0,
+      phoneCleaning: 0,
+      phoneMoving: 0,
+    });
     spy.mockRestore();
   });
 
-  it("returns [] on null data", async () => {
+  it("returns zeros on null data", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({ data: null, error: null });
-    const { getEventCounts30d } =
+    const { getCustomerActions30d } =
       await import("@/shared/lib/queries/dashboard");
-    expect(await getEventCounts30d()).toEqual([]);
+    expect(await getCustomerActions30d()).toEqual({
+      quoteCleaning: 0,
+      quoteMoving: 0,
+      phoneCleaning: 0,
+      phoneMoving: 0,
+    });
   });
 });

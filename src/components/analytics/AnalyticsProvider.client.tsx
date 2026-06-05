@@ -20,7 +20,7 @@ export default function AnalyticsProvider(): null {
 
     const referrer = document.referrer;
     if (!referrer) return;
-    const host = window.location.host;
+    const host = window.location.hostname;
     const source = classifySource(referrer, host);
     if (source === "direct") return;
 
