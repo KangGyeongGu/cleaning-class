@@ -36,7 +36,7 @@ export default async function ReviewsPage({
 
       <nav
         aria-label="리뷰 정렬"
-        className="mb-3 flex items-center gap-4 border-b border-slate-200 pb-3"
+        className="mb-3 flex items-center justify-end gap-4"
       >
         <Link
           href="/admin/reviews?sort=latest"

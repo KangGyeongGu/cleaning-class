@@ -70,4 +70,13 @@ describe("getAdminCustomerReviews", () => {
       await import("@/shared/lib/queries/customer-review");
     expect(await getAdminCustomerReviews()).toEqual([]);
   });
+
+  it("supports ascending order when orderAscending=true", async () => {
+    const chain = makePromiseChain({ data: [], error: null });
+    mockFrom.mockImplementation(() => chain);
+    const { getAdminCustomerReviews } =
+      await import("@/shared/lib/queries/customer-review");
+    await getAdminCustomerReviews(true);
+    expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: true });
+  });
 });

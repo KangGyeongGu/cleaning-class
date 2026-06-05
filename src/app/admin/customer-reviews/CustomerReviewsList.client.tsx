@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2, Eye, EyeOff } from "lucide-react";
 import {
@@ -10,7 +10,9 @@ import {
 import { Pagination } from "@/app/admin/components/Pagination";
 import type { CustomerReviewRow } from "@/shared/types/database";
 
-function StarDisplay({ rating }: { rating: number }) {
+const REVIEWS_PER_PAGE = 10;
+
+function StarDisplay({ rating }: { rating: number }): React.ReactElement {
   return (
     <span className="flex items-center gap-0.5" aria-label={`별점 ${rating}점`}>
       {Array.from({ length: 5 }).map((_, i) => (
@@ -28,222 +30,213 @@ function StarDisplay({ rating }: { rating: number }) {
   );
 }
 
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-}
-
-function ReviewCardMobile({ review }: { review: CustomerReviewRow }) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-
-  return (
-    <div className="rounded-lg border border-slate-100 p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <StarDisplay rating={review.rating} />
-          <span className="text-xs text-slate-400">{review.rating}점</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() =>
-              startTransition(async () => {
-                await toggleCustomerReviewPublish(
-                  review.id,
-                  !review.is_published,
-                );
-                router.refresh();
-              })
-            }
-            disabled={isPending}
-            className="inline-flex items-center gap-1 text-xs text-slate-400"
-          >
-            {review.is_published ? <Eye size={12} /> : <EyeOff size={12} />}
-            <span>{review.is_published ? "공개" : "비공개"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (!confirm("이 리뷰를 삭제하시겠습니까?")) return;
-              startTransition(async () => {
-                await deleteCustomerReview(review.id);
-                router.refresh();
-              });
-            }}
-            disabled={isPending}
-            className="text-slate-400 hover:text-red-500"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
-      <p className="mb-2 text-sm leading-relaxed text-slate-700">
-        {review.comment}
-      </p>
-      <div className="flex items-center justify-between text-xs text-slate-400">
-        <span>{review.service_type ?? "-"}</span>
-        <span>{formatDate(review.created_at)}</span>
-      </div>
-    </div>
-  );
-}
-
-function ReviewRowDesktop({ review }: { review: CustomerReviewRow }) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-
-  return (
-    <tr className="border-b border-slate-100 last:border-0">
-      <td className="py-3 pr-4">
-        <div className="flex items-center gap-2">
-          <StarDisplay rating={review.rating} />
-          <span className="text-xs font-light text-slate-400">
-            {review.rating}점
-          </span>
-        </div>
-      </td>
-      <td className="py-3 pr-4 text-xs text-slate-400">
-        {review.service_type ?? "-"}
-      </td>
-      <td className="py-3 pr-4 font-light text-slate-700">
-        <p className="max-w-md leading-relaxed">{review.comment}</p>
-      </td>
-      <td className="py-3 pr-4 text-center">
-        <button
-          type="button"
-          onClick={() =>
-            startTransition(async () => {
-              await toggleCustomerReviewPublish(
-                review.id,
-                !review.is_published,
-              );
-              router.refresh();
-            })
-          }
-          disabled={isPending}
-          className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 disabled:opacity-50"
-        >
-          {isPending ? (
-            <Loader2 size={14} className="animate-spin" />
-          ) : review.is_published ? (
-            <Eye size={14} />
-          ) : (
-            <EyeOff size={14} />
-          )}
-          {review.is_published ? "공개" : "비공개"}
-        </button>
-      </td>
-      <td className="py-3 pr-4 text-sm font-light text-slate-400">
-        {formatDate(review.created_at)}
-      </td>
-      <td className="py-3 text-right">
-        <button
-          type="button"
-          onClick={() => {
-            if (!confirm("이 리뷰를 삭제하시겠습니까?")) return;
-            startTransition(async () => {
-              await deleteCustomerReview(review.id);
-            });
-          }}
-          disabled={isPending}
-          className="text-slate-400 transition-colors hover:text-red-500 disabled:opacity-50"
-        >
-          {isPending ? (
-            <Loader2 size={14} className="animate-spin" />
-          ) : (
-            <Trash2 size={14} />
-          )}
-        </button>
-      </td>
-    </tr>
-  );
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("ko-KR");
 }
 
 interface CustomerReviewsListProps {
   reviews: CustomerReviewRow[];
 }
 
-const REVIEWS_PER_PAGE = 10;
+export function CustomerReviewsList({
+  reviews,
+}: CustomerReviewsListProps): React.ReactElement {
+  const router = useRouter();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  const [currentPage, setCurrentPage] = useState(1);
 
-export function CustomerReviewsList({ reviews }: CustomerReviewsListProps) {
-  const [reviewPage, setReviewPage] = useState(1);
-  const reviewTotalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
+  const totalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
+  const safePage = Math.min(currentPage, Math.max(totalPages, 1));
   const pagedReviews = useMemo(
     () =>
       reviews.slice(
-        (reviewPage - 1) * REVIEWS_PER_PAGE,
-        reviewPage * REVIEWS_PER_PAGE,
+        (safePage - 1) * REVIEWS_PER_PAGE,
+        safePage * REVIEWS_PER_PAGE,
       ),
-    [reviews, reviewPage],
+    [reviews, safePage],
   );
 
-  return (
-    <section>
-      <div className="mb-4">
-        <h2 className="text-lg font-bold text-slate-900">제출된 고객 리뷰</h2>
-        <p className="mt-0.5 text-xs font-light text-slate-500">
-          고객이 토큰 링크를 통해 등록한 별점 리뷰 목록입니다. ({reviews.length}
-          건)
+  function handleDelete(reviewId: string): void {
+    if (!confirm("이 리뷰를 삭제하시겠습니까?")) return;
+    setDeletingId(reviewId);
+    startTransition(async () => {
+      try {
+        await deleteCustomerReview(reviewId);
+        router.refresh();
+      } finally {
+        setDeletingId(null);
+      }
+    });
+  }
+
+  function handleTogglePublish(reviewId: string, currentStatus: boolean): void {
+    setTogglingId(reviewId);
+    startTransition(async () => {
+      try {
+        await toggleCustomerReviewPublish(reviewId, !currentStatus);
+        router.refresh();
+      } finally {
+        setTogglingId(null);
+      }
+    });
+  }
+
+  if (reviews.length === 0) {
+    return (
+      <div className="border border-slate-200 p-12 text-center">
+        <p className="font-light text-slate-500">
+          아직 제출된 고객 리뷰가 없습니다.
         </p>
       </div>
+    );
+  }
 
-      {reviews.length === 0 ? (
-        <div className="border border-slate-100 p-8 text-center">
-          <p className="text-sm font-light text-slate-400">
-            아직 제출된 리뷰가 없습니다.
-          </p>
+  return (
+    <>
+      <div className="border border-slate-200">
+        <div className="hidden grid-cols-12 gap-4 border-b border-slate-200 bg-slate-50 p-4 md:grid">
+          <div className="text-label col-span-2 text-slate-500">별점</div>
+          <div className="text-label col-span-2 text-slate-500">서비스</div>
+          <div className="text-label col-span-4 text-slate-500">내용</div>
+          <div className="text-label col-span-1 text-center text-slate-500">
+            공개
+          </div>
+          <div className="text-label col-span-2 text-slate-500">등록일</div>
+          <div className="text-label col-span-1 text-right text-slate-500">
+            삭제
+          </div>
         </div>
-      ) : (
-        <>
-          <div className="space-y-3 md:hidden">
-            {pagedReviews.map((review) => (
-              <ReviewCardMobile key={review.id} review={review} />
-            ))}
-          </div>
 
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="py-3 pr-4 text-left text-xs font-bold tracking-widest text-slate-500 uppercase">
-                    별점
-                  </th>
-                  <th className="py-3 pr-4 text-left text-xs font-bold tracking-widest text-slate-500 uppercase">
-                    서비스
-                  </th>
-                  <th className="py-3 pr-4 text-left text-xs font-bold tracking-widest text-slate-500 uppercase">
-                    내용
-                  </th>
-                  <th className="py-3 pr-4 text-center text-xs font-bold tracking-widest text-slate-500 uppercase">
-                    공개
-                  </th>
-                  <th className="py-3 pr-4 text-left text-xs font-bold tracking-widest text-slate-500 uppercase">
-                    등록일
-                  </th>
-                  <th className="py-3 text-right text-xs font-bold tracking-widest text-slate-500 uppercase">
-                    삭제
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedReviews.map((review) => (
-                  <ReviewRowDesktop key={review.id} review={review} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            currentPage={reviewPage}
-            totalPages={reviewTotalPages}
-            onPageChange={setReviewPage}
-          />
-        </>
-      )}
-    </section>
+        <ul role="list" className="divide-y divide-slate-200">
+          {pagedReviews.map((review) => (
+            <li
+              key={review.id}
+              className="space-y-3 p-4 md:grid md:grid-cols-12 md:items-center md:gap-4 md:space-y-0"
+            >
+              <div className="flex items-start gap-3 md:hidden">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <StarDisplay rating={review.rating} />
+                    <span className="text-xs text-slate-400">
+                      {review.rating}점
+                    </span>
+                  </div>
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-700">
+                    {review.comment}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleTogglePublish(review.id, review.is_published)
+                        }
+                        disabled={togglingId === review.id}
+                        className="inline-flex items-center gap-1 text-xs text-slate-500"
+                      >
+                        {togglingId === review.id ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : review.is_published ? (
+                          <Eye size={12} />
+                        ) : (
+                          <EyeOff size={12} />
+                        )}
+                      </button>
+                      <span className="text-[10px] text-slate-400">
+                        {review.service_type ?? "-"}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {formatDate(review.created_at)}
+                      </span>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(review.id)}
+                        disabled={deletingId === review.id}
+                        className="rounded border border-slate-200 p-2 text-slate-500 disabled:opacity-50"
+                      >
+                        {deletingId === review.id ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={12} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="hidden md:col-span-2 md:flex md:items-center md:gap-2">
+                <StarDisplay rating={review.rating} />
+                <span className="text-xs font-light text-slate-400">
+                  {review.rating}
+                </span>
+              </div>
+
+              <div className="hidden md:col-span-2 md:block">
+                <span className="text-xs text-slate-500">
+                  {review.service_type ?? "-"}
+                </span>
+              </div>
+
+              <div className="hidden md:col-span-4 md:block">
+                <p className="line-clamp-2 text-sm font-light text-slate-700">
+                  {review.comment}
+                </p>
+              </div>
+
+              <div className="hidden md:col-span-1 md:block md:text-center">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleTogglePublish(review.id, review.is_published)
+                  }
+                  disabled={togglingId === review.id}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 disabled:opacity-50"
+                >
+                  {togglingId === review.id ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : review.is_published ? (
+                    <Eye size={14} />
+                  ) : (
+                    <EyeOff size={14} />
+                  )}
+                  {review.is_published ? "공개" : "비공개"}
+                </button>
+              </div>
+
+              <div className="hidden md:col-span-2 md:block">
+                <span className="text-xs text-slate-500">
+                  {formatDate(review.created_at)}
+                </span>
+              </div>
+
+              <div className="hidden md:col-span-1 md:flex md:justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleDelete(review.id)}
+                  disabled={deletingId === review.id}
+                  className="border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 transition-colors hover:border-red-500 hover:text-red-500 disabled:opacity-50"
+                >
+                  {deletingId === review.id ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={14} />
+                  )}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+    </>
   );
 }
