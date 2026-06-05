@@ -47,6 +47,10 @@ next-env.d.ts
 .mcp.json
 .playwright-mcp/
 
+# Playwright artifacts
+/playwright-report/
+/test-results/
+
 # Lighthouse CI output
 .lighthouseci/
 
