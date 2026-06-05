@@ -15,22 +15,19 @@ export default defineConfig({
           name: "node",
           environment: "jsdom",
           include: [
-            "src/**/*.test.{ts,tsx}",
-            "__tests__/{architecture,seo,image}/**/*.test.ts",
+            "tests/unit/**/*.test.{ts,tsx}",
+            "tests/integration/**/*.test.{ts,tsx}",
+            "tests/{architecture,seo,image}/**/*.test.ts",
           ],
-          exclude: [
-            "__tests__/e2e/**",
-            "src/components/**/*.browser.test.tsx",
-            "node_modules/**",
-          ],
+          exclude: ["tests/e2e/**", "tests/component/**", "node_modules/**"],
         },
       },
       {
         extends: true,
         test: {
           name: "browser",
-          include: ["src/components/**/*.browser.test.tsx"],
-          setupFiles: ["./test/browser-setup.ts"],
+          include: ["tests/component/**/*.test.{ts,tsx}"],
+          setupFiles: ["./tests/__mocks__/browser-setup.ts"],
           browser: {
             enabled: true,
             provider: playwright(),
@@ -49,7 +46,6 @@ export default defineConfig({
         "src/shared/lib/supabase/**",
         "src/shared/**/*.d.ts",
         "src/shared/**/index.ts",
-        "**/__tests__/**",
         "**/*.test.{ts,tsx}",
       ],
       thresholds: {
@@ -64,7 +60,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": "/src",
-      "server-only": new URL("./test/server-only-shim.ts", import.meta.url)
+      "server-only": new URL("./tests/__mocks__/server-only.ts", import.meta.url)
         .pathname,
     },
   },

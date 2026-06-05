@@ -9,12 +9,6 @@ import {
   trackReviewFilter,
 } from "@/shared/lib/infra/analytics";
 
-declare global {
-  interface Window {
-    gtag?: (event: string, name: string, params: unknown) => void;
-  }
-}
-
 const gtagSpy = vi.fn();
 
 beforeEach(() => {

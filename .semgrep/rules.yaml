@@ -13,7 +13,7 @@ rules:
       include:
         - "**/src/shared/actions/"
       exclude:
-        - "**/__tests__/**"
+        - "**/tests/**"
         - "**/*.test.ts"
 
   # ─── 컴포넌트에서 Supabase 직접 쿼리 금지 ──────────────────────────

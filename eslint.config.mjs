@@ -81,7 +81,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["__tests__/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    files: ["tests/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
     plugins: { vitest: vitestPlugin },
     rules: {
       "vitest/expect-expect": "error",
