@@ -208,6 +208,16 @@
     }
   }
 
+  /* CustomerReviewsCarousel — 무한 스크롤 (cards 2회 복제 후 -50%) */
+  @keyframes scroll-reviews {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
   /* react-slick 균등 높이 */
   .slick-track {
     display: flex !important;

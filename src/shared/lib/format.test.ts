@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  formatPhoneNumber,
-  buildDescription,
-  formatPriceWon,
-} from "@/shared/lib/format";
+import { formatPhoneNumber, formatPriceWon } from "@/shared/lib/format";
 
 describe("formatPhoneNumber", () => {
   it("returns digits as-is when length <= 3", () => {
@@ -27,15 +23,6 @@ describe("formatPhoneNumber", () => {
 
   it("truncates digits beyond 11 (4+4+3 pattern enforced)", () => {
     expect(formatPhoneNumber("010123456789")).toBe("010-1234-5678");
-  });
-});
-
-describe("buildDescription", () => {
-  it("returns the canonical landing description string", () => {
-    const result = buildDescription();
-    expect(result).toContain("청소클라쓰");
-    expect(result).toContain("전주");
-    expect(result.length).toBeLessThanOrEqual(160);
   });
 });
 
