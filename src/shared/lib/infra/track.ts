@@ -11,3 +11,7 @@ export function track(input: TrackRequest): void {
     void 0;
   });
 }
+
+export function currentPath(): string {
+  return typeof window !== "undefined" ? window.location.pathname : "/";
+}

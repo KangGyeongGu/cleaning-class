@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { track } from "@/shared/lib/infra/track";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 describe("track", () => {
   let fetchSpy: ReturnType<typeof vi.spyOn>;
@@ -69,6 +69,28 @@ describe("track", () => {
         path: "/",
       });
       expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        value: win,
+        configurable: true,
+      });
+    }
+  });
+});
+
+describe("currentPath", () => {
+  it("returns window.location.pathname when window is defined", () => {
+    expect(currentPath()).toBe(window.location.pathname);
+  });
+
+  it('returns "/" when window is undefined', () => {
+    const win = globalThis.window;
+    Object.defineProperty(globalThis, "window", {
+      value: undefined,
+      configurable: true,
+    });
+    try {
+      expect(currentPath()).toBe("/");
     } finally {
       Object.defineProperty(globalThis, "window", {
         value: win,

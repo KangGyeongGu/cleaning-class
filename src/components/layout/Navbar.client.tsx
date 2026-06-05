@@ -10,10 +10,7 @@ import {
   InstagramIcon,
   DaangnIcon,
 } from "@/components/icons/SocialIcons";
-import {
-  trackSnsClick,
-  trackSelectContent,
-} from "@/shared/lib/infra/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface NavbarProps {
   businessName?: string;
@@ -161,9 +158,10 @@ export function Navbar({
                   onClick={
                     item.href === "/contact"
                       ? () =>
-                          trackSelectContent({
-                            content_type: "cta_button",
-                            content_id: "navbar_contact",
+                          track({
+                            event_type: "cta_click",
+                            event_payload: { content_id: "navbar_contact" },
+                            path: currentPath(),
                           })
                       : undefined
                   }
@@ -183,9 +181,13 @@ export function Navbar({
                     title="네이버 블로그"
                     className="text-slate-400 transition-colors hover:text-slate-900"
                     onClick={() =>
-                      trackSnsClick({
-                        sns_platform: "naver_blog",
-                        click_location: "navbar",
+                      track({
+                        event_type: "sns_click",
+                        event_payload: {
+                          sns_platform: "naver_blog",
+                          click_location: "navbar",
+                        },
+                        path: currentPath(),
                       })
                     }
                   >
@@ -201,9 +203,13 @@ export function Navbar({
                     title="인스타그램"
                     className="text-slate-400 transition-colors hover:text-slate-900"
                     onClick={() =>
-                      trackSnsClick({
-                        sns_platform: "instagram",
-                        click_location: "navbar",
+                      track({
+                        event_type: "sns_click",
+                        event_payload: {
+                          sns_platform: "instagram",
+                          click_location: "navbar",
+                        },
+                        path: currentPath(),
                       })
                     }
                   >
@@ -219,9 +225,13 @@ export function Navbar({
                     title="당근마켓"
                     className="text-slate-400 transition-colors hover:text-slate-900"
                     onClick={() =>
-                      trackSnsClick({
-                        sns_platform: "daangn",
-                        click_location: "navbar",
+                      track({
+                        event_type: "sns_click",
+                        event_payload: {
+                          sns_platform: "daangn",
+                          click_location: "navbar",
+                        },
+                        path: currentPath(),
                       })
                     }
                   >
@@ -266,9 +276,10 @@ export function Navbar({
               setIsOpen(false);
 
               if (item.href === "/contact") {
-                trackSelectContent({
-                  content_type: "cta_button",
-                  content_id: "navbar_contact",
+                track({
+                  event_type: "cta_click",
+                  event_payload: { content_id: "navbar_contact" },
+                  path: currentPath(),
                 });
               }
             }}
@@ -287,9 +298,13 @@ export function Navbar({
                 tabIndex={isOpen ? 0 : -1}
                 onClick={() => {
                   setIsOpen(false);
-                  trackSnsClick({
-                    sns_platform: "naver_blog",
-                    click_location: "navbar",
+                  track({
+                    event_type: "sns_click",
+                    event_payload: {
+                      sns_platform: "naver_blog",
+                      click_location: "navbar",
+                    },
+                    path: currentPath(),
                   });
                 }}
                 aria-label="네이버 블로그"
@@ -306,9 +321,13 @@ export function Navbar({
                 tabIndex={isOpen ? 0 : -1}
                 onClick={() => {
                   setIsOpen(false);
-                  trackSnsClick({
-                    sns_platform: "instagram",
-                    click_location: "navbar",
+                  track({
+                    event_type: "sns_click",
+                    event_payload: {
+                      sns_platform: "instagram",
+                      click_location: "navbar",
+                    },
+                    path: currentPath(),
                   });
                 }}
                 aria-label="인스타그램"
@@ -325,9 +344,13 @@ export function Navbar({
                 tabIndex={isOpen ? 0 : -1}
                 onClick={() => {
                   setIsOpen(false);
-                  trackSnsClick({
-                    sns_platform: "daangn",
-                    click_location: "navbar",
+                  track({
+                    event_type: "sns_click",
+                    event_payload: {
+                      sns_platform: "daangn",
+                      click_location: "navbar",
+                    },
+                    path: currentPath(),
                   });
                 }}
                 aria-label="당근마켓"

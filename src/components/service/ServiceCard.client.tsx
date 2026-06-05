@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
-import { trackSelectContent } from "@/shared/lib/infra/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 export interface ServiceCardProps {
   service: {
@@ -65,9 +65,10 @@ export function ServiceCard({
           href={`/services#service-${service.id}`}
           className="block"
           onClick={() =>
-            trackSelectContent({
-              content_type: "cta_button",
-              content_id: `service_card_${service.id}`,
+            track({
+              event_type: "cta_click",
+              event_payload: { content_id: `service_card_${service.id}` },
+              path: currentPath(),
             })
           }
         >

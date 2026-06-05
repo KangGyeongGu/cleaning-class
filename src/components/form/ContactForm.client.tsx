@@ -4,11 +4,7 @@ import { useActionState, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Plus, Check, Loader2, X } from "lucide-react";
 import { submitContactForm } from "@/shared/actions/contact";
-import {
-  trackGenerateLead,
-  trackPhoneClick,
-} from "@/shared/lib/infra/analytics";
-import { track } from "@/shared/lib/infra/track";
+import { track, currentPath } from "@/shared/lib/infra/track";
 import { formatPhoneNumber } from "@/shared/lib/pure/format";
 import {
   CLEANING_INQUIRY_OPTIONS,
@@ -62,13 +58,6 @@ export function ContactForm({ phone }: ContactFormProps) {
   useEffect(() => {
     if (isSuccess && !hasTrackedLead.current) {
       hasTrackedLead.current = true;
-      trackGenerateLead({
-        currency: "KRW",
-        value: 0,
-        lead_source: "quote_form",
-        service_type: serviceType,
-        inquiry_type: inquiryType,
-      });
       track({
         event_type: "quote_form_success",
         event_payload: {
@@ -76,8 +65,7 @@ export function ContactForm({ phone }: ContactFormProps) {
           service_type: serviceType,
           has_images: images.length > 0,
         },
-        path:
-          typeof window !== "undefined" ? window.location.pathname : "/contact",
+        path: currentPath(),
       });
     }
     if (!isSuccess) {
@@ -101,8 +89,7 @@ export function ContactForm({ phone }: ContactFormProps) {
       track({
         event_type: "quote_form_error",
         event_payload: { inquiry_type: inquiryType, error_kind: errorKind },
-        path:
-          typeof window !== "undefined" ? window.location.pathname : "/contact",
+        path: currentPath(),
       });
     }
     if (!isFailure) {
@@ -209,12 +196,13 @@ export function ContactForm({ phone }: ContactFormProps) {
                 href={`tel:${phone}`}
                 className="inline-flex items-center px-1 font-bold text-slate-900 hover:underline"
                 onClick={() =>
-                  trackPhoneClick({
-                    currency: "KRW",
-                    value: 0,
-                    lead_source: "phone_click",
-                    phone_type: "cleaning",
-                    click_location: "contact_form",
+                  track({
+                    event_type: "phone_click",
+                    event_payload: {
+                      phone_type: "cleaning",
+                      click_location: "contact_form",
+                    },
+                    path: currentPath(),
                   })
                 }
               >
@@ -466,10 +454,7 @@ export function ContactForm({ phone }: ContactFormProps) {
                     inquiry_type: inquiryType,
                     service_type: serviceType,
                   },
-                  path:
-                    typeof window !== "undefined"
-                      ? window.location.pathname
-                      : "/contact",
+                  path: currentPath(),
                 });
               }}
             >

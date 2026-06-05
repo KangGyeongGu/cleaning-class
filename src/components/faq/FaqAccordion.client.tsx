@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { FaqRow } from "@/shared/types/database";
-import { trackFaqOpen } from "@/shared/lib/infra/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface FaqAccordionProps {
   faqs: FaqRow[];
@@ -22,7 +22,11 @@ export function FaqAccordion({ faqs }: FaqAccordionProps) {
 
   function toggle(id: string, faq: FaqRow): void {
     if (!openIds.has(id)) {
-      trackFaqOpen({ faq_id: String(faq.id), faq_question: faq.question });
+      track({
+        event_type: "faq_open",
+        event_payload: { faq_id: String(faq.id) },
+        path: currentPath(),
+      });
     }
     setOpenIds((prev) => {
       const next = new Set(prev);

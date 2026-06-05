@@ -12,11 +12,7 @@ import { NaverBlogIcon } from "@/components/icons/SocialIcons";
 import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 
 import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
-import {
-  trackReviewCardClick,
-  trackSnsClick,
-  trackReviewFilter,
-} from "@/shared/lib/infra/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface ReviewWithUrl extends Review {
   imageUrl: string;
@@ -125,12 +121,15 @@ function ReviewCardWrapper({
         rel="noopener noreferrer"
         className="group block h-full overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-300 hover:border-slate-400 hover:shadow-xl"
         onClick={() =>
-          trackReviewCardClick({
-            review_id: String(review.id),
-            review_title: review.title,
-            service_type: review.tags[0] ?? "",
-            click_source: "home_carousel",
-            destination_url: cardUrl,
+          track({
+            event_type: "review_card_click",
+            event_payload: {
+              review_id: String(review.id),
+              service_type: review.tags[0] ?? "",
+              click_source: "home_carousel",
+              destination_url: cardUrl,
+            },
+            path: currentPath(),
           })
         }
       >
@@ -199,9 +198,13 @@ export function BlogReviews({
       scrollRef.current.scrollTo({ left: 0, behavior: "instant" });
     }
 
-    trackReviewFilter({
-      filter_category: filter ?? "전체",
-      filter_source: "home",
+    track({
+      event_type: "review_filter",
+      event_payload: {
+        filter_category: filter ?? "전체",
+        filter_source: "home",
+      },
+      path: currentPath(),
     });
   };
 
@@ -248,9 +251,13 @@ export function BlogReviews({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900"
                 onClick={() =>
-                  trackSnsClick({
-                    sns_platform: "naver_blog",
-                    click_location: "reviews_section",
+                  track({
+                    event_type: "sns_click",
+                    event_payload: {
+                      sns_platform: "naver_blog",
+                      click_location: "reviews_section",
+                    },
+                    path: currentPath(),
                   })
                 }
               >
@@ -265,9 +272,13 @@ export function BlogReviews({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900"
                 onClick={() =>
-                  trackSnsClick({
-                    sns_platform: "instagram",
-                    click_location: "reviews_section",
+                  track({
+                    event_type: "sns_click",
+                    event_payload: {
+                      sns_platform: "instagram",
+                      click_location: "reviews_section",
+                    },
+                    path: currentPath(),
                   })
                 }
               >
@@ -337,9 +348,13 @@ export function BlogReviews({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm font-bold text-slate-900 transition-colors hover:text-slate-600"
                     onClick={() =>
-                      trackSnsClick({
-                        sns_platform: "naver_blog",
-                        click_location: "reviews_section",
+                      track({
+                        event_type: "sns_click",
+                        event_payload: {
+                          sns_platform: "naver_blog",
+                          click_location: "reviews_section",
+                        },
+                        path: currentPath(),
                       })
                     }
                   >
@@ -354,9 +369,13 @@ export function BlogReviews({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm font-bold text-slate-900 transition-colors hover:text-slate-600"
                     onClick={() =>
-                      trackSnsClick({
-                        sns_platform: "instagram",
-                        click_location: "reviews_section",
+                      track({
+                        event_type: "sns_click",
+                        event_payload: {
+                          sns_platform: "instagram",
+                          click_location: "reviews_section",
+                        },
+                        path: currentPath(),
                       })
                     }
                   >

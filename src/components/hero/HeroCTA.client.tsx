@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  trackSelectContent,
-  trackPhoneClick,
-} from "@/shared/lib/infra/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 export type HeroCTAVariant = "light" | "dark";
 
@@ -33,9 +30,10 @@ export function HeroCTA({
             : "border-slate-900 text-slate-900 hover:text-white",
         ].join(" ")}
         onClick={() =>
-          trackSelectContent({
-            content_type: "cta_button",
-            content_id: "hero_quote_button",
+          track({
+            event_type: "cta_click",
+            event_payload: { content_id: "hero_quote_button" },
+            path: currentPath(),
           })
         }
       >
@@ -69,12 +67,13 @@ export function HeroCTA({
                     : "text-slate-900 hover:text-slate-700",
                 ].join(" ")}
                 onClick={() =>
-                  trackPhoneClick({
-                    currency: "KRW",
-                    value: 0,
-                    lead_source: "phone_click",
-                    phone_type: "cleaning",
-                    click_location: "hero_cta",
+                  track({
+                    event_type: "phone_click",
+                    event_payload: {
+                      phone_type: "cleaning",
+                      click_location: "hero_cta",
+                    },
+                    path: currentPath(),
                   })
                 }
               >
@@ -94,12 +93,13 @@ export function HeroCTA({
                     : "text-slate-900 hover:text-slate-700",
                 ].join(" ")}
                 onClick={() =>
-                  trackPhoneClick({
-                    currency: "KRW",
-                    value: 0,
-                    lead_source: "phone_click",
-                    phone_type: "moving",
-                    click_location: "hero_cta",
+                  track({
+                    event_type: "phone_click",
+                    event_payload: {
+                      phone_type: "moving",
+                      click_location: "hero_cta",
+                    },
+                    path: currentPath(),
                   })
                 }
               >

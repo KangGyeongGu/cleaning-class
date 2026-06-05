@@ -8,10 +8,7 @@ import { getReviewImageUrl } from "@/shared/lib/supabase/storage";
 import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 
 import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
-import {
-  trackReviewCardClick,
-  trackReviewFilter,
-} from "@/shared/lib/infra/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface ReviewsPageClientProps {
   reviews: Review[];
@@ -76,13 +73,15 @@ function ReviewCard({ review }: { review: Review }) {
         className="block h-full"
         aria-label={`${review.title} — 블로그에서 보기`}
         onClick={() =>
-          trackReviewCardClick({
-            review_id: review.id,
-            review_title: review.title,
-
-            service_type: review.tags[0] ?? "",
-            click_source: "reviews_page",
-            destination_url: cardUrl,
+          track({
+            event_type: "review_card_click",
+            event_payload: {
+              review_id: review.id,
+              service_type: review.tags[0] ?? "",
+              click_source: "reviews_page",
+              destination_url: cardUrl,
+            },
+            path: currentPath(),
           })
         }
       >
@@ -119,9 +118,13 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
   const handleFilterChange = (filter: string | null) => {
     setActiveFilter(filter);
     setCurrentPage(1);
-    trackReviewFilter({
-      filter_category: filter ?? "전체",
-      filter_source: "reviews_page",
+    track({
+      event_type: "review_filter",
+      event_payload: {
+        filter_category: filter ?? "전체",
+        filter_source: "reviews_page",
+      },
+      path: currentPath(),
     });
   };
 

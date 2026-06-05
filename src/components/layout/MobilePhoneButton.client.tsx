@@ -1,7 +1,7 @@
 "use client";
 
 import { Phone } from "lucide-react";
-import { trackPhoneClick } from "@/shared/lib/infra/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface MobilePhoneButtonProps {
   phone: string;
@@ -21,12 +21,13 @@ export function MobilePhoneButton({
           href={`tel:${phone}`}
           className="flex flex-1 items-center justify-center gap-1.5 py-3.5 text-sm font-bold tracking-wide text-white active:bg-slate-800"
           onClick={() =>
-            trackPhoneClick({
-              currency: "KRW",
-              value: 0,
-              lead_source: "phone_click",
-              phone_type: "cleaning",
-              click_location: "mobile_bottom",
+            track({
+              event_type: "phone_click",
+              event_payload: {
+                phone_type: "cleaning",
+                click_location: "mobile_bottom",
+              },
+              path: currentPath(),
             })
           }
         >
@@ -38,12 +39,13 @@ export function MobilePhoneButton({
           href={`tel:${movingPhone}`}
           className="flex flex-1 items-center justify-center gap-1.5 py-3.5 text-sm font-bold tracking-wide text-white active:bg-slate-800"
           onClick={() =>
-            trackPhoneClick({
-              currency: "KRW",
-              value: 0,
-              lead_source: "phone_click",
-              phone_type: "moving",
-              click_location: "mobile_bottom",
+            track({
+              event_type: "phone_click",
+              event_payload: {
+                phone_type: "moving",
+                click_location: "mobile_bottom",
+              },
+              path: currentPath(),
             })
           }
         >
@@ -59,12 +61,13 @@ export function MobilePhoneButton({
       href={`tel:${phone}`}
       className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-50 flex items-center justify-center gap-1.5 rounded-2xl bg-slate-900 py-3.5 text-center text-sm font-bold tracking-wide text-white shadow-lg active:bg-slate-800 md:hidden"
       onClick={() =>
-        trackPhoneClick({
-          currency: "KRW",
-          value: 0,
-          lead_source: "phone_click",
-          phone_type: "cleaning",
-          click_location: "mobile_bottom",
+        track({
+          event_type: "phone_click",
+          event_payload: {
+            phone_type: "cleaning",
+            click_location: "mobile_bottom",
+          },
+          path: currentPath(),
         })
       }
     >
