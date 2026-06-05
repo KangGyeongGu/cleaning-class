@@ -2,18 +2,12 @@
 
 import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Loader2,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Loader2, Trash2, Eye, EyeOff } from "lucide-react";
 import {
   deleteCustomerReview,
   toggleCustomerReviewPublish,
 } from "@/shared/actions/customer-review";
+import { Pagination } from "@/app/admin/components/Pagination";
 import type { CustomerReviewRow } from "@/shared/types/database";
 
 function StarDisplay({ rating }: { rating: number }) {
@@ -41,42 +35,6 @@ function formatDate(isoString: string): string {
     month: "2-digit",
     day: "2-digit",
   });
-}
-
-function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}) {
-  if (totalPages <= 1) return null;
-
-  return (
-    <div className="mt-4 flex items-center justify-center gap-1">
-      <button
-        type="button"
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-30"
-      >
-        <ChevronLeft size={16} />
-      </button>
-      <span className="px-3 text-xs text-slate-500 tabular-nums">
-        {currentPage} / {totalPages}
-      </span>
-      <button
-        type="button"
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-30"
-      >
-        <ChevronRight size={16} />
-      </button>
-    </div>
-  );
 }
 
 function ReviewCardMobile({ review }: { review: CustomerReviewRow }) {
