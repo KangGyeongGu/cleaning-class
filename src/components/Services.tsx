@@ -1,12 +1,8 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { getSiteConfig } from "@/shared/lib/site-config";
 import { getPublishedServicesWithImageUrls } from "@/shared/lib/home";
 import { generateServiceJsonLd } from "@/shared/lib/json-ld";
-import { ServiceGrid } from "@/components/ServiceGrid";
-import TrackedCtaLink from "@/components/analytics/TrackedCtaLink.client";
-import TrackedPhoneLink from "@/components/analytics/TrackedPhoneLink.client";
 import { JsonLdScript } from "@/components/JsonLdScript";
+import { ServiceCategorySection } from "@/components/ServiceCategorySection";
 
 export async function Services() {
   const [servicesWithImageUrls, siteConfig] = await Promise.all([
@@ -32,9 +28,6 @@ export async function Services() {
     (s) => s.category === "moving",
   );
 
-  const cleaningPhone = siteConfig?.phone ?? "010-6711-2964";
-  const movingPhone = siteConfig?.moving_phone ?? "010-3654-0102";
-
   return (
     <section id="services" className="relative bg-white py-16 md:py-32">
       <JsonLdScript data={serviceJsonLd} />
@@ -48,89 +41,26 @@ export async function Services() {
           </p>
         </div>
 
-        {cleaningServices.length > 0 && (
-          <div className="mb-16 md:mb-24">
-            <div className="mb-8 flex items-end justify-between">
-              <div>
-                <p className="mb-1 text-xs font-bold tracking-widest text-slate-400 uppercase">
-                  Cleaning
-                </p>
-                <h3 className="text-lg font-black tracking-tight text-slate-900">
-                  청소 서비스
-                </h3>
-              </div>
-              <div className="flex items-center gap-3">
-                <TrackedCtaLink
-                  href="/contact"
-                  contentId="services_cleaning_contact"
-                  className="flex items-center gap-0.5 text-xs text-slate-500 transition-colors hover:text-slate-900"
-                >
-                  문의하기 <ArrowUpRight size={12} aria-hidden="true" />
-                </TrackedCtaLink>
+        <ServiceCategorySection
+          category="cleaning"
+          label="Cleaning"
+          heading="청소 서비스"
+          services={cleaningServices}
+          phone={siteConfig?.phone}
+          detailHref="/services#cleaning-services"
+          contactContentId="services_cleaning_contact"
+          className="mb-16 md:mb-24"
+        />
 
-                <TrackedPhoneLink
-                  href={`tel:${cleaningPhone}`}
-                  phoneType="cleaning"
-                  location="services_section"
-                  className="flex items-center gap-0.5 text-xs text-slate-500 transition-colors hover:text-slate-900"
-                >
-                  전화문의 <ArrowUpRight size={12} aria-hidden="true" />
-                </TrackedPhoneLink>
-              </div>
-            </div>
-            <ServiceGrid services={cleaningServices} />
-            <div className="mt-6 text-center">
-              <Link
-                href="/services#cleaning-services"
-                className="inline-block text-sm font-medium tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900"
-              >
-                상세 보기 →
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {movingServices.length > 0 && (
-          <div>
-            <div className="mb-8 flex items-end justify-between">
-              <div>
-                <p className="mb-1 text-xs font-bold tracking-widest text-slate-400 uppercase">
-                  Moving
-                </p>
-                <h3 className="text-lg font-black tracking-tight text-slate-900">
-                  이사 서비스
-                </h3>
-              </div>
-              <div className="flex items-center gap-3">
-                <TrackedCtaLink
-                  href="/contact"
-                  contentId="services_moving_contact"
-                  className="flex items-center gap-0.5 text-xs text-slate-500 transition-colors hover:text-slate-900"
-                >
-                  문의하기 <ArrowUpRight size={12} aria-hidden="true" />
-                </TrackedCtaLink>
-
-                <TrackedPhoneLink
-                  href={`tel:${movingPhone}`}
-                  phoneType="moving"
-                  location="services_section"
-                  className="flex items-center gap-0.5 text-xs text-slate-500 transition-colors hover:text-slate-900"
-                >
-                  전화문의 <ArrowUpRight size={12} aria-hidden="true" />
-                </TrackedPhoneLink>
-              </div>
-            </div>
-            <ServiceGrid services={movingServices} />
-            <div className="mt-6 text-center">
-              <Link
-                href="/services#moving-services"
-                className="inline-block text-sm font-medium tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900"
-              >
-                상세 보기 →
-              </Link>
-            </div>
-          </div>
-        )}
+        <ServiceCategorySection
+          category="moving"
+          label="Moving"
+          heading="이사 서비스"
+          services={movingServices}
+          phone={siteConfig?.moving_phone}
+          detailHref="/services#moving-services"
+          contactContentId="services_moving_contact"
+        />
       </div>
     </section>
   );

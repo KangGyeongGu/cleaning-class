@@ -13,6 +13,8 @@ import {
   MOVING_INQUIRY_OPTIONS,
 } from "@/shared/lib/constants";
 import { CustomDropdown } from "@/components/CustomDropdown.client";
+import { useInViewport } from "@/shared/lib/hooks/useInViewport";
+import { useImageUpload } from "@/shared/lib/hooks/useImageUpload";
 
 type InquiryType = "cleaning" | "moving";
 
@@ -28,8 +30,13 @@ export function ContactForm({ phone }: ContactFormProps) {
 
   const [inquiryType, setInquiryType] = useState<InquiryType>("cleaning");
 
-  const [images, setImages] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const {
+    images,
+    previewUrls,
+    addFiles,
+    removeAt,
+    clear: clearImages,
+  } = useImageUpload(15);
   const [messageLength, setMessageLength] = useState<number>(0);
   const [formValid, setFormValid] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,41 +48,10 @@ export function ContactForm({ phone }: ContactFormProps) {
   const [serviceType, setServiceType] = useState("");
   const [region, setRegion] = useState("");
   const [isReset, setIsReset] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const { ref: sectionRef, isVisible } = useInViewport();
 
   const isSuccess = state?.success === true;
   const showSuccess = isSuccess && !isReset;
-
-  const previewUrlsRef = useRef(previewUrls);
-
-  useEffect(() => {
-    previewUrlsRef.current = previewUrls;
-  }, [previewUrls]);
-
-  useEffect(() => {
-    return () => {
-      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, []);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const hasTrackedLead = useRef(false);
   const hasTrackedError = useRef(false);
@@ -135,9 +111,7 @@ export function ContactForm({ phone }: ContactFormProps) {
     if (!isSuccess || isReset) return;
 
     const timer = setTimeout(() => {
-      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      setImages([]);
-      setPreviewUrls([]);
+      clearImages();
       setMessageLength(0);
       setFormValid(false);
       setServiceType("");
@@ -153,7 +127,7 @@ export function ContactForm({ phone }: ContactFormProps) {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [isSuccess, isReset]);
+  }, [isSuccess, isReset, clearImages]);
 
   const checkFormValidity = () => {
     const name = nameRef.current?.value.trim() ?? "";
@@ -188,39 +162,27 @@ export function ContactForm({ phone }: ContactFormProps) {
     }, 0);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    const newImages = [...images, ...files];
+  function syncFileInputDataTransfer(files: File[]): void {
+    if (!fileInputRef.current) return;
+    const dt = new DataTransfer();
+    for (const f of files) dt.items.add(f);
+    fileInputRef.current.files = dt.files;
+  }
 
-    if (newImages.length > 15) {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = Array.from(e.target.files ?? []);
+    if (images.length + incoming.length > 15) {
       alert("이미지는 최대 15장까지 첨부 가능합니다.");
       return;
     }
-
-    const newUrls = files.map((file) => URL.createObjectURL(file));
-    setImages(newImages);
-    setPreviewUrls((prev) => [...prev, ...newUrls]);
-
-    if (fileInputRef.current) {
-      const dataTransfer = new DataTransfer();
-      newImages.forEach((file) => dataTransfer.items.add(file));
-      fileInputRef.current.files = dataTransfer.files;
-    }
+    addFiles(incoming);
+    syncFileInputDataTransfer([...images, ...incoming]);
   };
 
   const handleImageRemove = (index: number) => {
-    URL.revokeObjectURL(previewUrls[index]);
-
-    const newImages = images.filter((_, i) => i !== index);
-    const newUrls = previewUrls.filter((_, i) => i !== index);
-    setImages(newImages);
-    setPreviewUrls(newUrls);
-
-    if (fileInputRef.current) {
-      const dataTransfer = new DataTransfer();
-      newImages.forEach((file) => dataTransfer.items.add(file));
-      fileInputRef.current.files = dataTransfer.files;
-    }
+    const next = images.filter((_, i) => i !== index);
+    removeAt(index);
+    syncFileInputDataTransfer(next);
   };
 
   const serviceOptions =
