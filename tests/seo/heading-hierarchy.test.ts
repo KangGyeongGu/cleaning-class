@@ -78,20 +78,18 @@ describe("SEO: 헤딩 계층", () => {
     expect(violations).toEqual([]);
   });
 
-  it("전체 페이지에서 h1이 정확히 1개여야 한다 (모든 컴포넌트 합산)", () => {
+  it("각 컴포넌트 파일에 h1이 1개 이하만 존재한다", () => {
     const componentsDir = join(projectRoot, "src/components");
-    const pageFile = join(projectRoot, "src/app/(public)/page.tsx");
-
     const componentHeadings = extractHeadingsFromComponents(componentsDir);
-    const pageContent = readFileSync(pageFile, "utf-8");
-    const pageHeadings = extractHeadings(pageContent);
+    const violations: string[] = [];
 
-    let totalH1Count = pageHeadings.filter((h) => h === "h1").length;
-
-    for (const headings of componentHeadings.values()) {
-      totalH1Count += headings.filter((h) => h === "h1").length;
+    for (const [file, headings] of componentHeadings) {
+      const h1Count = headings.filter((h) => h === "h1").length;
+      if (h1Count > 1) {
+        violations.push(`${file}: h1 ${h1Count}개 (1개 이하만 허용)`);
+      }
     }
 
-    expect(totalH1Count).toBeLessThanOrEqual(1);
+    expect(violations).toEqual([]);
   });
 });

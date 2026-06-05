@@ -180,9 +180,7 @@ export function ReviewSubmitForm() {
         <p className="text-xs font-medium tracking-widest text-slate-400 uppercase">
           청소클라쓰
         </p>
-        <p className="text-heading-1 mt-2" role="heading" aria-level={1}>
-          고객 리뷰
-        </p>
+        <h1 className="text-heading-1 mt-2">고객 리뷰</h1>
         <p className="mt-3 text-sm font-light text-slate-500">
           서비스 이용 소감을 솔직하게 남겨주세요.
         </p>

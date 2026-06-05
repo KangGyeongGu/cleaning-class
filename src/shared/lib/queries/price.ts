@@ -1,4 +1,5 @@
 import { createClient } from "@/shared/lib/supabase/server";
+import { SUPABASE_NOT_FOUND_CODE } from "@/shared/lib/pure/constants";
 import { createStaticClient } from "@/shared/lib/supabase/static";
 import type { PriceItemRow } from "@/shared/types/database";
 
@@ -66,7 +67,7 @@ export async function getNextPriceItemSortOrder(): Promise<number> {
     .single();
 
   if (error) {
-    if (error.code !== "PGRST116") {
+    if (error.code !== SUPABASE_NOT_FOUND_CODE) {
       console.error("[getNextPriceItemSortOrder] sort_order 조회 실패:", error);
     }
     return 0;

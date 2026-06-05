@@ -49,11 +49,11 @@ export default async function ContactPage() {
     { name: "견적문의", url: "https://www.cleaningclass.co.kr/contact" },
   ]);
 
-  const phone = siteConfig?.phone ?? "";
-  const movingPhone = siteConfig?.moving_phone ?? "";
-  const blogUrl = siteConfig?.blog_url ?? "";
-  const instagramUrl = siteConfig?.instagram_url ?? "";
-  const daangnUrl = siteConfig?.daangn_url ?? "";
+  const phone = (siteConfig?.phone ?? "").trim();
+  const movingPhone = (siteConfig?.moving_phone ?? "").trim();
+  const blogUrl = (siteConfig?.blog_url ?? "").trim();
+  const instagramUrl = (siteConfig?.instagram_url ?? "").trim();
+  const daangnUrl = (siteConfig?.daangn_url ?? "").trim();
 
   return (
     <>

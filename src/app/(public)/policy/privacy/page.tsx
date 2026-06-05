@@ -33,6 +33,13 @@ export const metadata: Metadata = {
       },
     ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "개인정보처리방침 | 청소클라쓰",
+    description:
+      "청소클라쓰 개인정보처리방침 — 수집 항목, 보유기간, 파기 절차 및 정보주체 권리 안내",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function PrivacyPage() {

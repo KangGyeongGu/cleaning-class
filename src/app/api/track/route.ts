@@ -12,20 +12,25 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return new NextResponse(null, { status: 204 });
+    console.warn("[POST /api/track] invalid JSON body");
+    return new NextResponse(null, { status: 400 });
   }
 
   const parsed = trackRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return new NextResponse(null, { status: 204 });
+    console.warn("[POST /api/track] schema validation failed", parsed.error);
+    return new NextResponse(null, { status: 400 });
   }
 
   const supabase = await createClient();
-  await supabase.from("analytics_events").insert({
+  const { error } = await supabase.from("analytics_events").insert({
     event_type: parsed.data.event_type,
     event_payload: parsed.data.event_payload,
     path: parsed.data.path,
   });
+  if (error) {
+    console.error("[POST /api/track] insert failed", error);
+  }
 
   return new NextResponse(null, { status: 204 });
 }

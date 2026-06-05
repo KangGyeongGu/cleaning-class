@@ -9,10 +9,10 @@ interface ReviewRatingHeroProps {
 
 const STAR_PATH =
   "M10 1.667l2.575 5.217 5.758.838-4.166 4.063.983 5.732L10 14.583l-5.15 2.934.983-5.732L1.667 7.722l5.758-.838L10 1.667z";
-const GOLD = "#d4af37";
-const EMPTY = "#cbd5e1";
+const FILLED = "#0f172a";
+const EMPTY = "#e2e8f0";
 
-function GoldStarRating({ rating }: { rating: number }): React.ReactElement {
+function SlateStarRating({ rating }: { rating: number }): React.ReactElement {
   const size = 28;
 
   return (
@@ -58,8 +58,8 @@ function GoldStarRating({ rating }: { rating: number }): React.ReactElement {
             {fillType === "full" && (
               <path
                 d={STAR_PATH}
-                fill={GOLD}
-                stroke={GOLD}
+                fill={FILLED}
+                stroke={FILLED}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -69,8 +69,8 @@ function GoldStarRating({ rating }: { rating: number }): React.ReactElement {
             {fillType === "half" && (
               <path
                 d={STAR_PATH}
-                fill={GOLD}
-                stroke={GOLD}
+                fill={FILLED}
+                stroke={FILLED}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -161,7 +161,7 @@ export function ReviewRatingHero({
       >
         {totalCount}건의 리뷰
       </span>
-      <GoldStarRating rating={triggered ? avgRating : 0} />
+      <SlateStarRating rating={triggered ? avgRating : 0} />
     </div>
   );
 }

@@ -104,6 +104,74 @@ function isSafeUrl(url: string): boolean {
   return /^https?:\/\//i.test(url);
 }
 
+interface ReviewSnsLinksProps {
+  blogUrl?: string;
+  instagramUrl?: string;
+  variant: "desktop" | "mobile";
+}
+
+function ReviewSnsLinks({
+  blogUrl,
+  instagramUrl,
+  variant,
+}: ReviewSnsLinksProps): React.ReactElement | null {
+  const hasBlog = !!blogUrl && blogUrl.trim() !== "";
+  const hasInstagram = !!instagramUrl && instagramUrl.trim() !== "";
+  if (!hasBlog && !hasInstagram) return null;
+
+  const linkClass =
+    variant === "desktop"
+      ? "flex items-center gap-2 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900"
+      : "inline-flex items-center gap-2 text-sm font-bold text-slate-900 transition-colors hover:text-slate-600";
+
+  return (
+    <>
+      {hasBlog && (
+        <a
+          href={blogUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClass}
+          onClick={() =>
+            track({
+              event_type: "sns_click",
+              event_payload: {
+                sns_platform: "naver_blog",
+                click_location: "reviews_section",
+              },
+              path: currentPath(),
+            })
+          }
+        >
+          <NaverBlogIcon size={16} /> BLOG{" "}
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+      )}
+      {hasInstagram && (
+        <a
+          href={instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClass}
+          onClick={() =>
+            track({
+              event_type: "sns_click",
+              event_payload: {
+                sns_platform: "instagram",
+                click_location: "reviews_section",
+              },
+              path: currentPath(),
+            })
+          }
+        >
+          <Instagram size={16} /> INSTAGRAM{" "}
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+      )}
+    </>
+  );
+}
+
 function ReviewCardWrapper({
   review,
   blogUrl,
@@ -244,48 +312,11 @@ export function BlogReviews({
           </div>
 
           <div className="hidden items-center gap-4 md:flex">
-            {hasBlogUrl && (
-              <a
-                href={blogUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900"
-                onClick={() =>
-                  track({
-                    event_type: "sns_click",
-                    event_payload: {
-                      sns_platform: "naver_blog",
-                      click_location: "reviews_section",
-                    },
-                    path: currentPath(),
-                  })
-                }
-              >
-                <NaverBlogIcon size={16} /> BLOG{" "}
-                <ArrowUpRight size={16} aria-hidden="true" />
-              </a>
-            )}
-            {hasInstagramUrl && (
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900"
-                onClick={() =>
-                  track({
-                    event_type: "sns_click",
-                    event_payload: {
-                      sns_platform: "instagram",
-                      click_location: "reviews_section",
-                    },
-                    path: currentPath(),
-                  })
-                }
-              >
-                <Instagram size={16} /> INSTAGRAM{" "}
-                <ArrowUpRight size={16} aria-hidden="true" />
-              </a>
-            )}
+            <ReviewSnsLinks
+              blogUrl={blogUrl}
+              instagramUrl={instagramUrl}
+              variant="desktop"
+            />
           </div>
         </div>
 
@@ -341,48 +372,11 @@ export function BlogReviews({
 
             {(hasBlogUrl || hasInstagramUrl) && (
               <div className="mt-4 flex flex-col items-center gap-3 text-center md:hidden">
-                {hasBlogUrl && (
-                  <a
-                    href={blogUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-slate-900 transition-colors hover:text-slate-600"
-                    onClick={() =>
-                      track({
-                        event_type: "sns_click",
-                        event_payload: {
-                          sns_platform: "naver_blog",
-                          click_location: "reviews_section",
-                        },
-                        path: currentPath(),
-                      })
-                    }
-                  >
-                    <NaverBlogIcon size={16} /> BLOG{" "}
-                    <ArrowUpRight size={16} aria-hidden="true" />
-                  </a>
-                )}
-                {hasInstagramUrl && (
-                  <a
-                    href={instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-slate-900 transition-colors hover:text-slate-600"
-                    onClick={() =>
-                      track({
-                        event_type: "sns_click",
-                        event_payload: {
-                          sns_platform: "instagram",
-                          click_location: "reviews_section",
-                        },
-                        path: currentPath(),
-                      })
-                    }
-                  >
-                    <Instagram size={16} /> INSTAGRAM{" "}
-                    <ArrowUpRight size={16} aria-hidden="true" />
-                  </a>
-                )}
+                <ReviewSnsLinks
+                  blogUrl={blogUrl}
+                  instagramUrl={instagramUrl}
+                  variant="mobile"
+                />
               </div>
             )}
 

@@ -33,6 +33,13 @@ export const metadata: Metadata = {
       },
     ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "이용약관 | 청소클라쓰",
+    description:
+      "청소클라쓰 웹사이트 이용약관 — 서비스 이용조건, 권리의무, 면책사항 안내",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function TermsPage() {

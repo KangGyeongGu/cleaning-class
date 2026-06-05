@@ -3,10 +3,11 @@
 import { useActionState, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { updateReview } from "@/shared/actions/review";
-import { Loader2, X, Plus } from "lucide-react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import type { Review } from "@/shared/types/database";
 import { SERVICE_TYPES } from "@/shared/lib/pure/constants";
+import { TagManager } from "@/app/admin/components/TagManager.client";
+import { ImageUploadField } from "@/app/admin/components/ImageUploadField.client";
 
 interface EditReviewFormProps {
   review: Review;
@@ -21,7 +22,6 @@ export function EditReviewForm({ review, imageUrl }: EditReviewFormProps) {
   );
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>(review.tags ?? []);
-  const [tagInput, setTagInput] = useState("");
   const existingService = (review.tags ?? []).find((t) =>
     (SERVICE_TYPES as readonly string[]).includes(t),
   );
@@ -30,10 +30,6 @@ export function EditReviewForm({ review, imageUrl }: EditReviewFormProps) {
   );
 
   const imagePreviewRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    imagePreviewRef.current = imagePreview;
-  }, [imagePreview]);
 
   useEffect(() => {
     return () => {
@@ -50,20 +46,19 @@ export function EditReviewForm({ review, imageUrl }: EditReviewFormProps) {
         URL.revokeObjectURL(imagePreviewRef.current);
       }
       const url = URL.createObjectURL(file);
+      imagePreviewRef.current = url;
       setImagePreview(url);
     }
   };
 
-  const handleAddTag = () => {
-    const trimmed = tagInput.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags([...tags, trimmed]);
-      setTagInput("");
+  const handleAddTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      setTags([...tags, tag]);
     }
   };
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+  const handleRemoveTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (formData: FormData) => {
@@ -179,93 +174,24 @@ export function EditReviewForm({ review, imageUrl }: EditReviewFormProps) {
         </div>
       </div>
 
-      <div>
-        <label
-          htmlFor="tagInput"
-          className="mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase"
-        >
-          태그
-        </label>
-        <div className="mb-3 flex gap-2">
-          <input
-            id="tagInput"
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (!e.nativeEvent.isComposing) {
-                  handleAddTag();
-                }
-              }
-            }}
-            className="flex-1 border-b border-slate-200 bg-transparent pb-3 text-lg font-light transition-colors outline-none placeholder:text-slate-300 focus:border-slate-900"
-            placeholder="태그 입력 후 추가 버튼 클릭 또는 Enter"
-          />
-          <button
-            type="button"
-            onClick={handleAddTag}
-            className="border border-slate-900 px-4 py-2 text-xs font-bold text-slate-900 transition-colors hover:bg-slate-900 hover:text-white"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1 text-sm"
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={() => handleRemoveTag(tag)}
-                className="text-slate-500 hover:text-slate-900"
-              >
-                <X size={14} />
-              </button>
-            </span>
-          ))}
-        </div>
-        {state && "errors" in state && state.errors?.tags && (
-          <p className="mt-1 text-xs text-red-500">{state.errors.tags[0]}</p>
-        )}
-      </div>
+      <TagManager
+        label="태그"
+        tags={tags}
+        onAdd={handleAddTag}
+        onRemove={handleRemoveTag}
+        error={state && "errors" in state ? state.errors?.tags?.[0] : undefined}
+      />
 
-      <div>
-        <label
-          htmlFor="image"
-          className="mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase"
-        >
-          이미지
-        </label>
-        <input
-          id="image"
-          name="image"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="hidden"
-        />
-        <label
-          htmlFor="image"
-          className="inline-flex cursor-pointer items-center gap-2 border border-slate-200 px-6 py-3 text-xs font-bold text-slate-500 transition-colors hover:border-slate-900 hover:text-slate-900"
-        >
-          <Plus size={16} />
-          {imagePreview ? "이미지 변경" : "새 이미지 선택"}
-        </label>
-        <div className="relative mt-4 h-64 w-full max-w-md border border-slate-200">
-          <Image
-            src={displayImageUrl}
-            alt="미리보기"
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 448px"
-            unoptimized={!!imagePreview}
-          />
-        </div>
-      </div>
+      <ImageUploadField
+        id="image"
+        name="image"
+        label="이미지"
+        previewUrl={displayImageUrl}
+        onChange={handleImageChange}
+        replaceLabel="이미지 변경"
+        selectLabel="새 이미지 선택"
+        previewSize="md"
+      />
 
       <div className="flex items-center gap-3">
         <input

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Review } from "@/shared/types/database";
@@ -96,28 +97,59 @@ function ReviewCard({ review }: { review: Review }) {
 const PER_PAGE = 12;
 
 export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const listRef = useRef<HTMLUListElement>(null);
+
+  const filterParam = searchParams.get("filter");
+  const activeFilter =
+    filterParam &&
+    (CLEANING_SERVICE_TYPES as readonly string[]).includes(filterParam)
+      ? filterParam
+      : null;
+  const pageParam = Number.parseInt(searchParams.get("page") ?? "1", 10);
+  const requestedPage =
+    Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const filteredReviews = activeFilter
     ? reviews.filter((r) => r.tags.includes(activeFilter))
     : reviews;
 
-  const totalPages = Math.ceil(filteredReviews.length / PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredReviews.length / PER_PAGE));
+  const currentPage = Math.min(requestedPage, totalPages);
   const pagedReviews = filteredReviews.slice(
     (currentPage - 1) * PER_PAGE,
     currentPage * PER_PAGE,
   );
 
-  const goToPage = useCallback((page: number) => {
-    setCurrentPage(page);
-    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  const updateParams = useCallback(
+    (next: { filter?: string | null; page?: number }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.filter !== undefined) {
+        if (next.filter) params.set("filter", next.filter);
+        else params.delete("filter");
+      }
+      if (next.page !== undefined) {
+        if (next.page > 1) params.set("page", String(next.page));
+        else params.delete("page");
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const goToPage = useCallback(
+    (page: number) => {
+      updateParams({ page });
+      listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [updateParams],
+  );
 
   const handleFilterChange = (filter: string | null) => {
-    setActiveFilter(filter);
-    setCurrentPage(1);
+    updateParams({ filter, page: 1 });
     track({
       event_type: "review_filter",
       event_payload: {

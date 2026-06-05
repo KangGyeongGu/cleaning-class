@@ -1,5 +1,5 @@
 import { getSiteConfig } from "@/shared/lib/domain/site-config";
-import { getPublishedServicesWithImageUrls } from "@/shared/lib/domain/home";
+import { getPublishedServicesWithImageUrls } from "@/shared/lib/queries/service";
 import { generateServiceJsonLd } from "@/shared/lib/domain/json-ld";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 import { ServiceCategorySection } from "@/components/service/ServiceCategorySection";

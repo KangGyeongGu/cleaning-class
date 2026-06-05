@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { getCustomerReviews } from "@/shared/lib/domain/home";
+import { getPublishedCustomerReviews } from "@/shared/lib/queries/customer-review";
 import { getSiteConfig } from "@/shared/lib/domain/site-config";
 import { CustomerReviewsCarousel } from "@/components/review/CustomerReviewsCarousel.client";
 import { ReviewRatingHero } from "@/components/hero/ReviewRatingHero.client";
@@ -41,7 +41,7 @@ function toCardData(review: CustomerReviewRow): ReviewCardData {
 
 export async function CustomerReviewsSection(): Promise<React.ReactElement | null> {
   const [reviews, siteConfig] = await Promise.all([
-    getCustomerReviews(),
+    getPublishedCustomerReviews(),
     getSiteConfig(),
   ]);
 

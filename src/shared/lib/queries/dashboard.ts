@@ -1,4 +1,5 @@
 import { createClient } from "@/shared/lib/supabase/server";
+import { KST_OFFSET_MS } from "@/shared/lib/pure/constants";
 
 export interface SegmentedCount {
   cleaning: number;
@@ -34,20 +35,20 @@ export interface CustomerActionTotals {
 
 function todayKstDate(): string {
   const now = new Date();
-  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const kst = new Date(now.getTime() + KST_OFFSET_MS);
   return kst.toISOString().slice(0, 10);
 }
 
 function nDaysAgoKst(n: number): string {
   const now = new Date();
-  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const kst = new Date(now.getTime() + KST_OFFSET_MS);
   kst.setUTCDate(kst.getUTCDate() - n);
   return kst.toISOString().slice(0, 10);
 }
 
 function kstDateFromIso(iso: string): string {
   const d = new Date(iso);
-  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const kst = new Date(d.getTime() + KST_OFFSET_MS);
   return kst.toISOString().slice(0, 10);
 }
 

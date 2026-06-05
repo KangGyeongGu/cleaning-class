@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createStaticClient } from "@/shared/lib/supabase/static";
+import { SUPABASE_NOT_FOUND_CODE } from "@/shared/lib/pure/constants";
 
 export const revalidate = 3600;
 
@@ -40,15 +41,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .single(),
   ]);
 
-  if (serviceError && serviceError.code !== "PGRST116")
+  if (serviceError && serviceError.code !== SUPABASE_NOT_FOUND_CODE)
     console.error("[sitemap] services 조회 실패:", serviceError);
-  if (reviewError && reviewError.code !== "PGRST116")
+  if (reviewError && reviewError.code !== SUPABASE_NOT_FOUND_CODE)
     console.error("[sitemap] reviews 조회 실패:", reviewError);
-  if (configError && configError.code !== "PGRST116")
+  if (configError && configError.code !== SUPABASE_NOT_FOUND_CODE)
     console.error("[sitemap] site_config 조회 실패:", configError);
-  if (faqError && faqError.code !== "PGRST116")
+  if (faqError && faqError.code !== SUPABASE_NOT_FOUND_CODE)
     console.error("[sitemap] faqs 조회 실패:", faqError);
-  if (priceError && priceError.code !== "PGRST116")
+  if (priceError && priceError.code !== SUPABASE_NOT_FOUND_CODE)
     console.error("[sitemap] price_items 조회 실패:", priceError);
 
   const dates = [

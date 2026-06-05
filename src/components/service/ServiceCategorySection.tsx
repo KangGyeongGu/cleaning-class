@@ -3,7 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 import TrackedCtaLink from "@/components/analytics/TrackedCtaLink.client";
 import TrackedPhoneLink from "@/components/analytics/TrackedPhoneLink.client";
 import { ServiceGrid } from "@/components/service/ServiceGrid.client";
-import type { ServiceWithImageUrls } from "@/shared/lib/domain/home";
+import type { ServiceWithImageUrls } from "@/shared/lib/queries/service";
 
 type Category = "cleaning" | "moving";
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllPublishedReviews } from "@/shared/lib/domain/home";
+import { Suspense } from "react";
+import { getAllPublishedReviews } from "@/shared/lib/queries/review";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
 import { ReviewsPageClient } from "@/app/(public)/reviews/ReviewsPageClient.client";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
@@ -79,7 +80,9 @@ export default async function ReviewsPage() {
         <section className="py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <h2 className="sr-only">작업 목록</h2>
-            <ReviewsPageClient reviews={reviews} />
+            <Suspense fallback={null}>
+              <ReviewsPageClient reviews={reviews} />
+            </Suspense>
           </div>
         </section>
       </div>

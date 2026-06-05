@@ -31,6 +31,10 @@ export const MOVING_INQUIRY_OPTIONS: string[] = [
   "기타 문의",
 ];
 
+export const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+export const DEFAULT_FOCAL_POINT = 50;
+export const SUPABASE_NOT_FOUND_CODE = "PGRST116";
+
 export const CLEANING_REGIONS: readonly string[] = [
   "전주시 완산구",
   "전주시 덕진구",

@@ -2,19 +2,16 @@
 
 import { contactFormSchema } from "@/shared/lib/schema/index";
 import { sendContactEmail } from "@/shared/lib/infra/mail";
+import {
+  ALLOWED_IMAGE_EXTENSIONS,
+  MAX_IMAGE_UPLOAD_SIZE,
+  getFileExtensionLower,
+  isAllowedImageExtension,
+  isAllowedImageMimeType,
+} from "@/shared/lib/pure/image-validation";
 
 const MAX_IMAGE_COUNT = 15;
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const MAX_TOTAL_SIZE = 50 * 1024 * 1024;
-
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-] as const;
-
-const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp"] as const;
 
 export async function submitContactForm(
   prevState: unknown,
@@ -51,7 +48,7 @@ export async function submitContactForm(
   }
 
   for (const file of filteredImageFiles) {
-    if (file.size > MAX_IMAGE_SIZE) {
+    if (file.size > MAX_IMAGE_UPLOAD_SIZE) {
       return {
         success: false,
         error: `개별 이미지 크기는 10MB를 초과할 수 없습니다. (${file.name})`,
@@ -68,19 +65,18 @@ export async function submitContactForm(
   }
 
   for (const file of filteredImageFiles) {
-    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
+    if (!isAllowedImageMimeType(file.type)) {
       return {
         success: false,
-        error: `허용되지 않는 파일 형식입니다: ${file.type}. 허용 형식: jpg, jpeg, png, gif, webp (${file.name})`,
+        error: `허용되지 않는 파일 형식입니다: ${file.type}. (${file.name})`,
       };
     }
 
-    const lastDot = file.name.lastIndexOf(".");
-    const dotExt = lastDot === -1 ? "" : file.name.slice(lastDot).toLowerCase();
-    if (!(ALLOWED_EXTENSIONS as readonly string[]).includes(dotExt)) {
+    const ext = getFileExtensionLower(file.name);
+    if (!isAllowedImageExtension(ext)) {
       return {
         success: false,
-        error: `허용되지 않는 파일 확장자입니다. 허용 확장자: .jpg, .jpeg, .png, .gif, .webp (${file.name})`,
+        error: `허용되지 않는 파일 확장자입니다. 허용 확장자: ${ALLOWED_IMAGE_EXTENSIONS.join(", ")} (${file.name})`,
       };
     }
   }

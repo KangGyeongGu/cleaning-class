@@ -165,6 +165,38 @@ describe("useDragReorder", () => {
     expect(result.current.items).toEqual(newList);
   });
 
+  it("ignores onDragStart/onDragEnter while saving", async () => {
+    let resolveFn!: (value: { success: boolean }) => void;
+    const onReorder = vi.fn(
+      () =>
+        new Promise<{ success: boolean }>((r) => {
+          resolveFn = r;
+        }),
+    );
+    const { result } = renderHook(() => useDragReorder(items, onReorder));
+    act(() => {
+      result.current.onDragStart(0);
+      result.current.onDragEnter(1);
+    });
+    let endPromise!: Promise<void>;
+    act(() => {
+      endPromise = result.current.onDragEnd();
+    });
+    await waitFor(() => {
+      expect(result.current.isSaving).toBe(true);
+    });
+    act(() => {
+      result.current.onDragStart(2);
+      result.current.onDragEnter(0);
+    });
+    expect(result.current.dragIndex).toBeNull();
+    expect(result.current.dragOverIndex).toBeNull();
+    await act(async () => {
+      resolveFn({ success: true });
+      await endPromise;
+    });
+  });
+
   it("resets drag indices to null after end (regardless of result)", async () => {
     const onReorder = vi.fn().mockResolvedValue({ success: true });
     const { result } = renderHook(() => useDragReorder(items, onReorder));

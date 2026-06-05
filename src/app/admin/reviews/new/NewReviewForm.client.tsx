@@ -3,23 +3,19 @@
 import { useActionState, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createReview } from "@/shared/actions/review";
-import { Loader2, X, Plus } from "lucide-react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { SERVICE_TYPES } from "@/shared/lib/pure/constants";
+import { TagManager } from "@/app/admin/components/TagManager.client";
+import { ImageUploadField } from "@/app/admin/components/ImageUploadField.client";
 
 export function NewReviewForm() {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(createReview, null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
   const [selectedService, setSelectedService] = useState<string>("");
 
   const imagePreviewRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    imagePreviewRef.current = imagePreview;
-  }, [imagePreview]);
 
   useEffect(() => {
     return () => {
@@ -42,20 +38,19 @@ export function NewReviewForm() {
         URL.revokeObjectURL(imagePreviewRef.current);
       }
       const url = URL.createObjectURL(file);
+      imagePreviewRef.current = url;
       setImagePreview(url);
     }
   };
 
-  const handleAddTag = () => {
-    const trimmed = tagInput.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags([...tags, trimmed]);
-      setTagInput("");
+  const handleAddTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      setTags([...tags, tag]);
     }
   };
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+  const handleRemoveTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (formData: FormData) => {
@@ -149,89 +144,22 @@ export function NewReviewForm() {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="tagInput" className="form-label">
-          태그
-        </label>
-        <div className="mb-3 flex gap-2">
-          <input
-            id="tagInput"
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (!e.nativeEvent.isComposing) {
-                  handleAddTag();
-                }
-              }
-            }}
-            className="form-input-lg flex-1 placeholder:text-slate-300"
-            placeholder="태그 입력 후 추가 버튼 클릭 또는 Enter"
-          />
-          <button
-            type="button"
-            onClick={handleAddTag}
-            className="border border-slate-900 px-4 py-2 text-xs font-bold text-slate-900 transition-colors hover:bg-slate-900 hover:text-white"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1 text-sm"
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={() => handleRemoveTag(tag)}
-                className="text-slate-500 hover:text-slate-900"
-              >
-                <X size={14} />
-              </button>
-            </span>
-          ))}
-        </div>
-        {state && "errors" in state && state.errors?.tags && (
-          <p className="form-error">{state.errors.tags[0]}</p>
-        )}
-      </div>
+      <TagManager
+        label="태그"
+        tags={tags}
+        onAdd={handleAddTag}
+        onRemove={handleRemoveTag}
+        error={state && "errors" in state ? state.errors?.tags?.[0] : undefined}
+      />
 
-      <div>
-        <label htmlFor="image" className="form-label">
-          이미지
-        </label>
-        <input
-          id="image"
-          name="image"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="hidden"
-        />
-        <label
-          htmlFor="image"
-          className="inline-flex cursor-pointer items-center gap-2 border border-slate-200 px-6 py-3 text-xs font-bold text-slate-500 transition-colors hover:border-slate-900 hover:text-slate-900"
-        >
-          <Plus size={16} />
-          이미지 선택
-        </label>
-        {imagePreview && (
-          <div className="relative mt-4 aspect-video w-full max-w-md border border-slate-200">
-            <Image
-              src={imagePreview}
-              alt="미리보기"
-              fill
-              unoptimized
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 448px"
-            />
-          </div>
-        )}
-      </div>
+      <ImageUploadField
+        id="image"
+        name="image"
+        label="이미지"
+        previewUrl={imagePreview}
+        onChange={handleImageChange}
+        previewSize="lg"
+      />
 
       <div>
         <div className="flex items-center gap-3">

@@ -44,7 +44,7 @@ export function CustomerReviewsList({
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
@@ -133,7 +133,7 @@ export function CustomerReviewsList({
                         onClick={() =>
                           handleTogglePublish(review.id, review.is_published)
                         }
-                        disabled={togglingId === review.id}
+                        disabled={isPending || togglingId === review.id}
                         className="inline-flex items-center gap-1 text-xs text-slate-500"
                       >
                         {togglingId === review.id ? (
@@ -155,7 +155,7 @@ export function CustomerReviewsList({
                       <button
                         type="button"
                         onClick={() => handleDelete(review.id)}
-                        disabled={deletingId === review.id}
+                        disabled={isPending || deletingId === review.id}
                         className="rounded border border-slate-200 p-2 text-slate-500 disabled:opacity-50"
                       >
                         {deletingId === review.id ? (
@@ -194,7 +194,7 @@ export function CustomerReviewsList({
                   onClick={() =>
                     handleTogglePublish(review.id, review.is_published)
                   }
-                  disabled={togglingId === review.id}
+                  disabled={isPending || togglingId === review.id}
                   className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 disabled:opacity-50"
                 >
                   {togglingId === review.id ? (
@@ -218,7 +218,7 @@ export function CustomerReviewsList({
                 <button
                   type="button"
                   onClick={() => handleDelete(review.id)}
-                  disabled={deletingId === review.id}
+                  disabled={isPending || deletingId === review.id}
                   className="border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500 transition-colors hover:border-red-500 hover:text-red-500 disabled:opacity-50"
                 >
                   {deletingId === review.id ? (

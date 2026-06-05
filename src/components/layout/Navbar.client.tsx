@@ -19,6 +19,49 @@ interface NavbarProps {
   daangnUrl?: string;
 }
 
+type SnsPlatform = "naver_blog" | "instagram" | "daangn";
+
+interface SnsLinkProps {
+  href: string;
+  platform: SnsPlatform;
+  ariaLabel: string;
+  iconSize: number;
+  onAfterClick?: () => void;
+  tabIndex?: number;
+  children: React.ReactNode;
+}
+
+function NavbarSnsLink({
+  href,
+  platform,
+  ariaLabel,
+  onAfterClick,
+  tabIndex,
+  children,
+}: SnsLinkProps): React.ReactElement {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      tabIndex={tabIndex}
+      className="text-slate-400 transition-colors hover:text-slate-900"
+      onClick={() => {
+        track({
+          event_type: "sns_click",
+          event_payload: { sns_platform: platform, click_location: "navbar" },
+          path: currentPath(),
+        });
+        onAfterClick?.();
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
 interface MenuItem {
   label: string;
   href: string;
@@ -173,70 +216,34 @@ export function Navbar({
             {(hasBlogUrl || hasInstagramUrl || hasDaangnUrl) && (
               <div className="ml-2 flex items-center gap-4 border-l border-slate-200 pl-6">
                 {hasBlogUrl && (
-                  <a
-                    href={blogUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="네이버 블로그"
-                    title="네이버 블로그"
-                    className="text-slate-400 transition-colors hover:text-slate-900"
-                    onClick={() =>
-                      track({
-                        event_type: "sns_click",
-                        event_payload: {
-                          sns_platform: "naver_blog",
-                          click_location: "navbar",
-                        },
-                        path: currentPath(),
-                      })
-                    }
+                  <NavbarSnsLink
+                    href={blogUrl!}
+                    platform="naver_blog"
+                    ariaLabel="네이버 블로그"
+                    iconSize={20}
                   >
                     <NaverBlogIcon size={20} />
-                  </a>
+                  </NavbarSnsLink>
                 )}
                 {hasInstagramUrl && (
-                  <a
-                    href={instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="인스타그램"
-                    title="인스타그램"
-                    className="text-slate-400 transition-colors hover:text-slate-900"
-                    onClick={() =>
-                      track({
-                        event_type: "sns_click",
-                        event_payload: {
-                          sns_platform: "instagram",
-                          click_location: "navbar",
-                        },
-                        path: currentPath(),
-                      })
-                    }
+                  <NavbarSnsLink
+                    href={instagramUrl!}
+                    platform="instagram"
+                    ariaLabel="인스타그램"
+                    iconSize={20}
                   >
                     <InstagramIcon size={20} />
-                  </a>
+                  </NavbarSnsLink>
                 )}
                 {hasDaangnUrl && (
-                  <a
-                    href={daangnUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="당근마켓"
-                    title="당근마켓"
-                    className="text-slate-400 transition-colors hover:text-slate-900"
-                    onClick={() =>
-                      track({
-                        event_type: "sns_click",
-                        event_payload: {
-                          sns_platform: "daangn",
-                          click_location: "navbar",
-                        },
-                        path: currentPath(),
-                      })
-                    }
+                  <NavbarSnsLink
+                    href={daangnUrl!}
+                    platform="daangn"
+                    ariaLabel="당근마켓"
+                    iconSize={20}
                   >
                     <DaangnIcon size={20} />
-                  </a>
+                  </NavbarSnsLink>
                 )}
               </div>
             )}
@@ -291,73 +298,40 @@ export function Navbar({
         {(hasBlogUrl || hasInstagramUrl || hasDaangnUrl) && (
           <div className="mt-2 flex items-center gap-5 border-t border-slate-200 pt-6">
             {hasBlogUrl && (
-              <a
-                href={blogUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <NavbarSnsLink
+                href={blogUrl!}
+                platform="naver_blog"
+                ariaLabel="네이버 블로그"
+                iconSize={24}
                 tabIndex={isOpen ? 0 : -1}
-                onClick={() => {
-                  setIsOpen(false);
-                  track({
-                    event_type: "sns_click",
-                    event_payload: {
-                      sns_platform: "naver_blog",
-                      click_location: "navbar",
-                    },
-                    path: currentPath(),
-                  });
-                }}
-                aria-label="네이버 블로그"
-                className="text-slate-400 transition-colors hover:text-slate-900"
+                onAfterClick={() => setIsOpen(false)}
               >
                 <NaverBlogIcon size={24} />
-              </a>
+              </NavbarSnsLink>
             )}
             {hasInstagramUrl && (
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <NavbarSnsLink
+                href={instagramUrl!}
+                platform="instagram"
+                ariaLabel="인스타그램"
+                iconSize={24}
                 tabIndex={isOpen ? 0 : -1}
-                onClick={() => {
-                  setIsOpen(false);
-                  track({
-                    event_type: "sns_click",
-                    event_payload: {
-                      sns_platform: "instagram",
-                      click_location: "navbar",
-                    },
-                    path: currentPath(),
-                  });
-                }}
-                aria-label="인스타그램"
-                className="text-slate-400 transition-colors hover:text-slate-900"
+                onAfterClick={() => setIsOpen(false)}
               >
                 <InstagramIcon size={24} />
-              </a>
+              </NavbarSnsLink>
             )}
             {hasDaangnUrl && (
-              <a
-                href={daangnUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <NavbarSnsLink
+                href={daangnUrl!}
+                platform="daangn"
+                ariaLabel="당근마켓"
+                iconSize={24}
                 tabIndex={isOpen ? 0 : -1}
-                onClick={() => {
-                  setIsOpen(false);
-                  track({
-                    event_type: "sns_click",
-                    event_payload: {
-                      sns_platform: "daangn",
-                      click_location: "navbar",
-                    },
-                    path: currentPath(),
-                  });
-                }}
-                aria-label="당근마켓"
-                className="text-slate-400 transition-colors hover:text-slate-900"
+                onAfterClick={() => setIsOpen(false)}
               >
                 <DaangnIcon size={24} />
-              </a>
+              </NavbarSnsLink>
             )}
           </div>
         )}

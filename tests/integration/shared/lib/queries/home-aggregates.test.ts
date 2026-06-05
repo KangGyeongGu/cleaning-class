@@ -43,14 +43,15 @@ beforeEach(() => {
   vi.resetModules();
 });
 
-describe("getPublishedReviews", () => {
+describe("getPublishedReviewsByCleaningTypes", () => {
   it("dedupes reviews that appear in multiple category queries", async () => {
     const r1 = { id: "r1", created_at: "2026-01-01T00:00:00Z", tags: [] };
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [r1], error: null }),
     );
-    const { getPublishedReviews } = await import("@/shared/lib/domain/home");
-    const result = await getPublishedReviews();
+    const { getPublishedReviewsByCleaningTypes } =
+      await import("@/shared/lib/queries/review");
+    const result = await getPublishedReviewsByCleaningTypes();
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("r1");
   });
@@ -70,8 +71,9 @@ describe("getPublishedReviews", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain(variants[Math.min(call++, variants.length - 1)]),
     );
-    const { getPublishedReviews } = await import("@/shared/lib/domain/home");
-    const result = await getPublishedReviews();
+    const { getPublishedReviewsByCleaningTypes } =
+      await import("@/shared/lib/queries/review");
+    const result = await getPublishedReviewsByCleaningTypes();
     expect(result[0].id).toBe("new");
   });
 
@@ -85,8 +87,9 @@ describe("getPublishedReviews", () => {
           : { data: [{ id: "r1", created_at: "2026-01-01" }], error: null },
       ),
     );
-    const { getPublishedReviews } = await import("@/shared/lib/domain/home");
-    const result = await getPublishedReviews();
+    const { getPublishedReviewsByCleaningTypes } =
+      await import("@/shared/lib/queries/review");
+    const result = await getPublishedReviewsByCleaningTypes();
     expect(result.length).toBeGreaterThanOrEqual(1);
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
@@ -97,8 +100,9 @@ describe("getPublishedReviews", () => {
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("boom");
     });
-    const { getPublishedReviews } = await import("@/shared/lib/domain/home");
-    const result = await getPublishedReviews();
+    const { getPublishedReviewsByCleaningTypes } =
+      await import("@/shared/lib/queries/review");
+    const result = await getPublishedReviewsByCleaningTypes();
     expect(result).toEqual([]);
     consoleSpy.mockRestore();
   });
@@ -107,8 +111,9 @@ describe("getPublishedReviews", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [], error: null }),
     );
-    const { getPublishedReviews } = await import("@/shared/lib/domain/home");
-    await getPublishedReviews();
+    const { getPublishedReviewsByCleaningTypes } =
+      await import("@/shared/lib/queries/review");
+    await getPublishedReviewsByCleaningTypes();
     expect(mockFrom).toHaveBeenCalledTimes(CLEANING_SERVICE_TYPES.length);
   });
 
@@ -116,8 +121,9 @@ describe("getPublishedReviews", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: null }),
     );
-    const { getPublishedReviews } = await import("@/shared/lib/domain/home");
-    const result = await getPublishedReviews();
+    const { getPublishedReviewsByCleaningTypes } =
+      await import("@/shared/lib/queries/review");
+    const result = await getPublishedReviewsByCleaningTypes();
     expect(result).toEqual([]);
   });
 });
@@ -130,7 +136,8 @@ describe("getAllPublishedReviews", () => {
         error: null,
       }),
     );
-    const { getAllPublishedReviews } = await import("@/shared/lib/domain/home");
+    const { getAllPublishedReviews } =
+      await import("@/shared/lib/queries/review");
     const result = await getAllPublishedReviews();
     expect(result).toHaveLength(1);
   });
@@ -140,7 +147,8 @@ describe("getAllPublishedReviews", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
-    const { getAllPublishedReviews } = await import("@/shared/lib/domain/home");
+    const { getAllPublishedReviews } =
+      await import("@/shared/lib/queries/review");
     const result = await getAllPublishedReviews();
     expect(result).toEqual([]);
     expect(consoleSpy).toHaveBeenCalled();
@@ -152,7 +160,8 @@ describe("getAllPublishedReviews", () => {
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("net");
     });
-    const { getAllPublishedReviews } = await import("@/shared/lib/domain/home");
+    const { getAllPublishedReviews } =
+      await import("@/shared/lib/queries/review");
     const result = await getAllPublishedReviews();
     expect(result).toEqual([]);
     consoleSpy.mockRestore();
@@ -162,7 +171,8 @@ describe("getAllPublishedReviews", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: null }),
     );
-    const { getAllPublishedReviews } = await import("@/shared/lib/domain/home");
+    const { getAllPublishedReviews } =
+      await import("@/shared/lib/queries/review");
     const result = await getAllPublishedReviews();
     expect(result).toEqual([]);
   });
@@ -192,7 +202,7 @@ describe("getPublishedServicesWithImageUrls", () => {
       makePromiseChain({ data: [baseService], error: null }),
     );
     const { getPublishedServicesWithImageUrls } =
-      await import("@/shared/lib/domain/home");
+      await import("@/shared/lib/queries/service");
     const result = await getPublishedServicesWithImageUrls();
     expect(result[0].imageUrl).toContain("before.jpg");
     expect(result[0].afterImageUrl).toContain("after.jpg");
@@ -215,7 +225,7 @@ describe("getPublishedServicesWithImageUrls", () => {
       }),
     );
     const { getPublishedServicesWithImageUrls } =
-      await import("@/shared/lib/domain/home");
+      await import("@/shared/lib/queries/service");
     const result = await getPublishedServicesWithImageUrls();
     expect(result[0].afterImageUrl).toBeUndefined();
     expect(result[0].detailImageUrl).toBeUndefined();
@@ -236,7 +246,7 @@ describe("getPublishedServicesWithImageUrls", () => {
       }),
     );
     const { getPublishedServicesWithImageUrls } =
-      await import("@/shared/lib/domain/home");
+      await import("@/shared/lib/queries/service");
     const result = await getPublishedServicesWithImageUrls();
     expect(result[0].afterFocalX).toBe(50);
     expect(result[0].afterFocalY).toBe(50);
@@ -247,7 +257,7 @@ describe("getPublishedServicesWithImageUrls", () => {
       makePromiseChain({ data: [{ ...baseService, tags: null }], error: null }),
     );
     const { getPublishedServicesWithImageUrls } =
-      await import("@/shared/lib/domain/home");
+      await import("@/shared/lib/queries/service");
     const result = await getPublishedServicesWithImageUrls();
     expect(result[0].tags).toEqual([]);
   });
@@ -258,7 +268,7 @@ describe("getPublishedServicesWithImageUrls", () => {
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getPublishedServicesWithImageUrls } =
-      await import("@/shared/lib/domain/home");
+      await import("@/shared/lib/queries/service");
     expect(await getPublishedServicesWithImageUrls()).toEqual([]);
     consoleSpy.mockRestore();
   });
@@ -269,7 +279,7 @@ describe("getPublishedServicesWithImageUrls", () => {
       throw new Error("x");
     });
     const { getPublishedServicesWithImageUrls } =
-      await import("@/shared/lib/domain/home");
+      await import("@/shared/lib/queries/service");
     expect(await getPublishedServicesWithImageUrls()).toEqual([]);
     consoleSpy.mockRestore();
   });
@@ -279,12 +289,21 @@ describe("getPublishedServicesWithImageUrls", () => {
       makePromiseChain({ data: null, error: null }),
     );
     const { getPublishedServicesWithImageUrls } =
-      await import("@/shared/lib/domain/home");
+      await import("@/shared/lib/queries/service");
     expect(await getPublishedServicesWithImageUrls()).toEqual([]);
+  });
+
+  it("filters by category when provided", async () => {
+    const chain = makePromiseChain({ data: [baseService], error: null });
+    mockFrom.mockImplementation(() => chain);
+    const { getPublishedServicesWithImageUrls } =
+      await import("@/shared/lib/queries/service");
+    await getPublishedServicesWithImageUrls("cleaning");
+    expect(chain.eq).toHaveBeenCalledWith("category", "cleaning");
   });
 });
 
-describe("getCustomerReviews", () => {
+describe("getPublishedCustomerReviews", () => {
   it("returns customer reviews on success", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({
@@ -292,8 +311,9 @@ describe("getCustomerReviews", () => {
         error: null,
       }),
     );
-    const { getCustomerReviews } = await import("@/shared/lib/domain/home");
-    const result = await getCustomerReviews();
+    const { getPublishedCustomerReviews } =
+      await import("@/shared/lib/queries/customer-review");
+    const result = await getPublishedCustomerReviews();
     expect(result).toHaveLength(1);
   });
 
@@ -302,8 +322,9 @@ describe("getCustomerReviews", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
-    const { getCustomerReviews } = await import("@/shared/lib/domain/home");
-    expect(await getCustomerReviews()).toEqual([]);
+    const { getPublishedCustomerReviews } =
+      await import("@/shared/lib/queries/customer-review");
+    expect(await getPublishedCustomerReviews()).toEqual([]);
     consoleSpy.mockRestore();
   });
 
@@ -312,8 +333,9 @@ describe("getCustomerReviews", () => {
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("x");
     });
-    const { getCustomerReviews } = await import("@/shared/lib/domain/home");
-    expect(await getCustomerReviews()).toEqual([]);
+    const { getPublishedCustomerReviews } =
+      await import("@/shared/lib/queries/customer-review");
+    expect(await getPublishedCustomerReviews()).toEqual([]);
     consoleSpy.mockRestore();
   });
 
@@ -321,7 +343,8 @@ describe("getCustomerReviews", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: null }),
     );
-    const { getCustomerReviews } = await import("@/shared/lib/domain/home");
-    expect(await getCustomerReviews()).toEqual([]);
+    const { getPublishedCustomerReviews } =
+      await import("@/shared/lib/queries/customer-review");
+    expect(await getPublishedCustomerReviews()).toEqual([]);
   });
 });
