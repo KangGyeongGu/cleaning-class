@@ -2,10 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 2 : 1,
+  workers: process.env.CI ? 1 : 2,
   reporter: process.env.CI ? "github" : "html",
   timeout: 60_000,
   expect: {
@@ -24,7 +25,7 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["iPhone 14"] } },
   ],
   webServer: {
-    command: "npm run build && npm start",
+    command: "npm run build && npm run start:standalone",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

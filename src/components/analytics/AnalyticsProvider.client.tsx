@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
   classifySource,
@@ -9,8 +8,6 @@ import {
 import { track } from "@/shared/lib/infra/track";
 
 export default function AnalyticsProvider(): null {
-  const pathname = usePathname();
-  const isFirstRender = useRef(true);
   const hasRecordedLanding = useRef(false);
 
   useEffect(() => {
@@ -34,20 +31,6 @@ export default function AnalyticsProvider(): null {
       path: window.location.pathname,
     });
   }, []);
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    if (typeof window === "undefined" || !window.gtag) return;
-
-    window.gtag("event", "page_view", {
-      page_path: pathname,
-      page_location: window.location.href,
-    });
-  }, [pathname]);
 
   return null;
 }

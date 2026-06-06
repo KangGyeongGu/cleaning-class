@@ -8,6 +8,36 @@ const snapshots = [
     path: "/services",
     viewport: { width: 1280, height: 800 },
   },
+  {
+    name: "services-mobile",
+    path: "/services",
+    viewport: { width: 390, height: 844 },
+  },
+  {
+    name: "contact-desktop",
+    path: "/contact",
+    viewport: { width: 1280, height: 800 },
+  },
+  {
+    name: "contact-mobile",
+    path: "/contact",
+    viewport: { width: 390, height: 844 },
+  },
+  {
+    name: "reviews-desktop",
+    path: "/reviews",
+    viewport: { width: 1280, height: 800 },
+  },
+  {
+    name: "price-desktop",
+    path: "/price",
+    viewport: { width: 1280, height: 800 },
+  },
+  {
+    name: "price-mobile",
+    path: "/price",
+    viewport: { width: 390, height: 844 },
+  },
 ];
 
 for (const s of snapshots) {

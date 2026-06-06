@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "legacy/**",
     "next-env.d.ts",
+    "playwright-report/**",
+    "test-results/**",
+    ".lighthouseci/**",
   ]),
   {
     plugins: { boundaries },
