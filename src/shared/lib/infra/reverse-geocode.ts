@@ -27,7 +27,8 @@ export async function reverseGeocodeKakao(
       cache: "no-store",
     });
     if (!res.ok) {
-      console.error("[reverseGeocodeKakao] HTTP", res.status);
+      const body = await res.text().catch(() => "");
+      console.error("[reverseGeocodeKakao] HTTP", res.status, body);
       return null;
     }
     const data = (await res.json()) as KakaoCoord2AddressResponse;

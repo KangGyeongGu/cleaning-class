@@ -2,11 +2,14 @@ import { describe, it, expect } from "vitest";
 import {
   ALLOWED_IMAGE_EXTENSIONS,
   ALLOWED_IMAGE_MIME_TYPES,
+  CONTACT_MAX_IMAGE_COUNT,
+  CONTACT_MAX_IMAGE_SIZE,
   MAX_IMAGE_UPLOAD_SIZE,
   getFileExtensionLower,
   isAllowedImageExtension,
   isAllowedImageMimeType,
   isValidImageMagicBytes,
+  validateContactImageFile,
 } from "@/shared/lib/pure/image-validation";
 
 describe("image-validation constants", () => {
@@ -14,6 +17,8 @@ describe("image-validation constants", () => {
     expect(ALLOWED_IMAGE_MIME_TYPES).toContain("image/jpeg");
     expect(ALLOWED_IMAGE_EXTENSIONS).toContain("jpg");
     expect(MAX_IMAGE_UPLOAD_SIZE).toBe(10 * 1024 * 1024);
+    expect(CONTACT_MAX_IMAGE_SIZE).toBe(25 * 1024 * 1024);
+    expect(CONTACT_MAX_IMAGE_COUNT).toBe(4);
   });
 });
 
@@ -53,6 +58,43 @@ describe("getFileExtensionLower", () => {
 
   it("returns empty string when there is no dot", () => {
     expect(getFileExtensionLower("noext")).toBe("");
+  });
+});
+
+describe("validateContactImageFile", () => {
+  function makeFile(name: string, size: number, type: string): File {
+    const bytes = new Uint8Array(Math.min(size, 16));
+    const f = new File([bytes], name, { type });
+    if (f.size !== size) {
+      Object.defineProperty(f, "size", { value: size });
+    }
+    return f;
+  }
+
+  it("returns ok for an allowed image", () => {
+    const file = makeFile("photo.jpg", 100, "image/jpeg");
+    expect(validateContactImageFile(file)).toEqual({ ok: true });
+  });
+
+  it("rejects when file exceeds 25MB", () => {
+    const file = makeFile("big.jpg", 26 * 1024 * 1024, "image/jpeg");
+    const result = validateContactImageFile(file);
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain("25MB");
+  });
+
+  it("rejects disallowed MIME type", () => {
+    const file = makeFile("doc.pdf", 100, "application/pdf");
+    const result = validateContactImageFile(file);
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain("형식");
+  });
+
+  it("rejects disallowed extension", () => {
+    const file = makeFile("noext", 100, "image/jpeg");
+    const result = validateContactImageFile(file);
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain("확장자");
   });
 });
 

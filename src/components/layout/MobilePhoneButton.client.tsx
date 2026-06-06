@@ -1,6 +1,7 @@
 "use client";
 
 import { Phone } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface MobilePhoneButtonProps {
@@ -12,6 +13,9 @@ export function MobilePhoneButton({
   phone,
   movingPhone,
 }: MobilePhoneButtonProps) {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/contact")) return null;
+
   const hasBoth = !!movingPhone;
 
   if (hasBoth) {

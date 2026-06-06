@@ -26,7 +26,7 @@ const cleaningContactSchema = z.object({
   addressDetail: z.string().optional().default(""),
   message: z
     .string()
-    .min(1, "문의 내용을 입력해주세요")
+    .min(50, "문의 내용은 최소 50자 이상 작성해주세요")
     .max(1000, "문의 내용은 1000자 이하로 작성해주세요"),
 });
 
@@ -44,7 +44,7 @@ const movingContactSchema = z.object({
   destinationDetail: z.string().optional().default(""),
   message: z
     .string()
-    .min(1, "문의 내용을 입력해주세요")
+    .min(50, "문의 내용은 최소 50자 이상 작성해주세요")
     .max(1000, "문의 내용은 1000자 이하로 작성해주세요"),
 });
 

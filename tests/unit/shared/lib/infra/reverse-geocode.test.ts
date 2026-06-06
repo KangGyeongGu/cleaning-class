@@ -65,15 +65,33 @@ describe("reverseGeocodeKakao", () => {
     expect(await reverseGeocodeKakao(35.8, 127.1)).toBeNull();
   });
 
-  it("returns null on HTTP error and logs", async () => {
+  it("returns null on HTTP error and logs body", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response("err", { status: 500 }),
+      new Response("err-body", { status: 500 }),
     );
     const { reverseGeocodeKakao } =
       await import("@/shared/lib/infra/reverse-geocode");
     expect(await reverseGeocodeKakao(35.8, 127.1)).toBeNull();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith(
+      "[reverseGeocodeKakao] HTTP",
+      500,
+      "err-body",
+    );
+  });
+
+  it("returns null when response body read fails", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fakeRes = {
+      ok: false,
+      status: 502,
+      text: () => Promise.reject(new Error("read fail")),
+    } as unknown as Response;
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(fakeRes);
+    const { reverseGeocodeKakao } =
+      await import("@/shared/lib/infra/reverse-geocode");
+    expect(await reverseGeocodeKakao(35.8, 127.1)).toBeNull();
+    expect(spy).toHaveBeenCalledWith("[reverseGeocodeKakao] HTTP", 502, "");
   });
 
   it("returns null on fetch rejection and logs", async () => {

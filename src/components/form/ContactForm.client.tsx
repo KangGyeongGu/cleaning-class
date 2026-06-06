@@ -9,6 +9,11 @@ import {
   CLEANING_INQUIRY_OPTIONS,
   MOVING_INQUIRY_OPTIONS,
 } from "@/shared/lib/pure/constants";
+import {
+  CONTACT_MAX_IMAGE_COUNT,
+  getFileExtensionLower,
+  validateContactImageFile,
+} from "@/shared/lib/pure/image-validation";
 import { CustomDropdown } from "@/components/form/CustomDropdown.client";
 import { ContactImageGallery } from "@/components/form/ContactImageGallery.client";
 import { AddressInput } from "@/components/form/AddressInput.client";
@@ -35,7 +40,8 @@ export function ContactForm({ phone }: ContactFormProps) {
     addFiles,
     removeAt,
     clear: clearImages,
-  } = useImageUpload(15);
+  } = useImageUpload(CONTACT_MAX_IMAGE_COUNT);
+  const [isConverting, setIsConverting] = useState(false);
   const [messageLength, setMessageLength] = useState<number>(0);
   const [formValid, setFormValid] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,7 +135,10 @@ export function ContactForm({ phone }: ContactFormProps) {
     if (isReset) setIsReset(false);
 
     const baseValid =
-      name !== "" && phoneValue !== "" && serviceType !== "" && message !== "";
+      name !== "" &&
+      phoneValue !== "" &&
+      serviceType !== "" &&
+      message.length >= 50;
 
     if (inquiryType === "cleaning") {
       setFormValid(baseValid && cleaningAddress.trim() !== "");
@@ -152,7 +161,8 @@ export function ContactForm({ phone }: ContactFormProps) {
       const name = nameRef.current?.value.trim() ?? "";
       const phoneValue = phoneRef.current?.value.trim() ?? "";
       const message = messageRef.current?.value.trim() ?? "";
-      const baseValid = name !== "" && phoneValue !== "" && message !== "";
+      const baseValid =
+        name !== "" && phoneValue !== "" && message.length >= 50;
       setFormValid(baseValid && false);
     }, 0);
   };
@@ -164,14 +174,72 @@ export function ContactForm({ phone }: ContactFormProps) {
     fileInputRef.current.files = dt.files;
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  function isHeicFile(file: File): boolean {
+    const type = file.type.toLowerCase();
+    if (
+      type === "image/heic" ||
+      type === "image/heif" ||
+      type === "image/heic-sequence" ||
+      type === "image/heif-sequence"
+    ) {
+      return true;
+    }
+    const ext = getFileExtensionLower(file.name);
+    return ext === "heic" || ext === "heif";
+  }
+
+  async function convertHeicToJpeg(file: File): Promise<File> {
+    const { default: heic2any } = await import("heic2any");
+    const converted = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.85,
+    });
+    const blob = Array.isArray(converted) ? converted[0] : converted;
+    const newName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+    return new File([blob], newName, { type: "image/jpeg" });
+  }
+
+  const handleImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> => {
+    if (isConverting) return;
     const incoming = Array.from(e.target.files ?? []);
-    if (images.length + incoming.length > 15) {
-      alert("이미지는 최대 15장까지 첨부 가능합니다.");
+    if (incoming.length === 0) return;
+
+    if (images.length + incoming.length > CONTACT_MAX_IMAGE_COUNT) {
+      alert(`이미지는 최대 ${CONTACT_MAX_IMAGE_COUNT}장까지 첨부 가능합니다.`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    addFiles(incoming);
-    syncFileInputDataTransfer([...images, ...incoming]);
+
+    const hasHeic = incoming.some(isHeicFile);
+    if (hasHeic) setIsConverting(true);
+
+    try {
+      const processed: File[] = [];
+      for (const file of incoming) {
+        try {
+          const next = isHeicFile(file) ? await convertHeicToJpeg(file) : file;
+          const result = validateContactImageFile(next);
+          if (!result.ok) {
+            alert(result.message);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+          }
+          processed.push(next);
+        } catch {
+          alert(`이미지 변환에 실패했습니다. (${file.name})`);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
+      }
+
+      addFiles(processed);
+      syncFileInputDataTransfer([...images, ...processed]);
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   const handleImageRemove = (index: number) => {
@@ -288,7 +356,7 @@ export function ContactForm({ phone }: ContactFormProps) {
                     checkFormValidity();
                   }}
                   className="form-input"
-                  placeholder="010-0000-0000"
+                  placeholder="000-0000-0000"
                 />
                 {state?.errors?.phone && (
                   <p className="form-error">{state.errors.phone[0]}</p>
@@ -356,6 +424,9 @@ export function ContactForm({ phone }: ContactFormProps) {
               <label htmlFor="message" className="form-label-sm">
                 문의사항
                 <span className="ml-1 text-red-500">*</span>
+                <span className="ml-2 text-xs font-normal text-slate-400">
+                  50자 이상 필수
+                </span>
               </label>
               <textarea
                 ref={messageRef}
@@ -365,7 +436,11 @@ export function ContactForm({ phone }: ContactFormProps) {
                 maxLength={1000}
                 required
                 className="scrollbar-thin form-input resize-none overflow-y-auto"
-                placeholder={`예) 25평 아파트 거주청소\n· 화장실 곰팡이 제거 필요\n· 11/15 또는 16일 오전 가능`}
+                placeholder={
+                  inquiryType === "moving"
+                    ? `예시) 8평 원룸에서 24평 아파트로 이사입니다. 장롱·냉장고·세탁기·침대 포함. 출발지 엘리베이터 없음.`
+                    : `예시) 8평 원룸 주거 청소 문의합니다. 주방 기름때, 유리창, 화장실 환풍구까지 청소가 필요합니다. 빌라 엘리베이터가 없습니다.`
+                }
                 onInput={(e) => {
                   setMessageLength(e.currentTarget.value.length);
                   checkFormValidity();
@@ -395,7 +470,7 @@ export function ContactForm({ phone }: ContactFormProps) {
           <div className="pt-4 text-center">
             <button
               type="submit"
-              disabled={isPending || !formValid}
+              disabled={isPending || isConverting || !formValid}
               className="btn-primary px-10 py-3"
               onClick={() => {
                 track({
@@ -411,6 +486,10 @@ export function ContactForm({ phone }: ContactFormProps) {
               {isPending ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> 문의 중...
+                </span>
+              ) : isConverting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> 이미지 변환 중...
                 </span>
               ) : showSuccess ? (
                 <span className="flex items-center justify-center gap-2">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { MapPin, Search, Loader2, X } from "lucide-react";
 
@@ -34,6 +35,12 @@ export function AddressInput({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+    setMounted(true);
+  }, []);
 
   function commitAddress(next: string): void {
     setAddress(next);
@@ -106,9 +113,16 @@ export function AddressInput({
           name={addressName}
           value={address}
           required={required}
-          onChange={(e) => commitAddress(e.target.value)}
-          className="form-input pr-20"
-          placeholder="주소 입력 또는 우측 아이콘 사용"
+          readOnly
+          onClick={() => setPickerOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setPickerOpen(true);
+            }
+          }}
+          className="form-input cursor-pointer pr-20"
+          placeholder="주소 검색"
         />
         <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1">
           <button
@@ -142,44 +156,52 @@ export function AddressInput({
         value={detail}
         onChange={(e) => commitDetail(e.target.value)}
         className="form-input mt-2"
-        placeholder="상세주소 (동·호수·층) — 선택"
+        placeholder="선택사항: 상세 주소 (동·호수)"
       />
 
       {hint && <p className="form-error mt-1">{hint}</p>}
       {error && <p className="form-error mt-1">{error}</p>}
 
-      {pickerOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setPickerOpen(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setPickerOpen(false);
-          }}
-          role="presentation"
-        >
+      {pickerOpen &&
+        mounted &&
+        createPortal(
           <div
-            className="relative w-full max-w-lg bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-label="주소 검색"
-            tabIndex={-1}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setPickerOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setPickerOpen(false);
+            }}
+            role="presentation"
           >
-            <button
-              type="button"
-              onClick={() => setPickerOpen(false)}
-              aria-label="닫기"
-              className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100"
+            <div
+              className="w-full max-w-lg bg-white shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-label="주소 검색"
+              tabIndex={-1}
             >
-              <X size={16} />
-            </button>
-            <DaumPostcode
-              onComplete={handleSelectComplete}
-              style={{ height: 480 }}
-            />
-          </div>
-        </div>
-      )}
+              <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
+                <span className="text-sm font-bold text-slate-900">
+                  주소 검색
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(false)}
+                  aria-label="닫기"
+                  className="flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <DaumPostcode
+                onComplete={handleSelectComplete}
+                style={{ height: 480 }}
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

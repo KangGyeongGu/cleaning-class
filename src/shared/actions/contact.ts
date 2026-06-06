@@ -3,15 +3,9 @@
 import { contactFormSchema } from "@/shared/lib/schema/index";
 import { sendContactEmail } from "@/shared/lib/infra/mail";
 import {
-  ALLOWED_IMAGE_EXTENSIONS,
-  MAX_IMAGE_UPLOAD_SIZE,
-  getFileExtensionLower,
-  isAllowedImageExtension,
-  isAllowedImageMimeType,
+  CONTACT_MAX_IMAGE_COUNT,
+  validateContactImageFile,
 } from "@/shared/lib/pure/image-validation";
-
-const MAX_IMAGE_COUNT = 15;
-const MAX_TOTAL_SIZE = 50 * 1024 * 1024;
 
 export async function submitContactForm(
   prevState: unknown,
@@ -43,44 +37,17 @@ export async function submitContactForm(
   const imageFiles = formData.getAll("images") as File[];
   const filteredImageFiles = imageFiles.filter((file) => file && file.size > 0);
 
-  if (filteredImageFiles.length > MAX_IMAGE_COUNT) {
+  if (filteredImageFiles.length > CONTACT_MAX_IMAGE_COUNT) {
     return {
       success: false,
-      error: `이미지는 최대 ${MAX_IMAGE_COUNT}장까지 첨부할 수 있습니다.`,
+      error: `이미지는 최대 ${CONTACT_MAX_IMAGE_COUNT}장까지 첨부할 수 있습니다.`,
     };
   }
 
   for (const file of filteredImageFiles) {
-    if (file.size > MAX_IMAGE_UPLOAD_SIZE) {
-      return {
-        success: false,
-        error: `개별 이미지 크기는 10MB를 초과할 수 없습니다. (${file.name})`,
-      };
-    }
-  }
-
-  const totalSize = filteredImageFiles.reduce((sum, f) => sum + f.size, 0);
-  if (totalSize > MAX_TOTAL_SIZE) {
-    return {
-      success: false,
-      error: "첨부 파일 총 용량은 50MB를 초과할 수 없습니다.",
-    };
-  }
-
-  for (const file of filteredImageFiles) {
-    if (!isAllowedImageMimeType(file.type)) {
-      return {
-        success: false,
-        error: `허용되지 않는 파일 형식입니다: ${file.type}. (${file.name})`,
-      };
-    }
-
-    const ext = getFileExtensionLower(file.name);
-    if (!isAllowedImageExtension(ext)) {
-      return {
-        success: false,
-        error: `허용되지 않는 파일 확장자입니다. 허용 확장자: ${ALLOWED_IMAGE_EXTENSIONS.join(", ")} (${file.name})`,
-      };
+    const { ok, message } = validateContactImageFile(file);
+    if (!ok) {
+      return { success: false, error: message };
     }
   }
 

@@ -29,6 +29,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.cleaningclass.co.kr"),
+  formatDetection: {
+    telephone: false,
+  },
   verification: {
     google: "p_YMbf0LS_UF1H8XHrmiIYuU-qCfd4oCj6ue9YuY_Us",
     other: {

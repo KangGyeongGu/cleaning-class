@@ -12,6 +12,9 @@ import {
   serviceFormSchema,
 } from "@/shared/lib/schema/index";
 
+const VALID_MESSAGE =
+  "8평 원룸 주거 청소 견적 문의드립니다. 주방 기름때와 유리창, 화장실 환풍구까지 전체 청소가 필요합니다. 일정은 다음 주 가능합니다.";
+
 describe("contactFormSchema", () => {
   it("accepts valid cleaning inquiry", () => {
     const result = contactFormSchema.safeParse({
@@ -20,7 +23,7 @@ describe("contactFormSchema", () => {
       phone: "010-1234-5678",
       serviceType: "거주청소",
       address: "전북 전주시 효자로 1",
-      message: "거주 청소 견적 문의드립니다.",
+      message: VALID_MESSAGE,
     });
     expect(result.success).toBe(true);
   });
@@ -32,7 +35,7 @@ describe("contactFormSchema", () => {
       phone: "010-abcd-5678",
       serviceType: "거주청소",
       address: "전북 전주시 효자로 1",
-      message: "테스트",
+      message: VALID_MESSAGE,
     });
     expect(result.success).toBe(false);
   });
@@ -43,9 +46,32 @@ describe("contactFormSchema", () => {
       name: "홍길동",
       phone: "010-1234-5678",
       serviceType: "원룸이사",
-      message: "이사 문의",
+      message: VALID_MESSAGE,
     });
     expect(result.success).toBe(true);
+  });
+
+  it("rejects cleaning inquiry with message shorter than 50 chars", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "cleaning",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "거주청소",
+      address: "전북 전주시 효자로 1",
+      message: "짧은 문의 내용",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects moving inquiry with message shorter than 50 chars", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "moving",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "원룸이사",
+      message: "짧은 문의 내용",
+    });
+    expect(result.success).toBe(false);
   });
 
   it("rejects cleaning inquiry without address", () => {

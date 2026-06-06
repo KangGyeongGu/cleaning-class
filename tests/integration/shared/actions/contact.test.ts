@@ -13,6 +13,9 @@ beforeEach(() => {
   vi.resetModules();
 });
 
+const SAMPLE_MESSAGE_50 =
+  "8평 원룸 주거 청소 견적 문의드립니다. 주방 기름때와 유리창, 화장실 환풍구까지 전체 청소가 필요합니다. 일정은 다음 주 가능합니다.";
+
 function buildCleaningForm(
   overrides: Partial<Record<string, FormDataEntryValue>> = {},
 ): FormData {
@@ -23,7 +26,7 @@ function buildCleaningForm(
   fd.set("serviceType", "거주청소");
   fd.set("address", "전북 전주시 효자로 1");
   fd.set("addressDetail", "101동 101호");
-  fd.set("message", "문의합니다");
+  fd.set("message", SAMPLE_MESSAGE_50);
   for (const [k, v] of Object.entries(overrides)) {
     fd.set(k, String(v));
   }
@@ -40,7 +43,7 @@ function buildMovingForm(): FormData {
   fd.set("departureDetail", "1층");
   fd.set("destinationAddress", "전북 전주시 효자로");
   fd.set("destinationDetail", "");
-  fd.set("message", "이사 문의");
+  fd.set("message", SAMPLE_MESSAGE_50);
   return fd;
 }
 
@@ -120,35 +123,24 @@ describe("submitContactForm — moving path", () => {
 });
 
 describe("submitContactForm — image validation", () => {
-  it("rejects more than 15 images", async () => {
+  it("rejects more than 4 images", async () => {
     const fd = buildCleaningForm();
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 5; i++) {
       fd.append("images", makeFile(`a${i}.jpg`, 1000));
     }
     const { submitContactForm } = await import("@/shared/actions/contact");
     const result = await submitContactForm(null, fd);
     expect(result.success).toBe(false);
-    expect(result.error).toContain("15");
+    expect(result.error).toContain("4");
   });
 
-  it("rejects single image over 10MB", async () => {
+  it("rejects single image over 25MB", async () => {
     const fd = buildCleaningForm();
-    fd.append("images", makeFile("big.jpg", 11 * 1024 * 1024));
+    fd.append("images", makeFile("big.jpg", 26 * 1024 * 1024));
     const { submitContactForm } = await import("@/shared/actions/contact");
     const result = await submitContactForm(null, fd);
     expect(result.success).toBe(false);
-    expect(result.error).toContain("10MB");
-  });
-
-  it("rejects total upload over 50MB", async () => {
-    const fd = buildCleaningForm();
-    for (let i = 0; i < 6; i++) {
-      fd.append("images", makeFile(`a${i}.jpg`, 9 * 1024 * 1024));
-    }
-    const { submitContactForm } = await import("@/shared/actions/contact");
-    const result = await submitContactForm(null, fd);
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("50MB");
+    expect(result.error).toContain("25MB");
   });
 
   it("rejects disallowed MIME type", async () => {

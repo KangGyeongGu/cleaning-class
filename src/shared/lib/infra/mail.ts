@@ -75,7 +75,7 @@ function getTransporter(): Mail {
   return cachedTransporter;
 }
 
-interface AttachmentForBody {
+export interface AttachmentForBody {
   filename: string;
   cid: string;
 }
@@ -88,24 +88,34 @@ function rowHtml(label: string, value: string): string {
     </tr>`;
 }
 
+function mapLinkOrPlain(addr: string | undefined): string {
+  const trimmed = addr?.trim() ?? "";
+  if (!trimmed) return escapeHtml("미입력");
+  const safe = escapeHtml(trimmed);
+  const url = `https://map.kakao.com/?q=${encodeURIComponent(trimmed)}`;
+  const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:4px;"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
+  return `<a href="${url}" target="_blank" rel="noopener" style="color:#0f172a;text-decoration:underline;">${safe}${icon}</a>`;
+}
+
 function buildImageGrid(attachments: AttachmentForBody[]): string {
   if (attachments.length === 0) return "";
-  const thumbs = attachments
+  const items = attachments
     .map(
-      (a) => `
-        <td style="padding:4px;vertical-align:top;">
-          <img src="cid:${a.cid}" alt="${escapeHtml(a.filename)}" width="120" height="120" style="display:block;width:120px;height:120px;object-fit:cover;border:1px solid #e2e8f0;" />
-        </td>`,
+      (a, i) => `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;color:#64748b;margin-bottom:6px;">${i + 1} / ${attachments.length} · ${escapeHtml(a.filename)}</div>
+        <img src="cid:${a.cid}" alt="${escapeHtml(a.filename)}" style="display:block;width:100%;max-width:552px;height:auto;border:1px solid #e2e8f0;" />
+      </div>`,
     )
     .join("");
   return `
     <tr><td style="padding:20px 24px;">
-      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#64748b;text-transform:uppercase;margin-bottom:8px;">첨부 사진 (${attachments.length}장)</div>
-      <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>${thumbs}</tr></table>
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#64748b;text-transform:uppercase;margin-bottom:12px;">첨부 사진 (${attachments.length}장)</div>
+      ${items}
     </td></tr>`;
 }
 
-function buildContactHtml(
+export function buildContactHtml(
   data: ContactEmailData,
   attachments: AttachmentForBody[],
 ): string {
@@ -118,19 +128,10 @@ function buildContactHtml(
     rowHtml("서비스", escapeHtml(data.serviceType)),
   ];
   if (isMoving) {
-    detailRows.push(
-      rowHtml("출발지", escapeHtml(data.departureAddress?.trim() || "미입력")),
-    );
-    detailRows.push(
-      rowHtml(
-        "도착지",
-        escapeHtml(data.destinationAddress?.trim() || "미입력"),
-      ),
-    );
+    detailRows.push(rowHtml("출발지", mapLinkOrPlain(data.departureAddress)));
+    detailRows.push(rowHtml("도착지", mapLinkOrPlain(data.destinationAddress)));
   } else {
-    detailRows.push(
-      rowHtml("주소", escapeHtml(data.address?.trim() || "미입력")),
-    );
+    detailRows.push(rowHtml("주소", mapLinkOrPlain(data.address)));
   }
 
   return `<!DOCTYPE html>

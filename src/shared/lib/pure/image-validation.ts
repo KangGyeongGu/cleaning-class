@@ -17,6 +17,39 @@ export const ALLOWED_IMAGE_EXTENSIONS = [
 
 export const MAX_IMAGE_UPLOAD_SIZE = 10 * 1024 * 1024;
 
+export const CONTACT_MAX_IMAGE_SIZE = 25 * 1024 * 1024;
+export const CONTACT_MAX_IMAGE_COUNT = 4;
+
+export interface ContactImageValidationResult {
+  ok: boolean;
+  message?: string;
+}
+
+export function validateContactImageFile(
+  file: File,
+): ContactImageValidationResult {
+  if (file.size > CONTACT_MAX_IMAGE_SIZE) {
+    return {
+      ok: false,
+      message: `개별 이미지 크기는 25MB를 초과할 수 없습니다. (${file.name})`,
+    };
+  }
+  if (!isAllowedImageMimeType(file.type)) {
+    return {
+      ok: false,
+      message: `허용되지 않는 파일 형식입니다: ${file.type}. (${file.name})`,
+    };
+  }
+  const ext = getFileExtensionLower(file.name);
+  if (!isAllowedImageExtension(ext)) {
+    return {
+      ok: false,
+      message: `허용되지 않는 파일 확장자입니다. 허용 확장자: ${ALLOWED_IMAGE_EXTENSIONS.join(", ")} (${file.name})`,
+    };
+  }
+  return { ok: true };
+}
+
 const IMAGE_MAGIC_BYTES: Array<{ signature: number[]; offset: number }> = [
   { signature: [0xff, 0xd8, 0xff], offset: 0 },
   { signature: [0x89, 0x50, 0x4e, 0x47], offset: 0 },
