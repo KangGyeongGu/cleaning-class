@@ -1,7 +1,7 @@
-import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
-import { MobilePhoneButton } from "@/components/MobilePhoneButton";
-import { getSiteConfig } from "@/shared/lib/site-config";
+import { Footer } from "@/components/layout/Footer";
+import { Navbar } from "@/components/layout/Navbar.client";
+import { MobilePhoneButton } from "@/components/layout/MobilePhoneButton.client";
+import { getSiteConfig } from "@/shared/lib/domain/site-config";
 
 export const revalidate = 3600;
 

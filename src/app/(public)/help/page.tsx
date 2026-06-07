@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { generateBreadcrumbListJsonLd } from "@/shared/lib/json-ld";
-import { getSiteConfig } from "@/shared/lib/site-config";
-import { FaqSection } from "@/components/FaqSection";
-import { JsonLdScript } from "@/components/JsonLdScript";
+import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
+import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { FaqSection } from "@/components/faq/FaqSection";
+import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
 

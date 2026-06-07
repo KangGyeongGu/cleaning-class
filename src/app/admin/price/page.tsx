@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { PriceDescriptionSection } from "@/app/admin/price/PriceDescriptionSection";
 import { PriceListSection } from "@/app/admin/price/PriceListSection";
 
 export default async function AdminPricePage(): Promise<React.ReactElement> {
@@ -16,6 +17,7 @@ export default async function AdminPricePage(): Promise<React.ReactElement> {
         </Link>
       </div>
 
+      <PriceDescriptionSection />
       <PriceListSection />
     </div>
   );

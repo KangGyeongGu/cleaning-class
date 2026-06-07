@@ -1,5 +1,5 @@
 import { getServices } from "@/shared/lib/queries/service";
-import { ServiceListClient } from "@/app/admin/services/ServiceListClient";
+import { ServiceListClient } from "@/app/admin/services/ServiceListClient.client";
 
 export async function ServiceListSection(): Promise<React.ReactElement> {
   const servicesWithImageUrls = await getServices();

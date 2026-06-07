@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getSiteConfig } from "@/shared/lib/site-config";
-import { generateBreadcrumbListJsonLd } from "@/shared/lib/json-ld";
-import { ContactForm } from "@/components/ContactForm";
+import { Suspense } from "react";
+import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
+import { getPublishedPriceItems } from "@/shared/lib/queries/price";
+import { ContactSection } from "@/components/form/ContactSection.client";
 import {
   NaverBlogIcon,
   InstagramIcon,
@@ -10,7 +12,7 @@ import {
 } from "@/components/icons/SocialIcons";
 import TrackedPhoneLink from "@/components/analytics/TrackedPhoneLink.client";
 import TrackedSnsLink from "@/components/analytics/TrackedSnsLink.client";
-import { JsonLdScript } from "@/components/JsonLdScript";
+import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
 
@@ -42,18 +44,22 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const siteConfig = await getSiteConfig();
+  const [siteConfig, priceItems] = await Promise.all([
+    getSiteConfig(),
+    getPublishedPriceItems(),
+  ]);
+  const cleaningServiceOptions = priceItems.map((p) => p.name);
 
   const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
     { name: "홈", url: "https://www.cleaningclass.co.kr" },
     { name: "견적문의", url: "https://www.cleaningclass.co.kr/contact" },
   ]);
 
-  const phone = siteConfig?.phone ?? "";
-  const movingPhone = siteConfig?.moving_phone ?? "";
-  const blogUrl = siteConfig?.blog_url ?? "";
-  const instagramUrl = siteConfig?.instagram_url ?? "";
-  const daangnUrl = siteConfig?.daangn_url ?? "";
+  const phone = (siteConfig?.phone ?? "").trim();
+  const movingPhone = (siteConfig?.moving_phone ?? "").trim();
+  const blogUrl = (siteConfig?.blog_url ?? "").trim();
+  const instagramUrl = (siteConfig?.instagram_url ?? "").trim();
+  const daangnUrl = (siteConfig?.daangn_url ?? "").trim();
 
   return (
     <>
@@ -164,7 +170,11 @@ export default async function ContactPage() {
               </aside>
 
               <div>
-                <ContactForm />
+                <Suspense>
+                  <ContactSection
+                    cleaningServiceOptions={cleaningServiceOptions}
+                  />
+                </Suspense>
               </div>
             </div>
           </div>

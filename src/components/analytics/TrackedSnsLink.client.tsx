@@ -1,12 +1,18 @@
 "use client";
 
-import { trackSnsClick } from "@/shared/lib/analytics";
-import type { SnsClickParams } from "@/shared/lib/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
+
+export type SnsPlatform = "naver_blog" | "instagram" | "daangn";
+export type SnsClickLocation =
+  | "navbar"
+  | "footer"
+  | "reviews_section"
+  | "contact_aside";
 
 interface TrackedSnsLinkProps {
   href: string;
-  platform: SnsClickParams["sns_platform"];
-  location: SnsClickParams["click_location"];
+  platform: SnsPlatform;
+  location: SnsClickLocation;
   children: React.ReactNode;
   className?: string;
   ariaLabel?: string;
@@ -21,9 +27,10 @@ export default function TrackedSnsLink({
   ariaLabel,
 }: TrackedSnsLinkProps): React.ReactElement {
   function handleClick(): void {
-    trackSnsClick({
-      sns_platform: platform,
-      click_location: location,
+    track({
+      event_type: "sns_click",
+      event_payload: { sns_platform: platform, click_location: location },
+      path: currentPath(),
     });
   }
 

@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { trackSelectContent } from "@/shared/lib/analytics";
-import type { CtaButtonId } from "@/shared/lib/analytics";
+import { track, currentPath } from "@/shared/lib/infra/track";
+
+export type CtaButtonId =
+  | "hero_quote_button"
+  | "services_cleaning_contact"
+  | "services_moving_contact"
+  | "services_page_quote"
+  | "navbar_contact"
+  | "home_price_banner"
+  | `service_card_${string}`;
 
 interface TrackedCtaLinkProps {
   href: string;
@@ -18,9 +26,10 @@ export default function TrackedCtaLink({
   className,
 }: TrackedCtaLinkProps): React.ReactElement {
   function handleClick(): void {
-    trackSelectContent({
-      content_type: "cta_button",
-      content_id: contentId,
+    track({
+      event_type: "cta_click",
+      event_payload: { content_id: contentId },
+      path: currentPath(),
     });
   }
 

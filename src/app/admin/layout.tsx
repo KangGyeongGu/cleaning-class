@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import type { Metadata } from "next";
-import { AdminSidebar } from "@/app/admin/AdminSidebar";
+import { AdminSidebar } from "@/app/admin/AdminSidebar.client";
 import { getUser } from "@/shared/lib/supabase/auth";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };

@@ -36,11 +36,13 @@ export function useDragReorder<T>(
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const onDragStart = (index: number): void => {
+    if (isSaving) return;
     dragItem.current = index;
     setDragIndex(index);
   };
 
   const onDragEnter = (index: number): void => {
+    if (isSaving) return;
     dragOverItem.current = index;
     setDragOverIndex(index);
   };

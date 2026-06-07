@@ -1,27 +1,61 @@
 import type { Metadata } from "next";
-import { getAdminCustomerReviews } from "@/shared/lib/queries/customer-review";
-import { CustomerReviewsList } from "@/app/admin/customer-reviews/CustomerReviewsList.client";
+import Link from "next/link";
+import { ArrowDownNarrowWide, ArrowUpWideNarrow } from "lucide-react";
 import { CustomerReviewDescriptionSection } from "@/app/admin/customer-reviews/CustomerReviewDescriptionSection";
+import { CustomerReviewsListSection } from "@/app/admin/customer-reviews/CustomerReviewsListSection";
+import { reviewListSortSchema } from "@/shared/lib/schema/index";
 
 export const metadata: Metadata = {
   title: "고객 리뷰 관리",
   robots: { index: false, follow: false },
 };
 
-export default async function CustomerReviewsPage(): Promise<React.ReactElement> {
-  const reviews = await getAdminCustomerReviews();
+interface CustomerReviewsPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function CustomerReviewsPage({
+  searchParams,
+}: CustomerReviewsPageProps): Promise<React.ReactElement> {
+  const params = await searchParams;
+  const sort = reviewListSortSchema.parse(params.sort);
+
+  const sortLinkBase =
+    "inline-flex items-center gap-1.5 text-xs font-bold transition-colors md:text-sm";
+  const activeClass = "text-slate-900";
+  const inactiveClass = "text-slate-400 hover:text-slate-600";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:p-8">
-      <div className="mb-6 md:mb-8">
-        <h1 className="md:text-heading-1 text-xl font-black">고객 리뷰 관리</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="md:text-heading-1 text-lg font-black">고객 리뷰 관리</h1>
       </div>
 
-      <div className="mb-6 md:mb-8">
-        <CustomerReviewDescriptionSection />
-      </div>
+      <CustomerReviewDescriptionSection />
 
-      <CustomerReviewsList reviews={reviews} />
+      <nav
+        aria-label="고객 리뷰 정렬"
+        className="mb-3 flex items-center justify-end gap-4"
+      >
+        <Link
+          href="/admin/customer-reviews?sort=latest"
+          className={`${sortLinkBase} ${sort === "latest" ? activeClass : inactiveClass}`}
+          aria-current={sort === "latest" ? "page" : undefined}
+        >
+          <ArrowDownNarrowWide size={14} />
+          최신순
+        </Link>
+        <Link
+          href="/admin/customer-reviews?sort=oldest"
+          className={`${sortLinkBase} ${sort === "oldest" ? activeClass : inactiveClass}`}
+          aria-current={sort === "oldest" ? "page" : undefined}
+        >
+          <ArrowUpWideNarrow size={14} />
+          오래된순
+        </Link>
+      </nav>
+
+      <CustomerReviewsListSection sort={sort} />
     </div>
   );
 }

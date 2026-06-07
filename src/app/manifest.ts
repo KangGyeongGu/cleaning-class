@@ -7,6 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description:
       "전주 청소업체 청소클라쓰 — 전북 전주 거주청소, 입주청소, 정기청소, 특수청소, 쓰레기집청소, 상가청소 전문 서비스",
     start_url: "/",
+    lang: "ko",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ffffff",

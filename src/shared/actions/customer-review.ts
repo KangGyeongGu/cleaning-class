@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/shared/lib/supabase/server";
 import { createStaticClient } from "@/shared/lib/supabase/static";
 import { getUser } from "@/shared/lib/supabase/auth";
-import { publicReviewFormSchema } from "@/shared/lib/schema";
+import { publicReviewFormSchema } from "@/shared/lib/schema/index";
 
 const REVALIDATE_PATHS = ["/", "/admin/customer-reviews"] as const;
 

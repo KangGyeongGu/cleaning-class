@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ReviewSubmitForm } from "@/components/ReviewSubmitForm.client";
+import { ReviewSubmitForm } from "@/components/review/ReviewSubmitForm.client";
 
 export const metadata: Metadata = {
   title: "리뷰 작성",

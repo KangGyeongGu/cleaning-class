@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { createStaticClient } from "@/shared/lib/supabase/static";
-import { formatPhoneNumber } from "@/shared/lib/format";
+import { formatPhoneNumber } from "@/shared/lib/pure/format";
 
 export const runtime = "nodejs";
 export const alt = "청소클라쓰 — 전북 전주 전문 청소·이사 서비스";

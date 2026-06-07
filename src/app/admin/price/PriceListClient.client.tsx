@@ -9,7 +9,7 @@ import {
   togglePriceItemPublished,
   reorderPriceItems,
 } from "@/shared/actions/price";
-import { formatPriceWon } from "@/shared/lib/format";
+import { formatPriceWon } from "@/shared/lib/pure/format";
 import { useDragReorder } from "@/shared/lib/hooks/useDragReorder";
 import type { PriceItemRow } from "@/shared/types/database";
 

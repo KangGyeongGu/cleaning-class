@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { generateBreadcrumbListJsonLd } from "@/shared/lib/json-ld";
-import { getPublishedServicesWithImageUrls } from "@/shared/lib/home";
-import type { ServiceWithImageUrls } from "@/shared/lib/home";
-import { ServiceBeforeAfter } from "@/components/ServiceBeforeAfter.client";
+import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
+import { getPublishedServicesWithImageUrls } from "@/shared/lib/queries/service";
+import type { ServiceWithImageUrls } from "@/shared/lib/queries/service";
+import { ServiceBeforeAfter } from "@/components/service/ServiceBeforeAfter.client";
 import { HashHighlight } from "@/app/(public)/services/HashHighlight.client";
-import { BLUR_PLACEHOLDER } from "@/shared/lib/image";
+import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
 import TrackedCtaLink from "@/components/analytics/TrackedCtaLink.client";
-import { JsonLdScript } from "@/components/JsonLdScript";
+import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
 
@@ -198,10 +198,10 @@ function ServiceCategorySection({
 }
 
 export default async function ServicesPage() {
-  const allServices = await getPublishedServicesWithImageUrls();
-
-  const cleaningServices = allServices.filter((s) => s.category === "cleaning");
-  const movingServices = allServices.filter((s) => s.category === "moving");
+  const [cleaningServices, movingServices] = await Promise.all([
+    getPublishedServicesWithImageUrls("cleaning"),
+    getPublishedServicesWithImageUrls("moving"),
+  ]);
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-slate-900 selection:text-white">

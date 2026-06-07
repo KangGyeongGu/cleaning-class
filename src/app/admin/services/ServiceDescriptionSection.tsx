@@ -1,5 +1,5 @@
-import { getSiteConfig } from "@/shared/lib/site-config";
-import { InlineDescriptionEditor } from "@/app/admin/components/InlineDescriptionEditor";
+import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { InlineDescriptionEditor } from "@/app/admin/components/InlineDescriptionEditor.client";
 import { updateServiceDescription } from "@/shared/actions/site-config";
 
 export async function ServiceDescriptionSection(): Promise<React.ReactElement> {

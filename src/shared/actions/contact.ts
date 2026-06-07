@@ -1,20 +1,11 @@
 "use server";
 
-import { contactFormSchema } from "@/shared/lib/schema";
-import { sendContactEmail } from "@/shared/lib/mail";
-
-const MAX_IMAGE_COUNT = 15;
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const MAX_TOTAL_SIZE = 50 * 1024 * 1024;
-
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-] as const;
-
-const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp"] as const;
+import { contactFormSchema } from "@/shared/lib/schema/index";
+import { sendContactEmail } from "@/shared/lib/infra/mail";
+import {
+  CONTACT_MAX_IMAGE_COUNT,
+  validateContactImageFile,
+} from "@/shared/lib/pure/image-validation";
 
 export async function submitContactForm(
   prevState: unknown,
@@ -25,9 +16,12 @@ export async function submitContactForm(
     name: formData.get("name"),
     phone: formData.get("phone"),
     serviceType: formData.get("serviceType"),
-    region: formData.get("region"),
-    departure: formData.get("departure"),
-    destination: formData.get("destination"),
+    address: formData.get("address"),
+    addressDetail: formData.get("addressDetail"),
+    departureAddress: formData.get("departureAddress"),
+    departureDetail: formData.get("departureDetail"),
+    destinationAddress: formData.get("destinationAddress"),
+    destinationDetail: formData.get("destinationDetail"),
     message: formData.get("message"),
   };
 
@@ -43,45 +37,17 @@ export async function submitContactForm(
   const imageFiles = formData.getAll("images") as File[];
   const filteredImageFiles = imageFiles.filter((file) => file && file.size > 0);
 
-  if (filteredImageFiles.length > MAX_IMAGE_COUNT) {
+  if (filteredImageFiles.length > CONTACT_MAX_IMAGE_COUNT) {
     return {
       success: false,
-      error: `이미지는 최대 ${MAX_IMAGE_COUNT}장까지 첨부할 수 있습니다.`,
+      error: `이미지는 최대 ${CONTACT_MAX_IMAGE_COUNT}장까지 첨부할 수 있습니다.`,
     };
   }
 
   for (const file of filteredImageFiles) {
-    if (file.size > MAX_IMAGE_SIZE) {
-      return {
-        success: false,
-        error: `개별 이미지 크기는 10MB를 초과할 수 없습니다. (${file.name})`,
-      };
-    }
-  }
-
-  const totalSize = filteredImageFiles.reduce((sum, f) => sum + f.size, 0);
-  if (totalSize > MAX_TOTAL_SIZE) {
-    return {
-      success: false,
-      error: "첨부 파일 총 용량은 50MB를 초과할 수 없습니다.",
-    };
-  }
-
-  for (const file of filteredImageFiles) {
-    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
-      return {
-        success: false,
-        error: `허용되지 않는 파일 형식입니다: ${file.type}. 허용 형식: jpg, jpeg, png, gif, webp (${file.name})`,
-      };
-    }
-
-    const lastDot = file.name.lastIndexOf(".");
-    const dotExt = lastDot === -1 ? "" : file.name.slice(lastDot).toLowerCase();
-    if (!(ALLOWED_EXTENSIONS as readonly string[]).includes(dotExt)) {
-      return {
-        success: false,
-        error: `허용되지 않는 파일 확장자입니다. 허용 확장자: .jpg, .jpeg, .png, .gif, .webp (${file.name})`,
-      };
+    const { ok, message } = validateContactImageFile(file);
+    if (!ok) {
+      return { success: false, error: message };
     }
   }
 
@@ -98,14 +64,28 @@ export async function submitContactForm(
 
     const data = validationResult.data;
 
+    function joinAddress(main: string, detail?: string): string {
+      const d = detail?.trim();
+      return d ? `${main} ${d}` : main;
+    }
+
     await sendContactEmail({
       inquiryType: data.inquiryType,
       name: data.name,
       phone: data.phone,
       serviceType: data.serviceType,
-      region: data.inquiryType === "cleaning" ? data.region : undefined,
-      departure: data.inquiryType === "moving" ? data.departure : undefined,
-      destination: data.inquiryType === "moving" ? data.destination : undefined,
+      address:
+        data.inquiryType === "cleaning"
+          ? joinAddress(data.address, data.addressDetail)
+          : undefined,
+      departureAddress:
+        data.inquiryType === "moving"
+          ? joinAddress(data.departureAddress, data.departureDetail)
+          : undefined,
+      destinationAddress:
+        data.inquiryType === "moving"
+          ? joinAddress(data.destinationAddress, data.destinationDetail)
+          : undefined,
       message: data.message,
       images: imageAttachments.length > 0 ? imageAttachments : undefined,
     });

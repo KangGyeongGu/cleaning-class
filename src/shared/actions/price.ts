@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/shared/lib/supabase/server";
 import { getUser } from "@/shared/lib/supabase/auth";
 import { z } from "zod";
-import { priceItemFormSchema } from "@/shared/lib/schema";
+import { priceItemFormSchema } from "@/shared/lib/schema/index";
 import type { PriceItemInsert, PriceItemUpdate } from "@/shared/types/database";
 
 const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");

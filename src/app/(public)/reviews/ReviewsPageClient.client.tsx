@@ -1,17 +1,15 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Review } from "@/shared/types/database";
 import { getReviewImageUrl } from "@/shared/lib/supabase/storage";
-import { CLEANING_SERVICE_TYPES } from "@/shared/lib/constants";
+import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 
-import { BLUR_PLACEHOLDER } from "@/shared/lib/image";
-import {
-  trackReviewCardClick,
-  trackReviewFilter,
-} from "@/shared/lib/analytics";
+import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
+import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface ReviewsPageClientProps {
   reviews: Review[];
@@ -76,13 +74,15 @@ function ReviewCard({ review }: { review: Review }) {
         className="block h-full"
         aria-label={`${review.title} — 블로그에서 보기`}
         onClick={() =>
-          trackReviewCardClick({
-            review_id: review.id,
-            review_title: review.title,
-
-            service_type: review.tags[0] ?? "",
-            click_source: "reviews_page",
-            destination_url: cardUrl,
+          track({
+            event_type: "review_card_click",
+            event_payload: {
+              review_id: review.id,
+              service_type: review.tags[0] ?? "",
+              click_source: "reviews_page",
+              destination_url: cardUrl,
+            },
+            path: currentPath(),
           })
         }
       >
@@ -97,31 +97,66 @@ function ReviewCard({ review }: { review: Review }) {
 const PER_PAGE = 12;
 
 export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const listRef = useRef<HTMLUListElement>(null);
+
+  const filterParam = searchParams.get("filter");
+  const activeFilter =
+    filterParam &&
+    (CLEANING_SERVICE_TYPES as readonly string[]).includes(filterParam)
+      ? filterParam
+      : null;
+  const pageParam = Number.parseInt(searchParams.get("page") ?? "1", 10);
+  const requestedPage =
+    Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const filteredReviews = activeFilter
     ? reviews.filter((r) => r.tags.includes(activeFilter))
     : reviews;
 
-  const totalPages = Math.ceil(filteredReviews.length / PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredReviews.length / PER_PAGE));
+  const currentPage = Math.min(requestedPage, totalPages);
   const pagedReviews = filteredReviews.slice(
     (currentPage - 1) * PER_PAGE,
     currentPage * PER_PAGE,
   );
 
-  const goToPage = useCallback((page: number) => {
-    setCurrentPage(page);
-    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  const updateParams = useCallback(
+    (next: { filter?: string | null; page?: number }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.filter !== undefined) {
+        if (next.filter) params.set("filter", next.filter);
+        else params.delete("filter");
+      }
+      if (next.page !== undefined) {
+        if (next.page > 1) params.set("page", String(next.page));
+        else params.delete("page");
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const goToPage = useCallback(
+    (page: number) => {
+      updateParams({ page });
+      listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [updateParams],
+  );
 
   const handleFilterChange = (filter: string | null) => {
-    setActiveFilter(filter);
-    setCurrentPage(1);
-    trackReviewFilter({
-      filter_category: filter ?? "전체",
-      filter_source: "reviews_page",
+    updateParams({ filter, page: 1 });
+    track({
+      event_type: "review_filter",
+      event_payload: {
+        filter_category: filter ?? "전체",
+        filter_source: "reviews_page",
+      },
+      path: currentPath(),
     });
   };
 

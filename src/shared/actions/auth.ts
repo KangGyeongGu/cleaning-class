@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/shared/lib/supabase/server";
-import { loginFormSchema } from "@/shared/lib/schema";
+import { loginFormSchema } from "@/shared/lib/schema/index";
 
 type LoginState = {
   error?: string;

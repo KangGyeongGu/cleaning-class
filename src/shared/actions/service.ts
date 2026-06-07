@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/shared/lib/supabase/server";
 import { getUser } from "@/shared/lib/supabase/auth";
 import { uploadImage, deleteImage } from "@/shared/lib/supabase/storage-server";
-import { serviceFormSchema } from "@/shared/lib/schema";
+import { serviceFormSchema } from "@/shared/lib/schema/index";
 import type { ServiceInsert, ServiceUpdate } from "@/shared/types/database";
 
 const BUCKET = "service-images";
@@ -24,9 +24,9 @@ export async function createService(prevState: unknown, formData: FormData) {
 
     const tagsRaw = formData.get("tags");
     let parsedTags: string[] = [];
-    if (typeof tagsRaw === "string") {
+    if (tagsRaw) {
       try {
-        parsedTags = JSON.parse(tagsRaw) as string[];
+        parsedTags = JSON.parse(tagsRaw as string) as string[];
       } catch {
         parsedTags = [];
       }
@@ -159,9 +159,9 @@ export async function updateService(
 
     const tagsRaw = formData.get("tags");
     let parsedTags: string[] = [];
-    if (typeof tagsRaw === "string") {
+    if (tagsRaw) {
       try {
-        parsedTags = JSON.parse(tagsRaw) as string[];
+        parsedTags = JSON.parse(tagsRaw as string) as string[];
       } catch {
         parsedTags = [];
       }

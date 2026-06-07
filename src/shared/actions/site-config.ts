@@ -6,7 +6,7 @@ import { getUser } from "@/shared/lib/supabase/auth";
 import {
   siteConfigFormSchema,
   movingSiteConfigSchema,
-} from "@/shared/lib/schema";
+} from "@/shared/lib/schema/index";
 import type { SiteConfigUpdate } from "@/shared/types/database";
 import { uploadImage, deleteImage } from "@/shared/lib/supabase/storage-server";
 
@@ -20,21 +20,22 @@ function revalidateSiteConfigPaths(): void {
   }
 }
 
-const FIELD_REVALIDATE_MAP: Record<string, readonly string[]> = {
+type DescriptionField =
+  | "customer_review_description"
+  | "faq_description"
+  | "price_description"
+  | "review_description"
+  | "service_description";
+
+const FIELD_REVALIDATE_MAP: Record<DescriptionField, readonly string[]> = {
   customer_review_description: ["/", "/admin/customer-reviews"],
   faq_description: ["/help", "/admin/faq"],
+  price_description: ["/price", "/admin/price"],
   review_description: ["/reviews", "/admin/reviews"],
   service_description: ["/services", "/admin/services"],
 };
 
-async function updateSiteConfigField(
-  field:
-    | "customer_review_description"
-    | "faq_description"
-    | "review_description"
-    | "service_description",
-  value: string,
-) {
+async function updateSiteConfigField(field: DescriptionField, value: string) {
   try {
     await getUser();
 
@@ -67,12 +68,8 @@ async function updateSiteConfigField(
     }
 
     revalidatePath("/");
-    const extraPaths: readonly string[] | undefined =
-      FIELD_REVALIDATE_MAP[field];
-    if (extraPaths) {
-      for (const p of extraPaths) {
-        revalidatePath(p);
-      }
+    for (const p of FIELD_REVALIDATE_MAP[field]) {
+      revalidatePath(p);
     }
 
     return { success: true };
@@ -91,6 +88,10 @@ export async function updateCustomerReviewDescription(description: string) {
 
 export async function updateFaqDescription(description: string) {
   return updateSiteConfigField("faq_description", description);
+}
+
+export async function updatePriceDescription(description: string) {
+  return updateSiteConfigField("price_description", description);
 }
 
 export async function updateReviewDescription(description: string) {
