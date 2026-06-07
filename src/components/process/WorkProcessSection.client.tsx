@@ -47,8 +47,9 @@ function useStepAnimation(index: number, progress: Progress) {
   const stepEnd = (index + 0.5) / PROCESS_STEPS.length;
 
   const SLATE_900 = "rgb(15 23 42)";
-  const activeBorder = SLATE_900;
-  const activeBg = SLATE_900;
+  const GREEN_600 = "rgb(22 163 74)";
+  const activeBorder = isLast ? GREEN_600 : SLATE_900;
+  const activeBg = isLast ? GREEN_600 : SLATE_900;
 
   return {
     isLast,
