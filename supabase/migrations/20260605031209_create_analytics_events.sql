@@ -1,4 +1,3 @@
--- analytics_events: 원본 이벤트 로그 (90일 retention)
 create table public.analytics_events (
   id uuid primary key default gen_random_uuid(),
   event_type text not null check (event_type in (

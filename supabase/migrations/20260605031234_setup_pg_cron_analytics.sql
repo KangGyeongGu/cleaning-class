@@ -49,7 +49,6 @@ begin
 end;
 $$;
 
--- KST 03:00 = UTC 18:00 / KST 04:00 = UTC 19:00
 select cron.schedule(
   'analytics_daily_aggregate',
   '0 18 * * *',

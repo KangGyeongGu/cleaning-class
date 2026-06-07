@@ -1,39 +1,29 @@
-# Dependencies
 /node_modules/
 
-# Build output
 /.next/
 /out/
 /build/
 
-# Testing
 /coverage/
 /playwright-report/
 /test-results/
 .lighthouseci/
 
-# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# Environment / secrets
 .env*
 *.pem
 
-# Logs
 *.log
 
-# OS
 .DS_Store
 
-# IDE
 .idea/
 .vscode/
 
-# Vercel
 .vercel
 
-# AI agent artifacts
 .claude/
 .mcp.json
 .playwright-mcp/

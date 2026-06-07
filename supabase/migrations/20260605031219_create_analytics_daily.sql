@@ -1,4 +1,3 @@
--- analytics_daily: 일별 집계 (영구 보관)
 create table public.analytics_daily (
   date date not null,
   event_type text not null,

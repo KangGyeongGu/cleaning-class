@@ -56,7 +56,6 @@ describe("파일명 컨벤션", () => {
       if (name.endsWith(".d.ts")) continue;
       if (BARREL.test(name)) continue;
 
-      // 컴포넌트 (.tsx): PascalCase[.client].tsx
       if (name.endsWith(".tsx")) {
         if (!COMPONENT_PASCAL.test(name)) {
           violations.push(
@@ -66,7 +65,6 @@ describe("파일명 컨벤션", () => {
         continue;
       }
 
-      // 훅 (.ts, hooks/ 디렉토리 또는 useXxx 패턴)
       if (rel.includes("/hooks/") || name.startsWith("use")) {
         if (!HOOK_CAMEL.test(name)) {
           violations.push(`${rel}: 훅 파일명은 useXxx.ts 여야 함`);
@@ -74,7 +72,6 @@ describe("파일명 컨벤션", () => {
         continue;
       }
 
-      // 일반 모듈 (.ts): kebab-case (단일어 포함 — 모두 kebab 형식과 동일)
       if (!MODULE_KEBAB.test(name)) {
         violations.push(`${rel}: 일반 모듈 파일명은 kebab-case.ts 여야 함`);
       }

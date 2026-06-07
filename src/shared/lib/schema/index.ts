@@ -4,11 +4,6 @@ import {
   MOVING_SERVICE_TYPES,
 } from "@/shared/lib/pure/constants";
 
-const cleaningServiceTypeEnum = z.enum([
-  ...CLEANING_SERVICE_TYPES,
-  "기타 문의",
-] as [string, ...string[]]);
-
 const movingServiceTypeEnum = z.enum([...MOVING_SERVICE_TYPES, "기타 문의"] as [
   string,
   ...string[],
@@ -21,7 +16,10 @@ const cleaningContactSchema = z.object({
     .string()
     .min(1, "연락처를 입력해주세요")
     .regex(/^[0-9-]+$/, "올바른 전화번호 형식이 아닙니다"),
-  serviceType: cleaningServiceTypeEnum,
+  serviceType: z
+    .string()
+    .min(1, "서비스 종류를 선택해주세요")
+    .max(100, "서비스 종류가 너무 깁니다"),
   address: z.string().min(1, "주소를 입력해주세요"),
   addressDetail: z.string().optional().default(""),
   message: z

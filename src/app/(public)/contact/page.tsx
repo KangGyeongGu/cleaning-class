@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { getSiteConfig } from "@/shared/lib/domain/site-config";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
-import { ContactForm } from "@/components/form/ContactForm.client";
+import { getPublishedPriceItems } from "@/shared/lib/queries/price";
+import { ContactSection } from "@/components/form/ContactSection.client";
 import {
   NaverBlogIcon,
   InstagramIcon,
@@ -42,7 +44,11 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const siteConfig = await getSiteConfig();
+  const [siteConfig, priceItems] = await Promise.all([
+    getSiteConfig(),
+    getPublishedPriceItems(),
+  ]);
+  const cleaningServiceOptions = priceItems.map((p) => p.name);
 
   const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
     { name: "홈", url: "https://www.cleaningclass.co.kr" },
@@ -164,7 +170,11 @@ export default async function ContactPage() {
               </aside>
 
               <div>
-                <ContactForm />
+                <Suspense>
+                  <ContactSection
+                    cleaningServiceOptions={cleaningServiceOptions}
+                  />
+                </Suspense>
               </div>
             </div>
           </div>

@@ -18,22 +18,30 @@ function PriceRow({ item, index }: PriceRowProps) {
     .join(" ");
 
   const won = item.price_won;
+  const href = `/contact?service=${encodeURIComponent(item.name)}`;
 
   return (
-    <li
-      className={`flex items-baseline justify-between gap-6 py-4 md:py-5 ${borderClass}`}
-    >
-      <span className="text-base font-medium text-slate-700">{item.name}</span>
-      {won == null ? (
-        <span className="shrink-0 text-sm font-medium text-slate-400 italic">
-          현장 견적
+    <li className={borderClass}>
+      <Link
+        href={href}
+        className="flex items-baseline justify-between gap-6 py-4 transition-colors hover:bg-slate-50 md:py-5"
+      >
+        <span className="text-base font-medium text-slate-700">
+          {item.name}
         </span>
-      ) : (
-        <span className="shrink-0 text-base tracking-tight text-slate-900 tabular-nums">
-          <span className="font-semibold">{won.toLocaleString("ko-KR")}원</span>
-          <span className="ml-0.5 font-medium text-slate-400">~</span>
-        </span>
-      )}
+        {won == null ? (
+          <span className="shrink-0 text-sm font-medium text-slate-400 italic">
+            현장 견적
+          </span>
+        ) : (
+          <span className="shrink-0 text-base tracking-tight text-slate-900 tabular-nums">
+            <span className="font-semibold">
+              {won.toLocaleString("ko-KR")}원
+            </span>
+            <span className="ml-0.5 font-medium text-slate-400">~</span>
+          </span>
+        )}
+      </Link>
     </li>
   );
 }

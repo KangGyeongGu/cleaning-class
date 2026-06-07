@@ -17,7 +17,7 @@ async function globalSetup(): Promise<void> {
       try {
         await context.get(path, { timeout: 60_000 });
       } catch {
-        // 첫 시도 실패는 무시 (서버가 아직 응답 안 할 수 있음). 본 테스트의 page.goto 가 다시 시도함.
+        void 0;
       }
     }),
   );

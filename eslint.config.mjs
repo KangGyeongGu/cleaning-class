@@ -99,19 +99,11 @@ const eslintConfig = defineConfig([
     settings: {
       "better-tailwindcss": {
         entryPoint: "src/app/globals.css",
-        /**
-         * globals.css 의 `@layer base` / `@layer components` / `@theme` 에 정의된
-         * 커스텀 유틸리티는 Tailwind v4 자동 인식이 안 되어 명시적 ignore 필요.
-         * modifier(`md:`, `hover:` 등) 접두사가 붙은 사용도 자동으로 함께 무시됨.
-         */
         ignore: [
-          // @layer base — 스크롤바 / 스크롤 진입 애니메이션
           "scrollbar-hide",
           "scrollbar-thin",
           "scroll-reveal",
-          // @theme 커스텀 width 토큰
           "max-w-8xl",
-          // @layer components — 타이포그래피
           "text-display",
           "text-heading-1",
           "text-heading-2",
@@ -122,21 +114,18 @@ const eslintConfig = defineConfig([
           "text-body-sm",
           "text-label",
           "text-caption",
-          // @layer components — 버튼
           "btn-primary",
           "btn-outline",
           "btn-filter",
           "btn-filter-active",
           "btn-filter-inactive",
           "btn-icon",
-          // @layer components — 폼
           "form-label",
           "form-label-sm",
           "form-input",
           "form-input-lg",
           "form-error",
           "form-success",
-          // @layer components — 태그
           "tag-pill",
         ],
       },
@@ -161,7 +150,6 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // 컴포넌트에서 서버 Supabase 클라이언트 직접 임포트 금지
   {
     files: ["src/components/**/*.{ts,tsx}"],
     rules: {
@@ -173,7 +161,6 @@ const eslintConfig = defineConfig([
       }],
     },
   },
-  // 클라이언트 컴포넌트에서 서버 전용 모듈 임포트 금지
   {
     files: ["**/*.client.tsx"],
     rules: {
