@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getPublishedPriceItems } from "@/shared/lib/queries/price";
+import { ContactCta } from "@/components/common/ContactCta";
 import type { PriceItemRow } from "@/shared/types/database";
 
 interface PriceRowProps {
@@ -92,30 +93,16 @@ export async function PriceSection() {
         </div>
       </section>
 
-      <section
-        aria-label="견적 문의 유도"
-        className="border-t border-slate-100 bg-slate-50 px-6 py-12"
-      >
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase">
-            Contact
-          </p>
-          <h2 className="mb-4 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
-            견적 문의
-          </h2>
-          <p className="mb-8 text-sm leading-relaxed text-slate-500">
+      <ContactCta
+        contentId="price_page_quote"
+        description={
+          <>
             기준 요금은 참고용이며, 실제 견적은 현장 상태에 따라 달라집니다.
             <br className="hidden sm:block" />
             부담 없이 연락 주시면 빠르게 안내해 드립니다.
-          </p>
-          <Link
-            href="/contact"
-            className="btn-primary inline-block px-8 py-3 text-sm"
-          >
-            견적 문의하기
-          </Link>
-        </div>
-      </section>
+          </>
+        }
+      />
     </>
   );
 }

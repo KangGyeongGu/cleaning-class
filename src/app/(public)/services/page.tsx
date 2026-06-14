@@ -7,7 +7,7 @@ import type { ServiceWithImageUrls } from "@/shared/lib/queries/service";
 import { ServiceBeforeAfter } from "@/components/service/ServiceBeforeAfter.client";
 import { HashHighlight } from "@/app/(public)/services/HashHighlight.client";
 import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
-import TrackedCtaLink from "@/components/analytics/TrackedCtaLink.client";
+import { ContactCta } from "@/components/common/ContactCta";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
@@ -257,31 +257,10 @@ export default async function ServicesPage() {
         services={movingServices}
       />
 
-      <section
-        aria-label="견적 문의 유도"
-        className="border-t border-slate-100 bg-slate-50 px-6 py-12"
-      >
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase">
-            Contact
-          </p>
-          <h2 className="mb-4 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
-            견적 문의
-          </h2>
-          <p className="mb-8 text-sm leading-relaxed text-slate-500">
-            원하시는 서비스가 있으신가요? 부담 없이 연락 주시면 빠르게 안내해
-            드립니다.
-          </p>
-
-          <TrackedCtaLink
-            href="/contact"
-            contentId="services_page_quote"
-            className="btn-primary inline-block px-8 py-3 text-sm"
-          >
-            견적 문의하기
-          </TrackedCtaLink>
-        </div>
-      </section>
+      <ContactCta
+        contentId="services_page_quote"
+        description="원하시는 서비스가 있으신가요? 부담 없이 연락 주시면 빠르게 안내해 드립니다."
+      />
     </div>
   );
 }
