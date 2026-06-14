@@ -18,6 +18,7 @@ export function Footer({ siteConfig }: FooterProps) {
   const phone = siteConfig?.phone ?? "";
   const email = siteConfig?.email ?? "";
   const blogUrl = siteConfig?.blog_url;
+  const nomadLabsUrl = process.env.NEXT_PUBLIC_NOMADLABS_URL;
   const instagramUrl = siteConfig?.instagram_url;
   const daangnUrl = siteConfig?.daangn_url;
   const businessRegistrationNumber =
@@ -195,7 +196,18 @@ export function Footer({ siteConfig }: FooterProps) {
 
       <div className="border-t border-slate-100 bg-slate-50 py-3">
         <p className="text-center text-[10px] tracking-wider text-slate-400">
-          Designed by 노마드랩스
+          {nomadLabsUrl ? (
+            <a
+              href={nomadLabsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-slate-700"
+            >
+              Designed by 노마드랩스
+            </a>
+          ) : (
+            "Designed by 노마드랩스"
+          )}
         </p>
       </div>
     </footer>

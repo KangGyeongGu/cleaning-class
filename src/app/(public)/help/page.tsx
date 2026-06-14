@@ -3,6 +3,7 @@ import Link from "next/link";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
 import { getSiteConfig } from "@/shared/lib/domain/site-config";
 import { FaqSection } from "@/components/faq/FaqSection";
+import { ContactCta } from "@/components/common/ContactCta";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
@@ -85,6 +86,11 @@ export default async function HelpPage() {
             <FaqSection />
           </div>
         </section>
+
+        <ContactCta
+          contentId="help_page_quote"
+          description="찾으시는 답변이 없으신가요? 부담 없이 연락 주시면 빠르게 안내해 드립니다."
+        />
       </div>
     </>
   );
