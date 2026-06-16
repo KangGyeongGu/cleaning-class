@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -euo pipefail
 
 DATA_DIR="${TRAFFIC_DATA_DIR:-/home/ubuntu/traffic-data}"
