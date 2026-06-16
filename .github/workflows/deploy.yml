@@ -48,5 +48,7 @@ jobs:
               --restart unless-stopped \
               -p 3000:3000 \
               --env-file ~/cleaning-class/.env \
+              -v /home/ubuntu/traffic-data/goaccess:/data/goaccess:ro \
+              -v /home/ubuntu/traffic-data/cloudflare:/data/cloudflare:rw \
               rudrn0110/cleaning-class-web:latest
             docker image prune -f
