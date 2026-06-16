@@ -209,6 +209,7 @@ graph TB
 
 | 버전 | 날짜 | 주요 내용 | 노트 |
 |------|------|-----------|------|
+| [v1.2.0](docs/releases/v1.2.0.md) | 2026-06-16 | 관리자 트래픽 분석 대시보드 추가(Cloudflare·GoAccess) · 배포 빌드 인자 누락 수정 · npm audit 해결 | [→](docs/releases/v1.2.0.md) |
 | [v1.1.1](docs/releases/v1.1.1.md) | 2026-06-14 | 푸터 노마드랩스 외부 링크 추가 · 견적 CTA 공유 컴포넌트화(FAQ 적용) · 주소 GPS 제거 · middleware→proxy 전환 | [→](docs/releases/v1.1.1.md) |
 | [v1.1.0](docs/releases/v1.1.0.md) | 2026-06-07 | 견적폼 청소/이사 분리 + 가격표 자동 연동, HEIC 변환·정책 v20260607 갱신·GA4/Clarity 제거 | [→](docs/releases/v1.1.0.md) |
 | [v1.0.1](docs/releases/v1.0.1.md) | 2026-05-19 | 고객 리뷰 평점 카운트업 애니메이션 회귀 수정 + 단위 테스트 100% 커버리지·검증 게이트 강화 | [→](docs/releases/v1.0.1.md) |

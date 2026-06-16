@@ -15,11 +15,13 @@ import {
   HelpCircle,
   Star,
   Tag,
+  Activity,
 } from "lucide-react";
 import { logout } from "@/shared/actions/auth";
 
 const navItems = [
   { href: "/admin/dashboard", label: "대시보드", icon: LayoutDashboard },
+  { href: "/admin/traffic", label: "트래픽 분석", icon: Activity },
   { href: "/admin/services", label: "서비스 관리", icon: Layers },
   { href: "/admin/reviews", label: "리뷰 관리", icon: Image },
   { href: "/admin/customer-reviews", label: "고객리뷰 관리", icon: Star },
