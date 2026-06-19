@@ -1,7 +1,9 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar.client";
 import { MobilePhoneButton } from "@/components/layout/MobilePhoneButton.client";
 import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import ClarityInit from "@/components/analytics/ClarityInit.client";
 
 export const revalidate = 3600;
 
@@ -9,8 +11,11 @@ interface PublicLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function PublicLayout({ children }: PublicLayoutProps) {
+export default async function PublicLayout({
+  children,
+}: PublicLayoutProps): Promise<React.ReactElement> {
   const siteConfig = await getSiteConfig();
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
   return (
     <>
@@ -28,6 +33,8 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
           movingPhone={siteConfig.moving_phone ?? undefined}
         />
       )}
+      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
+      <ClarityInit />
     </>
   );
 }

@@ -79,6 +79,8 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![AWS Lightsail](https://img.shields.io/badge/AWS_Lightsail-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
 
 <br/>
 
@@ -92,6 +94,10 @@
 graph TB
     subgraph Client["클라이언트"]
         Browser["브라우저"]
+    end
+
+    subgraph CF["Cloudflare"]
+        Edge["엣지<br/>(TLS · WAF · CDN)"]
     end
 
     subgraph AWS["AWS Lightsail"]
@@ -109,18 +115,20 @@ graph TB
 
     subgraph External["외부 서비스"]
         GA4["Google Analytics 4"]
+        Clarity["Microsoft Clarity"]
         SMTP["SMTP 서버<br/>(Nodemailer)"]
     end
 
-    Browser -->|"HTML/CSS/JS"| NextJS
+    Browser -->|"HTTPS"| Edge
+    Edge -->|"프록시"| NextJS
     Browser -->|"이미지 요청"| ImageOpt
     ImageOpt -->|"원본 다운로드"| Storage
     NextJS -->|"데이터 조회/변경"| DB
     NextJS -->|"인증"| Auth
     NextJS -->|"이미지 업로드"| Storage
-    NextJS -->|"분석 데이터 조회"| GA4
     NextJS -->|"이메일 발송"| SMTP
     Browser -->|"이벤트 전송"| GA4
+    Browser -->|"세션 레코딩"| Clarity
 ```
 
 </div>
@@ -209,6 +217,7 @@ graph TB
 
 | 버전 | 날짜 | 주요 내용 | 노트 |
 |------|------|-----------|------|
+| [v1.2.1](docs/releases/v1.2.1.md) | 2026-06-19 | GA4·Microsoft Clarity 클라이언트 추적 재도입(자체 DB와 dual-write) · 견적폼 PII 마스킹 · 관리자 콘솔 바로가기 | [→](docs/releases/v1.2.1.md) |
 | [v1.2.0](docs/releases/v1.2.0.md) | 2026-06-16 | 관리자 트래픽 분석 대시보드 추가(Cloudflare·GoAccess) · 배포 빌드 인자 누락 수정 · npm audit 해결 | [→](docs/releases/v1.2.0.md) |
 | [v1.1.1](docs/releases/v1.1.1.md) | 2026-06-14 | 푸터 노마드랩스 외부 링크 추가 · 견적 CTA 공유 컴포넌트화(FAQ 적용) · 주소 GPS 제거 · middleware→proxy 전환 | [→](docs/releases/v1.1.1.md) |
 | [v1.1.0](docs/releases/v1.1.0.md) | 2026-06-07 | 견적폼 청소/이사 분리 + 가격표 자동 연동, HEIC 변환·정책 v20260607 갱신·GA4/Clarity 제거 | [→](docs/releases/v1.1.0.md) |

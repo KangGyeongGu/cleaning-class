@@ -77,6 +77,7 @@ export function AddressInput({
           }}
           className="form-input cursor-pointer pr-20"
           placeholder="주소 검색"
+          data-clarity-mask="True"
         />
         <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1">
           <button
@@ -97,6 +98,7 @@ export function AddressInput({
         onChange={(e) => commitDetail(e.target.value)}
         className="form-input mt-2"
         placeholder="선택사항: 상세 주소 (동·호수)"
+        data-clarity-mask="True"
       />
 
       {error && <p className="form-error mt-1">{error}</p>}
@@ -133,10 +135,12 @@ export function AddressInput({
                   <X size={16} />
                 </button>
               </div>
-              <DaumPostcode
-                onComplete={handleSelectComplete}
-                style={{ height: 480 }}
-              />
+              <div data-clarity-mask="True">
+                <DaumPostcode
+                  onComplete={handleSelectComplete}
+                  style={{ height: 480 }}
+                />
+              </div>
             </div>
           </div>,
           document.body,
