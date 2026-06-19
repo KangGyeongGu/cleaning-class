@@ -26,6 +26,7 @@ export function ContactNameField({
         onChange={(e) => onChange(e.currentTarget.value)}
         className="form-input"
         placeholder="이름을 입력하세요"
+        data-clarity-mask="True"
       />
       {error && <p className="form-error">{error}</p>}
     </div>

@@ -28,6 +28,7 @@ export function ContactPhoneField({
         onChange={(e) => onChange(formatPhoneNumber(e.currentTarget.value))}
         className="form-input"
         placeholder="000-0000-0000"
+        data-clarity-mask="True"
       />
       {error && <p className="form-error">{error}</p>}
     </div>

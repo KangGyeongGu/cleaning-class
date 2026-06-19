@@ -31,6 +31,32 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
         대시보드
       </h1>
 
+      {(process.env.ADMIN_GA4_CONSOLE_URL ||
+        process.env.ADMIN_CLARITY_CONSOLE_URL) && (
+        <div className="mb-6 flex gap-4">
+          {process.env.ADMIN_GA4_CONSOLE_URL && (
+            <a
+              href={process.env.ADMIN_GA4_CONSOLE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
+            >
+              GA4 콘솔
+            </a>
+          )}
+          {process.env.ADMIN_CLARITY_CONSOLE_URL && (
+            <a
+              href={process.env.ADMIN_CLARITY_CONSOLE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
+            >
+              Clarity 콘솔
+            </a>
+          )}
+        </div>
+      )}
+
       <DashboardStats data={content} />
       <TodayStats data={today} />
       <DailyTrendChart rows={trend} />
