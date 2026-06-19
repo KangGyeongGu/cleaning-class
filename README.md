@@ -217,6 +217,7 @@ graph TB
 
 | 버전 | 날짜 | 주요 내용 | 노트 |
 |------|------|-----------|------|
+| [v1.2.1](docs/releases/v1.2.1.md) | 2026-06-19 | GA4·Microsoft Clarity 클라이언트 추적 재도입(자체 DB와 dual-write) · 견적폼 PII 마스킹 · 관리자 콘솔 바로가기 | [→](docs/releases/v1.2.1.md) |
 | [v1.2.0](docs/releases/v1.2.0.md) | 2026-06-16 | 관리자 트래픽 분석 대시보드 추가(Cloudflare·GoAccess) · 배포 빌드 인자 누락 수정 · npm audit 해결 | [→](docs/releases/v1.2.0.md) |
 | [v1.1.1](docs/releases/v1.1.1.md) | 2026-06-14 | 푸터 노마드랩스 외부 링크 추가 · 견적 CTA 공유 컴포넌트화(FAQ 적용) · 주소 GPS 제거 · middleware→proxy 전환 | [→](docs/releases/v1.1.1.md) |
 | [v1.1.0](docs/releases/v1.1.0.md) | 2026-06-07 | 견적폼 청소/이사 분리 + 가격표 자동 연동, HEIC 변환·정책 v20260607 갱신·GA4/Clarity 제거 | [→](docs/releases/v1.1.0.md) |
