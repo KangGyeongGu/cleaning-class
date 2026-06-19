@@ -79,6 +79,8 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![AWS Lightsail](https://img.shields.io/badge/AWS_Lightsail-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
 
 <br/>
 
@@ -92,6 +94,10 @@
 graph TB
     subgraph Client["클라이언트"]
         Browser["브라우저"]
+    end
+
+    subgraph CF["Cloudflare"]
+        Edge["엣지<br/>(TLS · WAF · CDN)"]
     end
 
     subgraph AWS["AWS Lightsail"]
@@ -109,18 +115,20 @@ graph TB
 
     subgraph External["외부 서비스"]
         GA4["Google Analytics 4"]
+        Clarity["Microsoft Clarity"]
         SMTP["SMTP 서버<br/>(Nodemailer)"]
     end
 
-    Browser -->|"HTML/CSS/JS"| NextJS
+    Browser -->|"HTTPS"| Edge
+    Edge -->|"프록시"| NextJS
     Browser -->|"이미지 요청"| ImageOpt
     ImageOpt -->|"원본 다운로드"| Storage
     NextJS -->|"데이터 조회/변경"| DB
     NextJS -->|"인증"| Auth
     NextJS -->|"이미지 업로드"| Storage
-    NextJS -->|"분석 데이터 조회"| GA4
     NextJS -->|"이메일 발송"| SMTP
     Browser -->|"이벤트 전송"| GA4
+    Browser -->|"세션 레코딩"| Clarity
 ```
 
 </div>
