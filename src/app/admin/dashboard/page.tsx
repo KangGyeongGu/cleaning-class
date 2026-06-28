@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 
 import { DashboardStats } from "@/app/admin/components/DashboardStats";
-import { TodayStats } from "@/app/admin/dashboard/TodayStats";
 import { DailyTrendChart } from "@/app/admin/dashboard/DailyTrendChart.client";
 import { TrafficSourceTable } from "@/app/admin/dashboard/TrafficSourceTable";
 import { CustomerActionTable } from "@/app/admin/dashboard/CustomerActionTable";
 import { getAdminDashboardData } from "@/shared/lib/queries/admin";
 import {
-  getTodayStats,
   getDailyTrend7d,
   getTrafficSources30d,
   getCustomerActions30d,
@@ -17,9 +15,8 @@ export const metadata: Metadata = { title: "대시보드" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage(): Promise<React.ReactElement> {
-  const [content, today, trend, sources, actions] = await Promise.all([
+  const [content, trend, sources, actions] = await Promise.all([
     getAdminDashboardData(),
-    getTodayStats(),
     getDailyTrend7d(),
     getTrafficSources30d(),
     getCustomerActions30d(),
@@ -58,7 +55,6 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
       )}
 
       <DashboardStats data={content} />
-      <TodayStats data={today} />
       <DailyTrendChart rows={trend} />
 
       <section className="mb-10">
