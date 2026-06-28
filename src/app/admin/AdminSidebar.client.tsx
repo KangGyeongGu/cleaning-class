@@ -15,19 +15,17 @@ import {
   HelpCircle,
   Star,
   Tag,
-  Activity,
 } from "lucide-react";
 import { logout } from "@/shared/actions/auth";
 
 const navItems = [
   { href: "/admin/dashboard", label: "대시보드", icon: LayoutDashboard },
-  { href: "/admin/traffic", label: "트래픽 분석", icon: Activity },
+  { href: "/admin/config", label: "업체 정보", icon: Settings },
   { href: "/admin/services", label: "서비스 관리", icon: Layers },
-  { href: "/admin/reviews", label: "리뷰 관리", icon: Image },
-  { href: "/admin/customer-reviews", label: "고객리뷰 관리", icon: Star },
+  { href: "/admin/reviews", label: "작업후기 관리", icon: Image },
   { href: "/admin/faq", label: "FAQ 관리", icon: HelpCircle },
   { href: "/admin/price", label: "가격표 관리", icon: Tag },
-  { href: "/admin/config", label: "업체 정보", icon: Settings },
+  { href: "/admin/customer-reviews", label: "고객리뷰 관리", icon: Star },
 ];
 
 const navItemBase =

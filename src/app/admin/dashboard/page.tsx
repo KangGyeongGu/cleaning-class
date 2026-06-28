@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { DashboardStats } from "@/app/admin/components/DashboardStats";
-import { TodayStats } from "@/app/admin/dashboard/TodayStats";
 import { DailyTrendChart } from "@/app/admin/dashboard/DailyTrendChart.client";
 import { TrafficSourceTable } from "@/app/admin/dashboard/TrafficSourceTable";
 import { CustomerActionTable } from "@/app/admin/dashboard/CustomerActionTable";
 import { getAdminDashboardData } from "@/shared/lib/queries/admin";
 import {
-  getTodayStats,
   getDailyTrend7d,
   getTrafficSources30d,
   getCustomerActions30d,
@@ -17,9 +16,8 @@ export const metadata: Metadata = { title: "대시보드" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage(): Promise<React.ReactElement> {
-  const [content, today, trend, sources, actions] = await Promise.all([
+  const [content, trend, sources, actions] = await Promise.all([
     getAdminDashboardData(),
-    getTodayStats(),
     getDailyTrend7d(),
     getTrafficSources30d(),
     getCustomerActions30d(),
@@ -31,34 +29,36 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
         대시보드
       </h1>
 
-      {(process.env.ADMIN_GA4_CONSOLE_URL ||
-        process.env.ADMIN_CLARITY_CONSOLE_URL) && (
-        <div className="mb-6 flex gap-4">
-          {process.env.ADMIN_GA4_CONSOLE_URL && (
-            <a
-              href={process.env.ADMIN_GA4_CONSOLE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-            >
-              GA4 콘솔
-            </a>
-          )}
-          {process.env.ADMIN_CLARITY_CONSOLE_URL && (
-            <a
-              href={process.env.ADMIN_CLARITY_CONSOLE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-            >
-              Clarity 콘솔
-            </a>
-          )}
-        </div>
-      )}
+      <div className="mb-6 flex gap-4">
+        <Link
+          href="/admin/traffic"
+          className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
+        >
+          트래픽 분석
+        </Link>
+        {process.env.ADMIN_GA4_CONSOLE_URL && (
+          <a
+            href={process.env.ADMIN_GA4_CONSOLE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
+          >
+            GA4 콘솔
+          </a>
+        )}
+        {process.env.ADMIN_CLARITY_CONSOLE_URL && (
+          <a
+            href={process.env.ADMIN_CLARITY_CONSOLE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
+          >
+            Clarity 콘솔
+          </a>
+        )}
+      </div>
 
       <DashboardStats data={content} />
-      <TodayStats data={today} />
       <DailyTrendChart rows={trend} />
 
       <section className="mb-10">

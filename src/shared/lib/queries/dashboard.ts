@@ -6,12 +6,6 @@ export interface SegmentedCount {
   moving: number;
 }
 
-export interface TodayStats {
-  visitors: number;
-  quoteSubmissions: SegmentedCount;
-  phoneClicks: SegmentedCount;
-}
-
 export interface DailyTrendRow {
   date: string;
   visitors: number;
@@ -31,12 +25,6 @@ export interface CustomerActionTotals {
   quoteMoving: number;
   phoneCleaning: number;
   phoneMoving: number;
-}
-
-function todayKstDate(): string {
-  const now = new Date();
-  const kst = new Date(now.getTime() + KST_OFFSET_MS);
-  return kst.toISOString().slice(0, 10);
 }
 
 function nDaysAgoKst(n: number): string {
@@ -65,44 +53,6 @@ function extractSegment(
   const value = payload?.[key];
   if (value === "cleaning" || value === "moving") return value;
   return null;
-}
-
-export async function getTodayStats(): Promise<TodayStats> {
-  const supabase = await createClient();
-  const startOfTodayKst = `${todayKstDate()}T00:00:00+09:00`;
-
-  const { data, error } = await supabase
-    .from("analytics_events")
-    .select("event_type, event_payload")
-    .gte("created_at", startOfTodayKst);
-
-  const empty: TodayStats = {
-    visitors: 0,
-    quoteSubmissions: { cleaning: 0, moving: 0 },
-    phoneClicks: { cleaning: 0, moving: 0 },
-  };
-
-  if (error) {
-    console.error("[getTodayStats]", error);
-    return empty;
-  }
-
-  const result = empty;
-  for (const row of (data as
-    | Pick<EventRow, "event_type" | "event_payload">[]
-    | null) ?? []) {
-    if (row.event_type === "page_landing") {
-      result.visitors += 1;
-    } else if (row.event_type === "quote_form_success") {
-      const seg = extractSegment(row.event_payload, "inquiry_type");
-      if (seg) result.quoteSubmissions[seg] += 1;
-    } else if (row.event_type === "phone_click") {
-      const seg = extractSegment(row.event_payload, "phone_type");
-      if (seg) result.phoneClicks[seg] += 1;
-    }
-  }
-
-  return result;
 }
 
 export async function getDailyTrend7d(): Promise<DailyTrendRow[]> {

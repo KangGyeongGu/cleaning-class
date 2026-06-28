@@ -50,7 +50,7 @@ export function HeroCTA({
       {hasAnyPhone && (
         <div
           className={[
-            "mt-4 flex flex-col items-center gap-1 text-xs font-light sm:mt-6 sm:flex-row sm:gap-6 sm:text-base",
+            "mt-4 flex flex-col items-center justify-center gap-1 text-xs font-light sm:mt-6 sm:flex-row sm:gap-6 sm:text-base",
             isDark ? "text-white/80" : "text-slate-600",
           ].join(" ")}
           style={{ animation: "fadeIn 0.8s 0.9s both" }}
