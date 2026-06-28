@@ -78,12 +78,12 @@ const menuItems: MenuItem[] = [
 function LogoIcon(): React.JSX.Element {
   return (
     <Image
-      src="/images/logo-small.png"
+      src="/images/logo.png"
       alt=""
-      width={28}
-      height={28}
+      width={48}
+      height={48}
       aria-hidden={true}
-      className="h-7 w-7 rounded-sm md:h-9 md:w-9"
+      className="h-10 w-10 rounded-sm md:h-12 md:w-12"
     />
   );
 }
