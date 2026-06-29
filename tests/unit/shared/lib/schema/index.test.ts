@@ -81,9 +81,12 @@ describe("contactFormSchema", () => {
       phone: "010-1234-5678",
       serviceType: "거주청소",
       address: "",
-      message: "test",
+      message: VALID_MESSAGE,
     });
     expect(result.success).toBe(false);
+    if (result.success) throw new Error("expected failure");
+    expect(result.error.issues).toHaveLength(1);
+    expect(result.error.issues[0].path).toEqual(["address"]);
   });
 
   it("rejects message longer than 1000 chars", () => {

@@ -9,12 +9,6 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 2,
   reporter: process.env.CI ? "github" : "html",
   timeout: 60_000,
-  expect: {
-    toHaveScreenshot: {
-      maxDiffPixelRatio: 0.01,
-      animations: "disabled",
-    },
-  },
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",

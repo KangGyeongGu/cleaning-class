@@ -76,14 +76,30 @@ beforeEach(() => {
 });
 
 describe("createReview", () => {
-  it("returns success when all checks pass", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: null }),
-    );
+  it("returns success when all checks pass and inserts mapped fields", async () => {
+    const chains: Record<string, unknown>[] = [];
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain({ data: null, error: null });
+      chains.push(chain);
+      return chain;
+    });
     const { createReview } = await import("@/shared/actions/review");
     const result = await createReview(null, buildForm());
     expect(result.success).toBe(true);
-    expect(mockUploadImage).toHaveBeenCalled();
+    expect(mockUploadImage).toHaveBeenCalledWith(
+      "review-images",
+      expect.any(File),
+    );
+    expect(chains[0].insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "테스트 후기",
+        summary: "후기 요약",
+        tags: ["거주청소"],
+        link_url: "https://blog.example.com/1",
+        is_published: true,
+        image_path: "path/uploaded.jpg",
+      }),
+    );
   });
 
   it("applies link_url fallback when missing", async () => {
@@ -189,21 +205,36 @@ describe("updateReview", () => {
     expect(mockUploadImage).not.toHaveBeenCalled();
   });
 
-  it("uploads new image + deletes old on successful update", async () => {
+  it("uploads new image + deletes old on successful update and injects updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { image_path: "old.jpg" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateReview } = await import("@/shared/actions/review");
     expect((await updateReview(VALID_ID, null, buildForm())).success).toBe(
       true,
     );
     expect(mockUploadImage).toHaveBeenCalled();
     expect(mockDeleteImage).toHaveBeenCalledWith("review-images", "old.jpg");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "테스트 후기",
+        summary: "후기 요약",
+        tags: ["거주청소"],
+        link_url: "https://blog.example.com/1",
+        is_published: true,
+        image_path: "path/uploaded.jpg",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", VALID_ID);
   });
 
   it("rejects invalid JSON in tags", async () => {

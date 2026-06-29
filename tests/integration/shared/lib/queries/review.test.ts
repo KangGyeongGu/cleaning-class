@@ -53,12 +53,12 @@ describe("getReviews", () => {
   });
 
   it("supports ascending=true (oldest first)", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: [], error: null }),
-    );
+    const chain = makePromiseChain({ data: [], error: null });
+    mockFrom.mockImplementation(() => chain);
     const { getReviews } = await import("@/shared/lib/queries/review");
     await getReviews(true);
     expect(mockFrom).toHaveBeenCalledWith("reviews");
+    expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: true });
   });
 
   it("returns [] on error", async () => {

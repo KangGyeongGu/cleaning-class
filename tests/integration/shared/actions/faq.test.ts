@@ -53,7 +53,14 @@ describe("createFaq", () => {
     const { createFaq } = await import("@/shared/actions/faq");
     const result = await createFaq(null, buildForm());
     expect(result.success).toBe(true);
-    expect(mockInsert).toHaveBeenCalled();
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        question: "결제 방법은?",
+        answer: "현금 또는 계좌이체",
+        display_order: 0,
+        is_active: true,
+      }),
+    );
   });
 
   it("rejects empty question (Zod)", async () => {
@@ -101,9 +108,19 @@ describe("createFaq", () => {
 });
 
 describe("updateFaq", () => {
-  it("returns success on valid id + form", async () => {
+  it("returns success on valid id + form and injects updated_at", async () => {
     const { updateFaq } = await import("@/shared/actions/faq");
     expect((await updateFaq(VALID_ID, null, buildForm())).success).toBe(true);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        question: "결제 방법은?",
+        answer: "현금 또는 계좌이체",
+        display_order: 0,
+        is_active: true,
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(mockEq).toHaveBeenCalledWith("id", VALID_ID);
   });
 
   it("rejects invalid UUID", async () => {

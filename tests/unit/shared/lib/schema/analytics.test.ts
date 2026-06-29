@@ -128,6 +128,33 @@ describe("trackRequestSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("should reject phone_click missing click_location", () => {
+    const result = trackRequestSchema.safeParse({
+      event_type: "phone_click",
+      event_payload: { phone_type: "cleaning" },
+      path: "/",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject page_landing missing referrer_host", () => {
+    const result = trackRequestSchema.safeParse({
+      event_type: "page_landing",
+      event_payload: { source: "naver", landing_path: "/" },
+      path: "/",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject empty path via .min(1)", () => {
+    const result = trackRequestSchema.safeParse({
+      event_type: "cta_click",
+      event_payload: { content_id: "x" },
+      path: "",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("should reject missing path", () => {
     const result = trackRequestSchema.safeParse({
       event_type: "cta_click",

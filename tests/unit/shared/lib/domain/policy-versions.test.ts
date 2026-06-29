@@ -91,6 +91,6 @@ describe("formatPolicyVersionRange", () => {
       current: false,
     };
     const formatted = formatPolicyVersionRange(v);
-    expect(formatted).toContain("2026.01.01");
+    expect(formatted).toBe("2026.01.01 ~ ");
   });
 });

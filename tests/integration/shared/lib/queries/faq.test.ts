@@ -40,15 +40,18 @@ beforeEach(() => {
 
 describe("getActiveFaqs", () => {
   it("returns active FAQs on success", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({
-        data: [{ id: "1", question: "Q", answer: "A", is_active: true }],
-        error: null,
-      }),
-    );
+    const chain = makePromiseChain({
+      data: [{ id: "1", question: "Q", answer: "A", is_active: true }],
+      error: null,
+    });
+    mockFrom.mockImplementation(() => chain);
     const { getActiveFaqs } = await import("@/shared/lib/queries/faq");
     const result = await getActiveFaqs();
     expect(result).toHaveLength(1);
+    expect(chain.eq).toHaveBeenCalledWith("is_active", true);
+    expect(chain.order).toHaveBeenCalledWith("display_order", {
+      ascending: true,
+    });
   });
 
   it("returns [] on error + logs", async () => {

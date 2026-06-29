@@ -44,15 +44,8 @@ function extractHeadingsFromComponents(
 describe("SEO: 헤딩 계층", () => {
   const projectRoot = process.cwd();
 
-  it("page.tsx에 h1이 1개 존재한다", () => {
-    const pageFile = join(projectRoot, "src/app/(public)/page.tsx");
-    const content = readFileSync(pageFile, "utf-8");
-    const headings = extractHeadings(content);
-
-    const h1Count = headings.filter((h) => h === "h1").length;
-
-    expect(h1Count).toBeGreaterThanOrEqual(0);
-  });
+  // 단일 h1 규칙은 페이지가 h1을 자식 컴포넌트(Hero 등)로 렌더하므로
+  // 정적 검사로는 정확히 셀 수 없어 E2E(tests/e2e/seo.spec.ts, 실제 DOM)에서 강제한다.
 
   it("헤딩 순서가 h1→h2→h3 규칙을 준수한다 (컴포넌트별)", () => {
     const componentsDir = join(projectRoot, "src/components");

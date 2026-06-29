@@ -42,13 +42,8 @@ rules:
       Use environment variables instead.
     severity: ERROR
     languages: [typescript]
-    pattern-either:
-      - pattern: |
-          "sk_live_..."
-      - pattern: |
-          "sk_test_..."
-      - pattern: |
-          "password = \"...\""
+    # 문자열 리터럴 ellipsis("sk_live_...")는 실제 토큰을 못 잡으므로 regex 로 매칭한다.
+    pattern-regex: '(sk_live_|sk_test_|rk_live_)[A-Za-z0-9]{16,}'
     paths:
       include:
         - /src/**/*.ts
@@ -87,23 +82,12 @@ rules:
           z.string().url(...).refine(...)
     paths:
       include:
-        - /src/shared/lib/schema.ts
+        - /src/shared/lib/schema/**/*.ts
 
-  # ─── Email Template Injection ──────────────────────────────────
-  - id: email-template-unescaped
-    message: >
-      User data interpolated into email HTML without escaping.
-      Use escapeHtml() for all user-provided values in email templates.
-    severity: ERROR
-    languages: [typescript]
-    patterns:
-      - pattern: |
-          `...<$TAG>...${$DATA}...</$TAG>...`
-      - pattern-not: |
-          `...<$TAG>...${escapeHtml($DATA)}...</$TAG>...`
-    paths:
-      include:
-        - /src/shared/lib/mail.ts
+  # email-template-unescaped 룰 제거: semgrep 의 템플릿 리터럴 HTML 매칭이
+  # 명확한 위반에도 발화하지 않아(비기능) 거짓 보안을 줬다. 이메일 HTML 의
+  # 사용자 데이터 이스케이프는 infra/mail.ts 의 escapeHtml 규율 + email-header-injection
+  # 룰 + 코드 리뷰로 강제한다. (감사 2026-06-29)
 
   # ─── Header Injection ──────────────────────────────────────────
   - id: email-header-injection
@@ -117,4 +101,4 @@ rules:
       - pattern-not: "subject: `...${sanitizeHeader(...)}...`"
     paths:
       include:
-        - /src/shared/lib/mail.ts
+        - /src/shared/lib/infra/mail.ts

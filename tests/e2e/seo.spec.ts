@@ -175,4 +175,24 @@ test.describe("SEO 핵심 자산", () => {
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"] ?? "").toMatch(/xml/);
   });
+
+  // 단일 h1 규칙: 페이지가 h1 을 자식 컴포넌트로 렌더하므로 정적 검사 대신
+  // 실제 DOM 에서 공개 라우트별 h1 이 정확히 1개인지 강제한다.
+  const PUBLIC_ROUTES = [
+    "/",
+    "/contact",
+    "/services",
+    "/price",
+    "/reviews",
+    "/help",
+    "/review/write",
+    "/policy/privacy",
+    "/policy/terms",
+  ];
+  for (const route of PUBLIC_ROUTES) {
+    test(`${route} 에 h1 이 정확히 1개 존재한다`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page.locator("h1")).toHaveCount(1);
+    });
+  }
 });

@@ -18,12 +18,13 @@
     "test:e2e": "playwright test",
     "lighthouse:mobile": "npm run build && lhci autorun --config=lighthouserc.mobile.json",
     "lighthouse:desktop": "npm run build && lhci autorun --config=lighthouserc.desktop.json",
-    "lighthouse": "npm run lighthouse:mobile && npm run lighthouse:desktop",
+    "lighthouse": "rm -rf .lighthouseci && npm run lighthouse:mobile && npm run lighthouse:desktop",
     "security:semgrep": "semgrep --config .semgrep/ --config p/typescript src/ --no-git-ignore --error",
     "check:fast": "npm run typecheck && npm run lint && npm run format:check",
     "verify": "npm run check:fast && npm run test:coverage && npm run security:semgrep",
     "verify:full": "npm run verify && npm run test:browser && npm run build && npm run test:e2e && npm run lighthouse",
-    "prepare": "husky"
+    "prepare": "husky",
+    "clean": "rm -rf .next .lighthouseci coverage playwright-report test-results .playwright-mcp"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

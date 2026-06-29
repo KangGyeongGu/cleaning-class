@@ -68,19 +68,29 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
     expect((await updateCustomerReviewDescription("d")).success).toBe(true);
   });
 
-  it("revalidates field-specific extra paths (faq)", async () => {
+  it("revalidates field-specific extra paths (faq) and writes faq_description column", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { id: "cfg-1" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateFaqDescription } =
       await import("@/shared/actions/site-config");
     expect((await updateFaqDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/help");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        faq_description: "d",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", "cfg-1");
   });
 
   it("revalidates review_description extra paths", async () => {
@@ -113,19 +123,28 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
     expect(mockRevalidatePath).toHaveBeenCalledWith("/services");
   });
 
-  it("updatePriceDescription succeeds and revalidates price path", async () => {
+  it("updatePriceDescription succeeds, writes price_description column and revalidates price path", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { id: "cfg-1" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updatePriceDescription } =
       await import("@/shared/actions/site-config");
     expect((await updatePriceDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/price");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        price_description: "d",
+        updated_at: expect.any(String),
+      }),
+    );
   });
 
   it("returns failure when fetch fails", async () => {
@@ -207,15 +226,31 @@ describe("updateSiteConfig", () => {
     return fd;
   }
 
-  it("returns success when valid", async () => {
+  it("returns success when valid and writes mapped fields + updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? siteConfigChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateSiteConfig } = await import("@/shared/actions/site-config");
     expect((await updateSiteConfig(null, buildForm())).success).toBe(true);
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        business_name: "청소클라쓰",
+        representative: "홍길동",
+        phone: "010-1234-5678",
+        email: "a@b.com",
+        site_url: "https://example.com",
+        address_region: "전북",
+        address_locality: "전주시",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", "cfg-1");
   });
 
   it("applies fallback empty strings when optional fields missing", async () => {
@@ -308,17 +343,28 @@ describe("updateHeroImage", () => {
     return fd;
   }
 
-  it("uploads new image + replaces existing", async () => {
+  it("uploads new image + replaces existing (slot 1 → hero_image_path column)", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateHeroImage } = await import("@/shared/actions/site-config");
     const fd = buildForm({ hero_image: makeFile("new.jpg", 1000) });
     expect((await updateHeroImage(null, fd)).success).toBe(true);
     expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-1.jpg");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hero_image_path: "uploaded-path",
+        hero_image_focal_x: 50,
+        hero_image_focal_y: 50,
+        updated_at: expect.any(String),
+      }),
+    );
   });
 
   it("uploads first image without deleting when no existing path", async () => {
@@ -365,29 +411,57 @@ describe("updateHeroImage", () => {
     expect(mockDeleteImage).not.toHaveBeenCalled();
   });
 
-  it("uses slot 2 for hero_image_path_2", async () => {
+  it("uses slot 2 → hero_image_path_2 / focal_*_2 columns", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ slot: "2", hero_image: makeFile("new.jpg", 1000) });
+    const fd = buildForm({
+      slot: "2",
+      focal_x: "30",
+      focal_y: "70",
+      hero_image: makeFile("new.jpg", 1000),
+    });
     expect((await updateHeroImage(null, fd)).success).toBe(true);
+    expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-2.jpg");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hero_image_path_2: "uploaded-path",
+        hero_image_focal_x_2: 30,
+        hero_image_focal_y_2: 70,
+        updated_at: expect.any(String),
+      }),
+    );
   });
 
-  it("deletes hero image when delete_hero_image=true and path exists", async () => {
+  it("deletes hero image when delete_hero_image=true and path exists (clears column)", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateHeroImage } = await import("@/shared/actions/site-config");
     const fd = buildForm({ delete_hero_image: "true" });
     expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).toHaveBeenCalled();
+    expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-1.jpg");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hero_image_path: "",
+        hero_image_focal_x: 50,
+        hero_image_focal_y: 50,
+        updated_at: expect.any(String),
+      }),
+    );
   });
 
   it("returns failure on delete DB error", async () => {
@@ -523,19 +597,31 @@ describe("updateMovingSiteConfig", () => {
     return fd;
   }
 
-  it("returns success on valid input", async () => {
+  it("returns success on valid input and writes moving_* fields + updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { id: "cfg-1" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateMovingSiteConfig } =
       await import("@/shared/actions/site-config");
     expect((await updateMovingSiteConfig(null, buildForm())).success).toBe(
       true,
+    );
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        moving_representative: "이사남",
+        moving_phone: "010-9999-8888",
+        moving_business_registration_number: "000-11-22222",
+        moving_address: "전주시",
+        updated_at: expect.any(String),
+      }),
     );
   });
 

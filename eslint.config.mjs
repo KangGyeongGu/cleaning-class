@@ -63,6 +63,7 @@ const eslintConfig = defineConfig([
   {
     files: ["**/*.tsx"],
     rules: {
+      "@next/next/no-img-element": "error",
       "jsx-a11y/alt-text": "error",
       "jsx-a11y/heading-has-content": "error",
       "jsx-a11y/html-has-lang": "error",

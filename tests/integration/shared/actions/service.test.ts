@@ -84,12 +84,33 @@ beforeEach(() => {
 });
 
 describe("createService", () => {
-  it("returns success with valid form (no extra images)", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: null }),
-    );
+  it("returns success with valid form (no extra images) and inserts mapped fields", async () => {
+    const chains: Record<string, unknown>[] = [];
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain({ data: null, error: null });
+      chains.push(chain);
+      return chain;
+    });
     const { createService } = await import("@/shared/actions/service");
     expect((await createService(null, buildForm())).success).toBe(true);
+    expect(chains[0].insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "거주청소",
+        description: "설명",
+        category: "cleaning",
+        tags: ["깔끔"],
+        sort_order: 0,
+        is_published: true,
+        image_focal_x: 50,
+        image_focal_y: 50,
+        image_after_focal_x: 50,
+        image_after_focal_y: 50,
+        image_path: "uploaded-path",
+        image_after_path: "",
+        detail_image_path: "",
+        detail_image_after_path: "",
+      }),
+    );
   });
 
   it("applies fallback defaults when optional fields missing", async () => {
@@ -251,13 +272,16 @@ describe("updateService", () => {
     expect((await updateService(VALID_ID, null, fd)).success).toBe(true);
   });
 
-  it("uploads new images + deletes old paths on success", async () => {
+  it("uploads new images + deletes old paths on success and injects updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? existingChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateService } = await import("@/shared/actions/service");
     const fd = buildForm();
     fd.set("image_after", makeFile("after.jpg", 1000));
@@ -265,6 +289,19 @@ describe("updateService", () => {
     fd.set("detail_image_after", makeFile("da.jpg", 1000));
     expect((await updateService(VALID_ID, null, fd)).success).toBe(true);
     expect(mockDeleteImage).toHaveBeenCalled();
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "거주청소",
+        category: "cleaning",
+        tags: ["깔끔"],
+        image_path: "uploaded-path",
+        image_after_path: "uploaded-path",
+        detail_image_path: "uploaded-path",
+        detail_image_after_path: "uploaded-path",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", VALID_ID);
   });
 
   it("logs cleanup failure but still returns success", async () => {

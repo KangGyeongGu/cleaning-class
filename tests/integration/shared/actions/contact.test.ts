@@ -173,12 +173,24 @@ describe("submitContactForm — image validation", () => {
     expect(call.images[1].filename).not.toContain("/");
   });
 
-  it("uses 'attachment' fallback when sanitized filename empty", async () => {
+  it("strips illegal filename characters from attachments", async () => {
     const fd = buildCleaningForm();
     fd.append("images", makeFile(":<>|.jpg", 1000));
     const { submitContactForm } = await import("@/shared/actions/contact");
     const result = await submitContactForm(null, fd);
     expect(result.success).toBe(true);
+    const call = mockSendContactEmail.mock.calls[0][0];
+    expect(call.images[0].filename).toBe(".jpg");
+  });
+
+  it("replaces non-ascii filename characters with underscore", async () => {
+    const fd = buildCleaningForm();
+    fd.append("images", makeFile("사진.jpg", 1000));
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    const result = await submitContactForm(null, fd);
+    expect(result.success).toBe(true);
+    const call = mockSendContactEmail.mock.calls[0][0];
+    expect(call.images[0].filename).toBe("__.jpg");
   });
 
   it("filters out empty/zero-size files from images list", async () => {

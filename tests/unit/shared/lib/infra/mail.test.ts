@@ -46,6 +46,7 @@ describe("sendContactEmail — cleaning inquiry", () => {
     expect(arg.html).toContain("거주청소");
     expect(arg.html).toContain('href="tel:01011112222"');
     expect(arg.html).toContain("청소 의뢰");
+    expect(arg.html).toContain("2026-06-05 14:00 KST");
     expect(arg.text).toContain("거주청소");
   });
 

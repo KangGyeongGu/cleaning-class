@@ -207,16 +207,31 @@ describe("generateBreadcrumbListJsonLd", () => {
 });
 
 describe("JSON-LD 직렬화 가능성 (Schema.org 호환)", () => {
-  it("generateWebSiteJsonLd 결과가 JSON 으로 직렬화 가능", () => {
-    expect(() =>
-      JSON.stringify(generateWebSiteJsonLd(FULL_CONFIG)),
-    ).not.toThrow();
+  it("generateWebSiteJsonLd 결과가 round-trip 직렬화 후 동일 필드 유지", () => {
+    const original = generateWebSiteJsonLd(FULL_CONFIG);
+    const roundTripped = JSON.parse(JSON.stringify(original));
+    expect(roundTripped).toEqual(original);
+    expect(roundTripped.name).toBe("테스트 청소");
+    expect(roundTripped.url).toBe("https://example.com");
   });
 
-  it("generateLocalBusinessJsonLd 결과가 JSON 으로 직렬화 가능", () => {
-    expect(() =>
-      JSON.stringify(generateLocalBusinessJsonLd(FULL_CONFIG)),
-    ).not.toThrow();
+  it("generateLocalBusinessJsonLd 결과가 round-trip 직렬화 후 동일 필드 유지", () => {
+    const original = generateLocalBusinessJsonLd(FULL_CONFIG);
+    const roundTripped = JSON.parse(JSON.stringify(original));
+    expect(roundTripped).toEqual(original);
+    expect(roundTripped.geo).toEqual({
+      "@type": "GeoCoordinates",
+      latitude: 35.850913,
+      longitude: 127.157065,
+    });
+    expect(roundTripped.address.streetAddress).toBe(
+      "전북 전주시 덕진구 우아8길 11",
+    );
+    expect(roundTripped.sameAs).toEqual([
+      "https://blog.example.com",
+      "https://instagram.com/x",
+      "https://daangn.example.com",
+    ]);
   });
 
   it("LocalBusiness 가 Schema.org 필수 필드를 보유 (@context/@type/name/address/geo)", () => {
