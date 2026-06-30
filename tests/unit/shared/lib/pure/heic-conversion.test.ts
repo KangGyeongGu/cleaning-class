@@ -74,10 +74,17 @@ describe("convertHeicToJpeg", () => {
     const { default: heic2any } = await import("heic2any");
     vi.mocked(heic2any).mockResolvedValueOnce([
       new Blob(["first"], { type: "image/jpeg" }),
-      new Blob(["second"], { type: "image/jpeg" }),
+      new Blob(["second-longer"], { type: "image/jpeg" }),
     ]);
     const heicFile = makeFile("photo.heic", "image/heic");
     const result = await convertHeicToJpeg(heicFile);
     expect(result.name).toBe("photo.jpg");
+    // "first" is 5 bytes vs "second-longer" 13 bytes → confirms first blob taken
+    expect(result.size).toBe(5);
+    expect(heic2any).toHaveBeenCalledWith({
+      blob: heicFile,
+      toType: "image/jpeg",
+      quality: 0.85,
+    });
   });
 });

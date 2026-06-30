@@ -3,18 +3,20 @@
 import { useRef } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "motion/react";
-import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
+import { BLUR_PLACEHOLDER } from "@/shared/lib/pure/constants";
 
 interface ServiceBeforeAfterProps {
   beforeSrc: string;
   afterSrc: string;
   alt: string;
+  priority?: boolean;
 }
 
 export function ServiceBeforeAfter({
   beforeSrc,
   afterSrc,
   alt,
+  priority,
 }: ServiceBeforeAfterProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +40,7 @@ export function ServiceBeforeAfter({
         src={beforeSrc}
         alt={`${alt} — 작업 전`}
         fill
+        priority={priority}
         sizes="(max-width: 768px) calc(100vw - 48px), 320px"
         placeholder="blur"
         blurDataURL={BLUR_PLACEHOLDER}

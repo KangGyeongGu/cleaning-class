@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { FaqSection } from "@/components/faq/FaqSection";
 import { ContactCta } from "@/components/common/ContactCta";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";

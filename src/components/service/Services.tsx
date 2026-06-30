@@ -1,4 +1,4 @@
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { getPublishedServicesWithImageUrls } from "@/shared/lib/queries/service";
 import { generateServiceJsonLd } from "@/shared/lib/domain/json-ld";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";

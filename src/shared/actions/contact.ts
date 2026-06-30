@@ -1,16 +1,37 @@
 "use server";
 
+import { headers } from "next/headers";
 import { contactFormSchema } from "@/shared/lib/schema/index";
 import { sendContactEmail } from "@/shared/lib/infra/mail";
 import {
   CONTACT_MAX_IMAGE_COUNT,
   validateContactImageFile,
+  isValidImageMagicBytes,
 } from "@/shared/lib/pure/image-validation";
+import { checkRateLimit } from "@/shared/lib/server/rate-limit";
+
+const CONTACT_RATE_LIMIT = 5;
+const CONTACT_RATE_WINDOW_MS = 60_000;
+const SUCCESS_MESSAGE = "문의가 성공적으로 접수되었습니다.";
 
 export async function submitContactForm(
   prevState: unknown,
   formData: FormData,
 ) {
+  if (formData.get("website")) {
+    return { success: true, message: SUCCESS_MESSAGE };
+  }
+
+  const ip = (await headers()).get("x-forwarded-for") ?? "unknown";
+  if (
+    !checkRateLimit(`contact:${ip}`, CONTACT_RATE_LIMIT, CONTACT_RATE_WINDOW_MS)
+  ) {
+    return {
+      success: false,
+      error: "잠시 후 다시 시도해주세요.",
+    };
+  }
+
   const rawData = {
     inquiryType: formData.get("inquiryType") ?? "cleaning",
     name: formData.get("name"),
@@ -48,6 +69,13 @@ export async function submitContactForm(
     const { ok, message } = validateContactImageFile(file);
     if (!ok) {
       return { success: false, error: message };
+    }
+    const header = new Uint8Array(await file.arrayBuffer());
+    if (!isValidImageMagicBytes(header.subarray(0, 12))) {
+      return {
+        success: false,
+        error: `유효하지 않은 이미지 파일입니다. (${file.name})`,
+      };
     }
   }
 
@@ -92,7 +120,7 @@ export async function submitContactForm(
 
     return {
       success: true,
-      message: "문의가 성공적으로 접수되었습니다.",
+      message: SUCCESS_MESSAGE,
     };
   } catch (error) {
     console.error("Contact email send error:", error);

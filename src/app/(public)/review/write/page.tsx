@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+export const revalidate = false;
+
 export default function PublicReviewPage() {
   return (
     <main className="min-h-screen bg-white">

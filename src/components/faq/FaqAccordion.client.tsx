@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { FaqRow } from "@/shared/types/database";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface FaqAccordionProps {
@@ -13,11 +14,7 @@ export function FaqAccordion({ faqs }: FaqAccordionProps) {
   const [openIds, setOpenIds] = useState(() => new Set<string>());
 
   if (faqs.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm font-light text-slate-400">
-        등록된 FAQ가 없습니다.
-      </p>
-    );
+    return <EmptyState message="등록된 FAQ가 없습니다." />;
   }
 
   function toggle(id: string, faq: FaqRow): void {

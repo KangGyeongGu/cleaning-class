@@ -17,9 +17,7 @@ export function ContactCta({
       className="border-t border-slate-100 bg-slate-50 px-6 py-12"
     >
       <div className="mx-auto max-w-5xl text-center">
-        <p className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase">
-          Contact
-        </p>
+        <p className="text-label mb-2 text-slate-400">Contact</p>
         <h2 className="mb-4 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
           견적 문의
         </h2>

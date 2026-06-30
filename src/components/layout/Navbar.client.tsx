@@ -25,7 +25,6 @@ interface SnsLinkProps {
   href: string;
   platform: SnsPlatform;
   ariaLabel: string;
-  iconSize: number;
   onAfterClick?: () => void;
   tabIndex?: number;
   children: React.ReactNode;
@@ -220,7 +219,6 @@ export function Navbar({
                     href={blogUrl!}
                     platform="naver_blog"
                     ariaLabel="네이버 블로그"
-                    iconSize={20}
                   >
                     <NaverBlogIcon size={20} />
                   </NavbarSnsLink>
@@ -230,7 +228,6 @@ export function Navbar({
                     href={instagramUrl!}
                     platform="instagram"
                     ariaLabel="인스타그램"
-                    iconSize={20}
                   >
                     <InstagramIcon size={20} />
                   </NavbarSnsLink>
@@ -240,7 +237,6 @@ export function Navbar({
                     href={daangnUrl!}
                     platform="daangn"
                     ariaLabel="당근마켓"
-                    iconSize={20}
                   >
                     <DaangnIcon size={20} />
                   </NavbarSnsLink>
@@ -302,7 +298,6 @@ export function Navbar({
                 href={blogUrl!}
                 platform="naver_blog"
                 ariaLabel="네이버 블로그"
-                iconSize={24}
                 tabIndex={isOpen ? 0 : -1}
                 onAfterClick={() => setIsOpen(false)}
               >
@@ -314,7 +309,6 @@ export function Navbar({
                 href={instagramUrl!}
                 platform="instagram"
                 ariaLabel="인스타그램"
-                iconSize={24}
                 tabIndex={isOpen ? 0 : -1}
                 onAfterClick={() => setIsOpen(false)}
               >
@@ -326,7 +320,6 @@ export function Navbar({
                 href={daangnUrl!}
                 platform="daangn"
                 ariaLabel="당근마켓"
-                iconSize={24}
                 tabIndex={isOpen ? 0 : -1}
                 onAfterClick={() => setIsOpen(false)}
               >

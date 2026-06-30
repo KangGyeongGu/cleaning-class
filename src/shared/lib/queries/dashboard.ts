@@ -1,11 +1,6 @@
 import { createClient } from "@/shared/lib/supabase/server";
 import { KST_OFFSET_MS } from "@/shared/lib/pure/constants";
 
-export interface SegmentedCount {
-  cleaning: number;
-  moving: number;
-}
-
 export interface DailyTrendRow {
   date: string;
   visitors: number;
@@ -34,36 +29,26 @@ function nDaysAgoKst(n: number): string {
   return kst.toISOString().slice(0, 10);
 }
 
-function kstDateFromIso(iso: string): string {
-  const d = new Date(iso);
-  const kst = new Date(d.getTime() + KST_OFFSET_MS);
-  return kst.toISOString().slice(0, 10);
-}
-
-type EventRow = {
+type DailyRow = {
+  date: string;
   event_type: string;
-  event_payload: Record<string, unknown> | null;
-  created_at: string;
+  dimension: string | null;
+  count: number;
 };
 
-function extractSegment(
-  payload: Record<string, unknown> | null,
-  key: string,
-): "cleaning" | "moving" | null {
-  const value = payload?.[key];
-  if (value === "cleaning" || value === "moving") return value;
+function asSegment(dimension: string | null): "cleaning" | "moving" | null {
+  if (dimension === "cleaning" || dimension === "moving") return dimension;
   return null;
 }
 
 export async function getDailyTrend7d(): Promise<DailyTrendRow[]> {
   const supabase = await createClient();
   const startDate = nDaysAgoKst(6);
-  const startIso = `${startDate}T00:00:00+09:00`;
 
   const { data, error } = await supabase
-    .from("analytics_events")
-    .select("event_type, event_payload, created_at")
-    .gte("created_at", startIso)
+    .from("analytics_daily")
+    .select("date, event_type, dimension, count")
+    .gte("date", startDate)
     .in("event_type", ["page_landing", "quote_form_success", "phone_click"]);
 
   if (error) {
@@ -84,19 +69,19 @@ export async function getDailyTrend7d(): Promise<DailyTrendRow[]> {
     });
   }
 
-  for (const row of (data as EventRow[] | null) ?? []) {
-    const target = byDate.get(kstDateFromIso(row.created_at));
+  for (const row of (data as DailyRow[] | null) ?? []) {
+    const target = byDate.get(row.date);
     if (!target) continue;
     if (row.event_type === "page_landing") {
-      target.visitors += 1;
+      target.visitors += row.count;
     } else if (row.event_type === "quote_form_success") {
-      const seg = extractSegment(row.event_payload, "inquiry_type");
-      if (seg === "cleaning") target.quoteCleaning += 1;
-      else if (seg === "moving") target.quoteMoving += 1;
+      const seg = asSegment(row.dimension);
+      if (seg === "cleaning") target.quoteCleaning += row.count;
+      else if (seg === "moving") target.quoteMoving += row.count;
     } else if (row.event_type === "phone_click") {
-      const seg = extractSegment(row.event_payload, "phone_type");
-      if (seg === "cleaning") target.phoneCleaning += 1;
-      else if (seg === "moving") target.phoneMoving += 1;
+      const seg = asSegment(row.dimension);
+      if (seg === "cleaning") target.phoneCleaning += row.count;
+      else if (seg === "moving") target.phoneMoving += row.count;
     }
   }
 
@@ -105,13 +90,13 @@ export async function getDailyTrend7d(): Promise<DailyTrendRow[]> {
 
 export async function getTrafficSources30d(): Promise<TrafficSourceRow[]> {
   const supabase = await createClient();
-  const startIso = `${nDaysAgoKst(29)}T00:00:00+09:00`;
+  const startDate = nDaysAgoKst(29);
 
   const { data, error } = await supabase
-    .from("analytics_events")
-    .select("event_payload")
+    .from("analytics_daily")
+    .select("dimension, count")
     .eq("event_type", "page_landing")
-    .gte("created_at", startIso);
+    .gte("date", startDate);
 
   if (error) {
     console.error("[getTrafficSources30d]", error);
@@ -119,14 +104,10 @@ export async function getTrafficSources30d(): Promise<TrafficSourceRow[]> {
   }
 
   const totals = (
-    (data as Pick<EventRow, "event_payload">[] | null) ?? []
+    (data as Pick<DailyRow, "dimension" | "count">[] | null) ?? []
   ).reduce<Record<string, number>>((acc, row) => {
-    const source =
-      typeof row.event_payload?.source === "string"
-        ? row.event_payload.source
-        : "";
-    const key = source || "direct";
-    acc[key] = (acc[key] ?? 0) + 1;
+    const key = row.dimension || "direct";
+    acc[key] = (acc[key] ?? 0) + row.count;
     return acc;
   }, {});
 
@@ -137,13 +118,13 @@ export async function getTrafficSources30d(): Promise<TrafficSourceRow[]> {
 
 export async function getCustomerActions30d(): Promise<CustomerActionTotals> {
   const supabase = await createClient();
-  const startIso = `${nDaysAgoKst(29)}T00:00:00+09:00`;
+  const startDate = nDaysAgoKst(29);
 
   const { data, error } = await supabase
-    .from("analytics_events")
-    .select("event_type, event_payload")
+    .from("analytics_daily")
+    .select("event_type, dimension, count")
     .in("event_type", ["quote_form_success", "phone_click"])
-    .gte("created_at", startIso);
+    .gte("date", startDate);
 
   const empty: CustomerActionTotals = {
     quoteCleaning: 0,
@@ -159,16 +140,16 @@ export async function getCustomerActions30d(): Promise<CustomerActionTotals> {
 
   const result = empty;
   for (const row of (data as
-    | Pick<EventRow, "event_type" | "event_payload">[]
+    | Pick<DailyRow, "event_type" | "dimension" | "count">[]
     | null) ?? []) {
     if (row.event_type === "quote_form_success") {
-      const seg = extractSegment(row.event_payload, "inquiry_type");
-      if (seg === "cleaning") result.quoteCleaning += 1;
-      else if (seg === "moving") result.quoteMoving += 1;
+      const seg = asSegment(row.dimension);
+      if (seg === "cleaning") result.quoteCleaning += row.count;
+      else if (seg === "moving") result.quoteMoving += row.count;
     } else if (row.event_type === "phone_click") {
-      const seg = extractSegment(row.event_payload, "phone_type");
-      if (seg === "cleaning") result.phoneCleaning += 1;
-      else if (seg === "moving") result.phoneMoving += 1;
+      const seg = asSegment(row.dimension);
+      if (seg === "cleaning") result.phoneCleaning += row.count;
+      else if (seg === "moving") result.phoneMoving += row.count;
     }
   }
 

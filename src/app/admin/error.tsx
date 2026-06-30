@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/Button";
 
 export default function AdminError({
   error,
@@ -25,13 +26,9 @@ export default function AdminError({
             : "페이지를 불러오는 중 문제가 발생했습니다."}
         </p>
       </div>
-      <button
-        type="button"
-        onClick={reset}
-        className="bg-slate-900 px-6 py-3 text-sm font-bold tracking-widest text-white transition-colors hover:bg-slate-800"
-      >
+      <Button onClick={reset} size="md">
         다시 시도
-      </button>
+      </Button>
     </div>
   );
 }

@@ -113,9 +113,9 @@ describe("isValidImageMagicBytes", () => {
     expect(isValidImageMagicBytes(buf)).toBe(true);
   });
 
-  it("matches WebP (RIFF) magic bytes", () => {
+  it("matches WebP (RIFF + WEBP at offset 8) magic bytes", () => {
     const buf = new Uint8Array([
-      0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0, 0, 0, 0,
+      0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50,
     ]);
     expect(isValidImageMagicBytes(buf)).toBe(true);
   });
@@ -143,6 +143,25 @@ describe("isValidImageMagicBytes", () => {
 
   it("returns false for short headers without ftyp match", () => {
     const buf = new Uint8Array([0x01, 0x02, 0x03]);
+    expect(isValidImageMagicBytes(buf)).toBe(false);
+  });
+
+  it("rejects non-image with arbitrary first byte followed by zero padding", () => {
+    const buf = new Uint8Array([
+      0xab, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0, 0, 0, 0,
+    ]);
+    expect(isValidImageMagicBytes(buf)).toBe(false);
+  });
+
+  it("rejects RIFF container that is not WEBP (e.g. AVI/WAV)", () => {
+    const avi = new Uint8Array([
+      0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x41, 0x56, 0x49, 0x20,
+    ]);
+    expect(isValidImageMagicBytes(avi)).toBe(false);
+  });
+
+  it("rejects RIFF header too short to carry the WEBP marker", () => {
+    const buf = new Uint8Array([0x52, 0x49, 0x46, 0x46]);
     expect(isValidImageMagicBytes(buf)).toBe(false);
   });
 });

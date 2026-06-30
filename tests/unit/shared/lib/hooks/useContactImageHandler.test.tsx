@@ -147,16 +147,34 @@ describe("useContactImageHandler", () => {
   });
 
   it("ignores re-entry while converting", async () => {
+    const heic2anyModule = await import("heic2any");
+    vi.mocked(heic2anyModule.default).mockClear();
+    let resolveConv!: (blob: Blob) => void;
+    vi.mocked(heic2anyModule.default).mockReturnValueOnce(
+      new Promise<Blob>((r) => {
+        resolveConv = r;
+      }),
+    );
     const { result } = renderHook(() => useContactImageHandler());
     const heic = makeFile("a.heic", "image/heic");
-    const promise = act(async () => {
-      await result.current.handleChange(makeChangeEvent([heic]));
+
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.handleChange(makeChangeEvent([heic]));
     });
+    await waitFor(() => expect(result.current.isConverting).toBe(true));
+
     await act(async () => {
       await result.current.handleChange(makeChangeEvent([heic]));
     });
-    await promise;
-    expect(result.current.images.length).toBeLessThanOrEqual(1);
+
+    await act(async () => {
+      resolveConv(new Blob(["jpeg"], { type: "image/jpeg" }));
+      await first;
+    });
+
+    expect(result.current.images).toHaveLength(1);
+    expect(vi.mocked(heic2anyModule.default)).toHaveBeenCalledTimes(1);
   });
 
   it("removes image by index", async () => {
@@ -185,7 +203,7 @@ describe("useContactImageHandler", () => {
     expect(result.current.images).toHaveLength(0);
   });
 
-  it("syncs file input element when an input is bound to fileInputRef", async () => {
+  it("syncs file input element with the processed (converted) files", async () => {
     function TestHarness(): React.ReactElement {
       const handler = useContactImageHandler();
       return (
@@ -201,13 +219,15 @@ describe("useContactImageHandler", () => {
 
     const { getByTestId } = render(<TestHarness />);
     const input = getByTestId("files") as HTMLInputElement;
-    const file = makeFile("a.jpg", "image/jpeg");
+    // Pre-fill with a HEIC file; after processing the sync must replace it
+    // with the converted .jpg, so the assertion is not pre-satisfied.
+    const selected = makeFile("photo.heic", "image/heic");
 
     Object.defineProperty(input, "files", {
       writable: true,
       configurable: true,
-      value: Object.assign([file], {
-        item: (i: number) => [file][i] ?? null,
+      value: Object.assign([selected], {
+        item: (i: number) => [selected][i] ?? null,
       }) as unknown as FileList,
     });
 
@@ -216,8 +236,10 @@ describe("useContactImageHandler", () => {
     });
 
     await waitFor(() => {
-      expect(input.files?.length).toBeGreaterThan(0);
+      expect(input.files?.length).toBe(1);
     });
+    expect(input.files?.[0].name).toBe("photo.jpg");
+    expect(input.files?.[0].type).toBe("image/jpeg");
   });
 
   it("falls back when HEIC conversion throws", async () => {

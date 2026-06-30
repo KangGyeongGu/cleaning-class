@@ -9,7 +9,6 @@ interface ContactImageGalleryProps {
   onAdd: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveAt: (index: number) => void;
   fileInputRef?: React.Ref<HTMLInputElement>;
-  maxCount?: number;
 }
 
 export function ContactImageGallery({
@@ -18,7 +17,6 @@ export function ContactImageGallery({
   onAdd,
   onRemoveAt,
   fileInputRef,
-  maxCount = 4,
 }: ContactImageGalleryProps): React.ReactElement {
   return (
     <div className="group">
@@ -58,7 +56,7 @@ export function ContactImageGallery({
             <Plus size={20} />
           </div>
           <span className="text-xs text-slate-400 transition-colors group-hover/add:text-slate-600">
-            {images.length}/{maxCount}
+            {images.length}/4
           </span>
           <input
             ref={fileInputRef}

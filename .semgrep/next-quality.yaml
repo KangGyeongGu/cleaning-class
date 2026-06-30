@@ -1,17 +1,4 @@
 rules:
-  # ─── img Tag Instead of next/image ─────────────────────────────
-  - id: html-img-instead-of-next-image
-    message: >
-      Use next/image <Image> component instead of <img> tag.
-      next/image provides automatic optimization, lazy loading, and CLS prevention.
-    severity: ERROR
-    languages: [typescript]
-    pattern: |
-      <img $...ATTRS />
-    paths:
-      include:
-        - /src/**/*.tsx
-
   # ─── Direct Supabase Call in page.tsx ──────────────────────────
   - id: direct-supabase-in-page
     message: >

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
 import { getPublishedPriceItems } from "@/shared/lib/queries/price";
 import { ContactSection } from "@/components/form/ContactSection.client";

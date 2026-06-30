@@ -6,7 +6,7 @@ import { Services } from "@/components/service/Services";
 import { WorkProcessSection } from "@/components/process/WorkProcessSection.client";
 import { BlogReviewsSection } from "@/components/review/BlogReviewsSection";
 import { CustomerReviewsSection } from "@/components/review/CustomerReviewsSection";
-import { buildDescription } from "@/shared/lib/domain/seo-description";
+import { HOME_META_DESCRIPTION } from "@/shared/lib/pure/constants";
 import {
   ServicesSkeleton,
   ReviewsSkeleton,
@@ -18,7 +18,7 @@ export const revalidate = 3600;
 export async function generateMetadata(): Promise<Metadata> {
   const title =
     "전주 청소·이사업체 청소클라쓰 | 전북 전주 전문 청소·이사 서비스";
-  const description = buildDescription();
+  const description = HOME_META_DESCRIPTION;
 
   return {
     title: {

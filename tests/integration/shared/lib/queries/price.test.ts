@@ -40,15 +40,16 @@ beforeEach(() => {
 
 describe("getPublishedPriceItems", () => {
   it("returns published items", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({
-        data: [{ id: "p1", name: "x", price_won: 100000 }],
-        error: null,
-      }),
-    );
+    const chain = makePromiseChain({
+      data: [{ id: "p1", name: "x", price_won: 100000 }],
+      error: null,
+    });
+    mockFrom.mockImplementation(() => chain);
     const { getPublishedPriceItems } =
       await import("@/shared/lib/queries/price");
     expect(await getPublishedPriceItems()).toHaveLength(1);
+    expect(chain.eq).toHaveBeenCalledWith("is_published", true);
+    expect(chain.order).toHaveBeenCalledWith("sort_order", { ascending: true });
   });
 
   it("returns [] on error", async () => {

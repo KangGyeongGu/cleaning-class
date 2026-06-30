@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { getPublishedCustomerReviews } from "@/shared/lib/queries/customer-review";
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { CustomerReviewsCarousel } from "@/components/review/CustomerReviewsCarousel.client";
 import { ReviewRatingHero } from "@/components/hero/ReviewRatingHero.client";
 import type { CustomerReviewRow } from "@/shared/types/database";
@@ -23,7 +23,6 @@ interface ReviewCardData {
   id: string;
   rating: number;
   comment: string;
-  nickname: string;
   serviceType: string | null;
   relativeDate: string;
 }
@@ -33,7 +32,6 @@ function toCardData(review: CustomerReviewRow): ReviewCardData {
     id: review.id,
     rating: review.rating,
     comment: review.comment,
-    nickname: review.nickname,
     serviceType: review.service_type,
     relativeDate: formatRelativeDate(review.created_at),
   };

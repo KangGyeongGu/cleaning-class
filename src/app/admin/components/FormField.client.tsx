@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 interface FormFieldProps {
   id: string;
@@ -39,7 +39,7 @@ export function FormField({
         defaultValue={defaultValue}
         onInput={onInput}
         placeholder={placeholder}
-        className="w-full border-b border-slate-200 bg-transparent pb-3 text-base font-light transition-colors outline-none placeholder:text-slate-300 focus:border-slate-900"
+        className="w-full border-b border-slate-200 bg-transparent pb-3 text-base font-light transition-colors outline-none placeholder:text-slate-400 focus:border-slate-900"
       />
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
@@ -67,14 +67,15 @@ export function ModalFooter({
       >
         취소
       </button>
-      <button
+      <Button
         type="submit"
-        disabled={isPending}
-        className="inline-flex items-center gap-2 bg-slate-900 px-6 py-2.5 text-xs font-bold tracking-widest text-white uppercase transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+        variant="primary"
+        size="none"
+        loading={isPending}
+        className="px-6 py-2.5 text-xs uppercase"
       >
-        {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {submitLabel}
-      </button>
+      </Button>
     </div>
   );
 }

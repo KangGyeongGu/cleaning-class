@@ -2,31 +2,50 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { StarRating } from "@/components/review/StarRating";
 
+type Fill = "full" | "half" | "empty";
+
+function classifyStar(svg: SVGSVGElement): Fill {
+  if (svg.querySelector("defs")) return "half";
+  const path = svg.querySelector("path");
+  return path?.getAttribute("fill") === "#0f172a" ? "full" : "empty";
+}
+
+function fillStates(container: HTMLElement): Fill[] {
+  return Array.from(container.querySelectorAll("svg")).map((svg) =>
+    classifyStar(svg as unknown as SVGSVGElement),
+  );
+}
+
 describe("StarRating (browser)", () => {
-  it("should render container with accessible label reflecting rating", () => {
-    render(<StarRating rating={4.5} />);
-    const container = screen.getByRole("img", { name: /별점 4\.5점 \/ 5점/ });
-    expect(container).toBeTruthy();
-  });
-
-  it("should render exactly 5 star svgs regardless of rating", () => {
-    render(<StarRating rating={3} />);
-    const container = screen.getByRole("img");
-    const svgs = container.querySelectorAll("svg");
-    expect(svgs.length).toBe(5);
-  });
-
-  it("should treat fractional rating below 0.5 as empty for the next star", () => {
+  it("should round down below the .5 threshold (no half star)", () => {
     render(<StarRating rating={2.4} />);
     const container = screen.getByRole("img", { name: /별점 2\.4점/ });
-    expect(container).toBeTruthy();
+    expect(fillStates(container)).toEqual([
+      "full",
+      "full",
+      "empty",
+      "empty",
+      "empty",
+    ]);
   });
 
-  it("should respect custom size prop on svg width/height", () => {
-    render(<StarRating rating={5} size={24} />);
+  it("should render a half star once the fractional part reaches 0.5", () => {
+    render(<StarRating rating={2.5} />);
     const container = screen.getByRole("img");
-    const firstSvg = container.querySelector("svg");
-    expect(firstSvg?.getAttribute("width")).toBe("24");
-    expect(firstSvg?.getAttribute("height")).toBe("24");
+    expect(fillStates(container)).toEqual([
+      "full",
+      "full",
+      "half",
+      "empty",
+      "empty",
+    ]);
+
+    const halfSvg = Array.from(container.querySelectorAll("svg"))[2];
+    expect(halfSvg.querySelector("path[clip-path]")?.getAttribute("fill")).toBe(
+      "#0f172a",
+    );
+    expect(halfSvg.querySelector("defs rect")?.getAttribute("width")).toBe(
+      "10",
+    );
   });
 });

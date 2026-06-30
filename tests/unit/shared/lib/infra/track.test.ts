@@ -260,7 +260,7 @@ describe("track GA4 dual-write", () => {
   });
 
   it("does not call sendGAEvent when NEXT_PUBLIC_GA_ID is undefined", () => {
-    vi.stubEnv("NEXT_PUBLIC_GA_ID", "");
+    vi.stubEnv("NEXT_PUBLIC_GA_ID", undefined);
     track({
       event_type: "phone_click",
       event_payload: { phone_type: "moving", click_location: "footer" },

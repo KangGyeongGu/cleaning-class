@@ -64,6 +64,23 @@ describe("useImageUpload", () => {
     expect(result.current.images).toEqual([]);
   });
 
+  it("should revoke all remaining preview URLs on unmount", () => {
+    const { result, unmount } = renderHook(() => useImageUpload());
+    act(() => {
+      result.current.addFiles([makeFile("a.jpg"), makeFile("b.jpg")]);
+    });
+    const urls = [...result.current.previewUrls];
+    expect(urls).toHaveLength(2);
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2);
+    for (const url of urls) {
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith(url);
+    }
+  });
+
   it("should clear all images and revoke all URLs", () => {
     const { result } = renderHook(() => useImageUpload());
     act(() => {

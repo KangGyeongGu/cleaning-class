@@ -115,4 +115,11 @@ describe("useInViewport", () => {
     unmount();
     expect(obs?.disconnect).toHaveBeenCalled();
   });
+
+  it("should keep a stable ref callback across rerenders with default options", () => {
+    const { result, rerender } = renderHook(() => useInViewport());
+    const firstRef = result.current.ref;
+    rerender();
+    expect(result.current.ref).toBe(firstRef);
+  });
 });

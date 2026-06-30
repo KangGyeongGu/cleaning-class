@@ -53,10 +53,11 @@ export function validateContactImageFile(
 const IMAGE_MAGIC_BYTES: Array<{ signature: number[]; offset: number }> = [
   { signature: [0xff, 0xd8, 0xff], offset: 0 },
   { signature: [0x89, 0x50, 0x4e, 0x47], offset: 0 },
-  { signature: [0x52, 0x49, 0x46, 0x46], offset: 0 },
   { signature: [0x47, 0x49, 0x46, 0x38], offset: 0 },
-  { signature: [0x00, 0x00, 0x00], offset: 1 },
 ];
+
+const RIFF_SIGNATURE = [0x52, 0x49, 0x46, 0x46];
+const WEBP_SIGNATURE = [0x57, 0x45, 0x42, 0x50];
 
 export type AllowedImageMimeType = (typeof ALLOWED_IMAGE_MIME_TYPES)[number];
 export type AllowedImageExtension = (typeof ALLOWED_IMAGE_EXTENSIONS)[number];
@@ -86,6 +87,12 @@ export function isValidImageMagicBytes(header: Uint8Array): boolean {
     header[5] === 0x74 &&
     header[6] === 0x79 &&
     header[7] === 0x70
+  ) {
+    return true;
+  }
+  if (
+    RIFF_SIGNATURE.every((byte, i) => header[i] === byte) &&
+    WEBP_SIGNATURE.every((byte, i) => header[8 + i] === byte)
   ) {
     return true;
   }

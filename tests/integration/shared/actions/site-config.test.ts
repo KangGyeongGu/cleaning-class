@@ -2,10 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockGetUser = vi.hoisted(() => vi.fn());
 const mockRevalidatePath = vi.hoisted(() => vi.fn());
-const mockUploadImage = vi.hoisted(() =>
-  vi.fn().mockResolvedValue("uploaded-path"),
-);
-const mockDeleteImage = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 
 interface ChainResult {
   data: unknown;
@@ -35,22 +31,11 @@ vi.mock("@/shared/lib/supabase/auth", () => ({ getUser: mockGetUser }));
 vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: mockCreateClient,
 }));
-vi.mock("@/shared/lib/supabase/storage-server", () => ({
-  uploadImage: mockUploadImage,
-  deleteImage: mockDeleteImage,
-}));
-
-function makeFile(name: string, size: number, type = "image/jpeg"): File {
-  const bytes = new Uint8Array(size);
-  return new File([bytes], name, { type });
-}
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.resetModules();
   mockGetUser.mockResolvedValue({ id: "u1" });
-  mockUploadImage.mockResolvedValue("uploaded-path");
-  mockDeleteImage.mockResolvedValue(undefined);
 });
 
 describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewDescription / updateServiceDescription", () => {
@@ -68,19 +53,29 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
     expect((await updateCustomerReviewDescription("d")).success).toBe(true);
   });
 
-  it("revalidates field-specific extra paths (faq)", async () => {
+  it("revalidates field-specific extra paths (faq) and writes faq_description column", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { id: "cfg-1" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateFaqDescription } =
       await import("@/shared/actions/site-config");
     expect((await updateFaqDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/help");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        faq_description: "d",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", "cfg-1");
   });
 
   it("revalidates review_description extra paths", async () => {
@@ -113,19 +108,28 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
     expect(mockRevalidatePath).toHaveBeenCalledWith("/services");
   });
 
-  it("updatePriceDescription succeeds and revalidates price path", async () => {
+  it("updatePriceDescription succeeds, writes price_description column and revalidates price path", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { id: "cfg-1" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updatePriceDescription } =
       await import("@/shared/actions/site-config");
     expect((await updatePriceDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/price");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        price_description: "d",
+        updated_at: expect.any(String),
+      }),
+    );
   });
 
   it("returns failure when fetch fails", async () => {
@@ -207,15 +211,31 @@ describe("updateSiteConfig", () => {
     return fd;
   }
 
-  it("returns success when valid", async () => {
+  it("returns success when valid and writes mapped fields + updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? siteConfigChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateSiteConfig } = await import("@/shared/actions/site-config");
     expect((await updateSiteConfig(null, buildForm())).success).toBe(true);
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        business_name: "청소클라쓰",
+        representative: "홍길동",
+        phone: "010-1234-5678",
+        email: "a@b.com",
+        site_url: "https://example.com",
+        address_region: "전북",
+        address_locality: "전주시",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", "cfg-1");
   });
 
   it("applies fallback empty strings when optional fields missing", async () => {
@@ -283,231 +303,6 @@ describe("updateSiteConfig", () => {
   });
 });
 
-describe("updateHeroImage", () => {
-  function heroFetchChain() {
-    return {
-      data: {
-        id: "cfg-1",
-        hero_image_path: "old-1.jpg",
-        hero_image_path_2: "old-2.jpg",
-      },
-      error: null,
-    };
-  }
-
-  function buildForm(
-    overrides: Record<string, FormDataEntryValue> = {},
-  ): FormData {
-    const fd = new FormData();
-    fd.set("slot", "1");
-    fd.set("focal_x", "50");
-    fd.set("focal_y", "50");
-    for (const [k, v] of Object.entries(overrides)) {
-      fd.set(k, v);
-    }
-    return fd;
-  }
-
-  it("uploads new image + replaces existing", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ hero_image: makeFile("new.jpg", 1000) });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-1.jpg");
-  });
-
-  it("uploads first image without deleting when no existing path", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? {
-              data: {
-                id: "cfg-1",
-                hero_image_path: "",
-                hero_image_path_2: "",
-              },
-              error: null,
-            }
-          : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ hero_image: makeFile("first.jpg", 1000) });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).not.toHaveBeenCalled();
-  });
-
-  it("skips deleteImage on delete request when path already empty", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? {
-              data: {
-                id: "cfg-1",
-                hero_image_path: "",
-                hero_image_path_2: "",
-              },
-              error: null,
-            }
-          : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ delete_hero_image: "true" });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).not.toHaveBeenCalled();
-  });
-
-  it("uses slot 2 for hero_image_path_2", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ slot: "2", hero_image: makeFile("new.jpg", 1000) });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-  });
-
-  it("deletes hero image when delete_hero_image=true and path exists", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ delete_hero_image: "true" });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).toHaveBeenCalled();
-  });
-
-  it("returns failure on delete DB error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? heroFetchChain()
-          : { data: null, error: { message: "x" } },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ delete_hero_image: "true" });
-    expect((await updateHeroImage(null, fd)).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("uses default focal when focal_x/y missing", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = new FormData();
-    fd.set("slot", "1");
-    fd.set("hero_image", makeFile("new.jpg", 1000));
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-  });
-
-  it("updates focal only when file empty and currentPath exists", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ hero_image: makeFile("e.jpg", 0) });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-  });
-
-  it("returns failure when focal update fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? heroFetchChain()
-          : { data: null, error: { message: "x" } },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure when no file and no currentPath", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({
-        data: {
-          id: "cfg-1",
-          hero_image_path: null,
-          hero_image_path_2: null,
-        },
-        error: null,
-      }),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-  });
-
-  it("rejects file > 10MB", async () => {
-    mockFrom.mockImplementation(() => makePromiseChain(heroFetchChain()));
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ hero_image: makeFile("big.jpg", 11 * 1024 * 1024) });
-    expect((await updateHeroImage(null, fd)).success).toBe(false);
-  });
-
-  it("rolls back uploaded image on DB error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? heroFetchChain()
-          : { data: null, error: { message: "x" } },
-      ),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    const fd = buildForm({ hero_image: makeFile("new.jpg", 1000) });
-    expect((await updateHeroImage(null, fd)).success).toBe(false);
-    expect(mockDeleteImage).toHaveBeenCalledWith(
-      "hero-images",
-      "uploaded-path",
-    );
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on fetch error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: { message: "x" } }),
-    );
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { updateHeroImage } = await import("@/shared/actions/site-config");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-});
-
 describe("updateMovingSiteConfig", () => {
   function buildForm(
     overrides: Partial<Record<string, FormDataEntryValue>> = {},
@@ -523,19 +318,31 @@ describe("updateMovingSiteConfig", () => {
     return fd;
   }
 
-  it("returns success on valid input", async () => {
+  it("returns success on valid input and writes moving_* fields + updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { id: "cfg-1" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateMovingSiteConfig } =
       await import("@/shared/actions/site-config");
     expect((await updateMovingSiteConfig(null, buildForm())).success).toBe(
       true,
+    );
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        moving_representative: "이사남",
+        moving_phone: "010-9999-8888",
+        moving_business_registration_number: "000-11-22222",
+        moving_address: "전주시",
+        updated_at: expect.any(String),
+      }),
     );
   });
 

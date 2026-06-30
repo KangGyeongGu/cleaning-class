@@ -7,7 +7,7 @@ import {
   generateLocalBusinessJsonLd,
   generateWebSiteJsonLd,
 } from "@/shared/lib/domain/json-ld";
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 
 export const viewport: Viewport = {
   width: "device-width",

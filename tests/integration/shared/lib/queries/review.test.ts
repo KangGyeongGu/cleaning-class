@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 
 interface ChainResult {
   data: unknown;
@@ -8,7 +9,14 @@ interface ChainResult {
 function makePromiseChain(result: ChainResult) {
   const promise = Promise.resolve(result);
   const chain: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "order", "single"]) {
+  for (const method of [
+    "select",
+    "eq",
+    "contains",
+    "order",
+    "limit",
+    "single",
+  ]) {
     chain[method] = vi.fn(() => chain);
   }
   chain.then = (
@@ -22,9 +30,15 @@ const mockFrom = vi.hoisted(() => vi.fn());
 const mockCreateClient = vi.hoisted(() =>
   vi.fn(async () => ({ from: mockFrom })),
 );
+const mockCreateStaticClient = vi.hoisted(() =>
+  vi.fn(() => ({ from: mockFrom })),
+);
 
 vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: mockCreateClient,
+}));
+vi.mock("@/shared/lib/supabase/static", () => ({
+  createStaticClient: mockCreateStaticClient,
 }));
 vi.mock("@/shared/lib/supabase/storage", () => ({
   getReviewImageUrl: vi.fn((p: string) =>
@@ -53,12 +67,12 @@ describe("getReviews", () => {
   });
 
   it("supports ascending=true (oldest first)", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: [], error: null }),
-    );
+    const chain = makePromiseChain({ data: [], error: null });
+    mockFrom.mockImplementation(() => chain);
     const { getReviews } = await import("@/shared/lib/queries/review");
     await getReviews(true);
     expect(mockFrom).toHaveBeenCalledWith("reviews");
+    expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: true });
   });
 
   it("returns [] on error", async () => {
@@ -78,6 +92,32 @@ describe("getReviews", () => {
     );
     const { getReviews } = await import("@/shared/lib/queries/review");
     expect(await getReviews()).toEqual([]);
+  });
+});
+
+describe("getAllPublishedReviews", () => {
+  it("filters by is_published = true", async () => {
+    const chain = makePromiseChain({ data: [], error: null });
+    mockFrom.mockImplementation(() => chain);
+    const { getAllPublishedReviews } =
+      await import("@/shared/lib/queries/review");
+    await getAllPublishedReviews();
+    expect(chain.eq).toHaveBeenCalledWith("is_published", true);
+  });
+});
+
+describe("getPublishedReviewsByCleaningTypes", () => {
+  it("filters each category by is_published, tags, and PER_CATEGORY limit", async () => {
+    const chain = makePromiseChain({ data: [], error: null });
+    mockFrom.mockImplementation(() => chain);
+    const { getPublishedReviewsByCleaningTypes } =
+      await import("@/shared/lib/queries/review");
+    await getPublishedReviewsByCleaningTypes();
+    expect(chain.eq).toHaveBeenCalledWith("is_published", true);
+    expect(chain.contains).toHaveBeenCalledWith("tags", [
+      CLEANING_SERVICE_TYPES[0],
+    ]);
+    expect(chain.limit).toHaveBeenCalledWith(4);
   });
 });
 

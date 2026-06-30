@@ -71,11 +71,12 @@ describe("login", () => {
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 
-  it("falls back to default error message when no specific error available", async () => {
+  it("returns validation message (not credentials message) and skips signIn when form empty", async () => {
     const { login } = await import("@/shared/actions/auth");
     const fd = new FormData();
     const result = await login(null, fd);
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe("이메일 또는 비밀번호 형식을 확인해주세요");
+    expect(mockSignIn).not.toHaveBeenCalled();
   });
 });
 

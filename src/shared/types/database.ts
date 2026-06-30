@@ -349,6 +349,9 @@ export type Database = {
     Functions: {
       aggregate_analytics_daily: { Args: never; Returns: undefined };
       cleanup_analytics_events: { Args: never; Returns: undefined };
+      reorder_faqs: { Args: { items: Json }; Returns: undefined };
+      reorder_price_items: { Args: { items: Json }; Returns: undefined };
+      reorder_services: { Args: { items: Json }; Returns: undefined };
       submit_public_review: {
         Args: {
           p_comment: string;

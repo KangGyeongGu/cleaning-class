@@ -6,7 +6,7 @@ import { getPublishedServicesWithImageUrls } from "@/shared/lib/queries/service"
 import type { ServiceWithImageUrls } from "@/shared/lib/queries/service";
 import { ServiceBeforeAfter } from "@/components/service/ServiceBeforeAfter.client";
 import { HashHighlight } from "@/app/(public)/services/HashHighlight.client";
-import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
+import { BLUR_PLACEHOLDER } from "@/shared/lib/pure/constants";
 import { ContactCta } from "@/components/common/ContactCta";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
@@ -104,13 +104,8 @@ function ServiceCategorySection({
       className="px-6 py-12 md:py-16"
     >
       <div className="mx-auto max-w-5xl">
-        <p className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
-          {label}
-        </p>
-        <h2
-          id={`${id}-heading`}
-          className="mb-6 text-3xl font-black tracking-tight text-slate-900 md:text-4xl"
-        >
+        <p className="text-label mb-3 text-slate-400">{label}</p>
+        <h2 id={`${id}-heading`} className="text-heading-1 mb-6">
           {heading}
         </h2>
 
@@ -135,6 +130,7 @@ function ServiceCategorySection({
                           beforeSrc={service.detailImageUrl!}
                           afterSrc={service.detailAfterImageUrl}
                           alt={service.title}
+                          priority={index === 0}
                         />
                       ) : (
                         <div className="relative aspect-[4/3] overflow-hidden">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, X, Check, Loader2 } from "lucide-react";
+import { Pencil, X, Check } from "lucide-react";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface InlineDescriptionEditorProps {
   initialValue: string;
@@ -72,11 +73,7 @@ export function InlineDescriptionEditor({
           className="p-2 text-slate-400 transition-colors hover:text-green-600 disabled:opacity-50"
           title="저장"
         >
-          {isSaving ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Check size={16} />
-          )}
+          {isSaving ? <Spinner size={16} /> : <Check size={16} />}
         </button>
       </div>
     );

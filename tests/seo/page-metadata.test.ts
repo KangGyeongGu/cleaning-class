@@ -7,7 +7,6 @@ function findPagesRecursive(root: string): string[] {
 
   function walk(dir: string): void {
     for (const item of readdirSync(dir)) {
-      if (item.startsWith("[")) continue;
       const full = join(dir, item);
       const s = statSync(full);
       if (s.isDirectory()) walk(full);
@@ -22,7 +21,11 @@ function findPagesRecursive(root: string): string[] {
 const PROJECT_ROOT = process.cwd();
 const PUBLIC_DIR = join(PROJECT_ROOT, "src/app/(public)");
 
-const INDEXING_EXEMPT = new Set([join(PUBLIC_DIR, "review/write/page.tsx")]);
+// noindex 페이지(robots.index:false)는 검색 노출 대상이 아니므로
+// canonical / openGraph / title 고유성 요구에서 제외한다. metadata export 자체는 필수.
+function isNoIndex(content: string): boolean {
+  return /robots\s*:\s*\{[^}]*index\s*:\s*false/.test(content);
+}
 
 describe("SEO: 공개 페이지 메타데이터", () => {
   const publicPages = findPagesRecursive(PUBLIC_DIR);
@@ -44,8 +47,8 @@ describe("SEO: 공개 페이지 메타데이터", () => {
   it("인덱싱 대상 공개 페이지는 canonical alternates 를 정의", () => {
     const violations: string[] = [];
     for (const file of publicPages) {
-      if (INDEXING_EXEMPT.has(file)) continue;
       const content = readFileSync(file, "utf-8");
+      if (isNoIndex(content)) continue;
       if (!/canonical\s*:/.test(content)) {
         violations.push(`${file}: alternates.canonical 정의 누락`);
       }
@@ -56,8 +59,8 @@ describe("SEO: 공개 페이지 메타데이터", () => {
   it("인덱싱 대상 공개 페이지는 openGraph 를 정의", () => {
     const violations: string[] = [];
     for (const file of publicPages) {
-      if (INDEXING_EXEMPT.has(file)) continue;
       const content = readFileSync(file, "utf-8");
+      if (isNoIndex(content)) continue;
       if (!/openGraph\s*:/.test(content)) {
         violations.push(`${file}: openGraph 정의 누락`);
       }
@@ -71,6 +74,7 @@ describe("SEO: 공개 페이지 메타데이터", () => {
 
     for (const file of publicPages) {
       const content = readFileSync(file, "utf-8");
+      if (isNoIndex(content)) continue;
 
       const absoluteMatch = content.match(
         /title\s*:\s*\{[\s\S]*?absolute\s*:\s*["'`]([^"'`]+)["'`]/,

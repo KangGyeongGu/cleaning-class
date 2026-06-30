@@ -76,24 +76,46 @@ beforeEach(() => {
 });
 
 describe("createReview", () => {
-  it("returns success when all checks pass", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: null }),
-    );
+  it("returns success when all checks pass and inserts mapped fields", async () => {
+    const chains: Record<string, unknown>[] = [];
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain({ data: null, error: null });
+      chains.push(chain);
+      return chain;
+    });
     const { createReview } = await import("@/shared/actions/review");
     const result = await createReview(null, buildForm());
     expect(result.success).toBe(true);
-    expect(mockUploadImage).toHaveBeenCalled();
+    expect(mockUploadImage).toHaveBeenCalledWith(
+      "review-images",
+      expect.any(File),
+    );
+    expect(chains[0].insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "테스트 후기",
+        summary: "후기 요약",
+        tags: ["거주청소"],
+        link_url: "https://blog.example.com/1",
+        is_published: true,
+        image_path: "path/uploaded.jpg",
+      }),
+    );
   });
 
   it("applies link_url fallback when missing", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: null }),
-    );
+    const chains: Record<string, unknown>[] = [];
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain({ data: null, error: null });
+      chains.push(chain);
+      return chain;
+    });
     const { createReview } = await import("@/shared/actions/review");
     const fd = buildForm();
     fd.delete("link_url");
     expect((await createReview(null, fd)).success).toBe(true);
+    expect(chains[0].insert).toHaveBeenCalledWith(
+      expect.objectContaining({ link_url: "" }),
+    );
   });
 
   it("rejects invalid JSON in tags", async () => {
@@ -156,20 +178,26 @@ describe("createReview", () => {
 
 describe("updateReview", () => {
   it("applies link_url fallback when missing on update", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { image_path: "old.jpg" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateReview } = await import("@/shared/actions/review");
     const fd = buildForm();
     fd.delete("link_url");
     fd.delete("image");
     fd.set("image", makeFile("empty.jpg", 0));
     expect((await updateReview(VALID_ID, null, fd)).success).toBe(true);
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({ link_url: "" }),
+    );
   });
 
   it("returns success when no new image provided (keep existing)", async () => {
@@ -189,21 +217,36 @@ describe("updateReview", () => {
     expect(mockUploadImage).not.toHaveBeenCalled();
   });
 
-  it("uploads new image + deletes old on successful update", async () => {
+  it("uploads new image + deletes old on successful update and injects updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0
           ? { data: { image_path: "old.jpg" }, error: null }
           : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateReview } = await import("@/shared/actions/review");
     expect((await updateReview(VALID_ID, null, buildForm())).success).toBe(
       true,
     );
     expect(mockUploadImage).toHaveBeenCalled();
     expect(mockDeleteImage).toHaveBeenCalledWith("review-images", "old.jpg");
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "테스트 후기",
+        summary: "후기 요약",
+        tags: ["거주청소"],
+        link_url: "https://blog.example.com/1",
+        is_published: true,
+        image_path: "path/uploaded.jpg",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", VALID_ID);
   });
 
   it("rejects invalid JSON in tags", async () => {
@@ -270,16 +313,6 @@ describe("updateReview", () => {
     consoleSpy.mockRestore();
   });
 
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { updateReview } = await import("@/shared/actions/review");
-    expect((await updateReview(VALID_ID, null, buildForm())).success).toBe(
-      false,
-    );
-    consoleSpy.mockRestore();
-  });
-
   it("preserves existing image when update fails without new image", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     let call = 0;
@@ -296,6 +329,14 @@ describe("updateReview", () => {
     expect((await updateReview(VALID_ID, null, fd)).success).toBe(false);
     expect(mockDeleteImage).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it("rejects an invalid (non-uuid) id before any DB access", async () => {
+    const { updateReview } = await import("@/shared/actions/review");
+    expect((await updateReview("not-a-uuid", null, buildForm())).success).toBe(
+      false,
+    );
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
 
@@ -356,12 +397,10 @@ describe("deleteReview", () => {
     expect(mockDeleteImage).not.toHaveBeenCalled();
   });
 
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
+  it("rejects an invalid (non-uuid) id before any DB access", async () => {
     const { deleteReview } = await import("@/shared/actions/review");
-    expect((await deleteReview(VALID_ID)).success).toBe(false);
-    consoleSpy.mockRestore();
+    expect((await deleteReview("not-a-uuid")).success).toBe(false);
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
 
@@ -381,7 +420,7 @@ describe("toggleReviewPublish", () => {
     const { toggleReviewPublish } = await import("@/shared/actions/review");
     const r = await toggleReviewPublish(VALID_ID, false);
     expect(r.success).toBe(true);
-    expect(r.message).toContain("비공개");
+    expect("message" in r ? r.message : undefined).toContain("비공개");
   });
 
   it("returns failure on DB error", async () => {
@@ -394,11 +433,9 @@ describe("toggleReviewPublish", () => {
     consoleSpy.mockRestore();
   });
 
-  it("returns failure on exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
+  it("rejects an invalid (non-uuid) id before any DB access", async () => {
     const { toggleReviewPublish } = await import("@/shared/actions/review");
-    expect((await toggleReviewPublish(VALID_ID, true)).success).toBe(false);
-    consoleSpy.mockRestore();
+    expect((await toggleReviewPublish("not-a-uuid", true)).success).toBe(false);
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });

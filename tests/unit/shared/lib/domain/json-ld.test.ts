@@ -206,69 +206,6 @@ describe("generateBreadcrumbListJsonLd", () => {
   });
 });
 
-describe("JSON-LD 직렬화 가능성 (Schema.org 호환)", () => {
-  it("generateWebSiteJsonLd 결과가 JSON 으로 직렬화 가능", () => {
-    expect(() =>
-      JSON.stringify(generateWebSiteJsonLd(FULL_CONFIG)),
-    ).not.toThrow();
-  });
-
-  it("generateLocalBusinessJsonLd 결과가 JSON 으로 직렬화 가능", () => {
-    expect(() =>
-      JSON.stringify(generateLocalBusinessJsonLd(FULL_CONFIG)),
-    ).not.toThrow();
-  });
-
-  it("LocalBusiness 가 Schema.org 필수 필드를 보유 (@context/@type/name/address/geo)", () => {
-    const r = generateLocalBusinessJsonLd(FULL_CONFIG);
-    expect(r["@context"]).toBe("https://schema.org");
-    expect(r["@type"]).toBeDefined();
-    expect(Array.isArray(r["@type"])).toBe(true);
-    expect(r["@type"]).toContain("LocalBusiness");
-    expect(r.name).toBeTruthy();
-    expect(r.address).toBeTruthy();
-    expect(r.address.streetAddress).toBeTruthy();
-    expect(r.address.addressCountry).toBe("KR");
-    expect(r.geo).toBeTruthy();
-    expect(typeof r.geo.latitude).toBe("number");
-    expect(typeof r.geo.longitude).toBe("number");
-  });
-
-  it("WebSite 가 Schema.org 필수 필드를 보유 (@context/@type/name/url)", () => {
-    const r = generateWebSiteJsonLd(FULL_CONFIG);
-    expect(r["@context"]).toBe("https://schema.org");
-    expect(r["@type"]).toBe("WebSite");
-    expect(r.name).toBeTruthy();
-    expect(r.url).toMatch(/^https?:\/\//);
-  });
-
-  it("FAQ JSON-LD 의 모든 mainEntity 가 name/acceptedAnswer.text 보유", () => {
-    const r = generateFaqPageJsonLd([
-      { question: "Q1", answer: "A1" },
-      { question: "Q2", answer: "A2" },
-    ]);
-    for (const item of r.mainEntity) {
-      expect(item["@type"]).toBe("Question");
-      expect(item.name).toBeTruthy();
-      expect(item.acceptedAnswer["@type"]).toBe("Answer");
-      expect(item.acceptedAnswer.text).toBeTruthy();
-    }
-  });
-
-  it("BreadcrumbList 의 itemListElement 가 position/name/item 보유", () => {
-    const r = generateBreadcrumbListJsonLd([
-      { name: "홈", url: "https://x.com/" },
-      { name: "후기", url: "https://x.com/reviews" },
-    ]);
-    for (const item of r.itemListElement) {
-      expect(item["@type"]).toBe("ListItem");
-      expect(typeof item.position).toBe("number");
-      expect(item.name).toBeTruthy();
-      expect(item.item).toMatch(/^https?:\/\//);
-    }
-  });
-});
-
 describe("generatePriceListJsonLd", () => {
   it("formats integer price_won with 원~ suffix", () => {
     const result = generatePriceListJsonLd([

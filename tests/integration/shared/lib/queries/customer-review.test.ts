@@ -22,9 +22,15 @@ const mockFrom = vi.hoisted(() => vi.fn());
 const mockCreateClient = vi.hoisted(() =>
   vi.fn(async () => ({ from: mockFrom })),
 );
+const mockCreateStaticClient = vi.hoisted(() =>
+  vi.fn(() => ({ from: mockFrom })),
+);
 
 vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: mockCreateClient,
+}));
+vi.mock("@/shared/lib/supabase/static", () => ({
+  createStaticClient: mockCreateStaticClient,
 }));
 
 beforeEach(() => {
@@ -34,20 +40,22 @@ beforeEach(() => {
 
 describe("getAdminCustomerReviews", () => {
   it("returns reviews ordered by created_at desc on success", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({
-        data: [
-          { id: "cr1", rating: 5, comment: "x" },
-          { id: "cr2", rating: 4, comment: "y" },
-        ],
-        error: null,
-      }),
-    );
+    const chain = makePromiseChain({
+      data: [
+        { id: "cr1", rating: 5, comment: "x" },
+        { id: "cr2", rating: 4, comment: "y" },
+      ],
+      error: null,
+    });
+    mockFrom.mockImplementation(() => chain);
     const { getAdminCustomerReviews } =
       await import("@/shared/lib/queries/customer-review");
     const result = await getAdminCustomerReviews();
     expect(result).toHaveLength(2);
     expect(mockFrom).toHaveBeenCalledWith("customer_reviews");
+    expect(chain.order).toHaveBeenCalledWith("created_at", {
+      ascending: false,
+    });
   });
 
   it("returns [] on DB error and logs", async () => {
@@ -78,5 +86,16 @@ describe("getAdminCustomerReviews", () => {
       await import("@/shared/lib/queries/customer-review");
     await getAdminCustomerReviews(true);
     expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: true });
+  });
+});
+
+describe("getPublishedCustomerReviews", () => {
+  it("filters by is_published = true", async () => {
+    const chain = makePromiseChain({ data: [], error: null });
+    mockFrom.mockImplementation(() => chain);
+    const { getPublishedCustomerReviews } =
+      await import("@/shared/lib/queries/customer-review");
+    await getPublishedCustomerReviews();
+    expect(chain.eq).toHaveBeenCalledWith("is_published", true);
   });
 });

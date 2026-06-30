@@ -3,11 +3,7 @@
 <img src="./src/app/icon.png" alt="청소클라쓰" width="120" />
 
 # 청소클라쓰
-
 **전주 청소·이사 전문 업체 청소클라쓰 공식 웹사이트**
-
-
-<br/>
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
@@ -15,35 +11,12 @@
 [![AWS Lightsail](https://img.shields.io/badge/AWS_Lightsail-232F3E?style=flat-square&logo=amazonaws&logoColor=white)](https://aws.amazon.com/lightsail/)
 [![License](https://img.shields.io/badge/License-Private-red?style=flat-square)]()
 
-<br/>
-
 [**운영 사이트 바로가기**](https://www.cleaningclass.co.kr)
 
+전주 청소업체 <i>청소클라쓰</i> **공식 마케팅 웹사이트** 및 **사내 운영 시스템**</br>
+Next.js 기반 마케팅용 공개 웹 사이트 및 콘텐츠·통계 관리용 관리자 대시보드
 </div>
-
-<br/>
-
----
-
-## 목차
-
-- [개요](#개요)
-- [기술 스택](#기술-스택)
-- [시스템 아키텍처](#시스템-아키텍처)
-- [주요 기능](#주요-기능)
-  - [공개 사이트](#01--공개-사이트)
-  - [관리자 대시보드](#02--관리자-대시보드)
-- [릴리즈 노트](#릴리즈-노트)
-
----
-
-## 개요
-
-본 프로젝트는 해당 업체의 **공식 마케팅 웹사이트** 및 **사내 운영 시스템**으로, 마케팅용 공개 웹 사이트 및 콘텐츠·통계 관리용 관리자 대시보드를 Next.js 애플리케이션으로 제공합니다.
-
-<br/>
-
----
+</br>
 
 ## 기술 스택
 
@@ -84,62 +57,18 @@
 
 <br/>
 
----
-
 ## 시스템 아키텍처
 
 <div align="center">
-
-```mermaid
-graph TB
-    subgraph Client["클라이언트"]
-        Browser["브라우저"]
-    end
-
-    subgraph CF["Cloudflare"]
-        Edge["엣지<br/>(TLS · WAF · CDN)"]
-    end
-
-    subgraph AWS["AWS Lightsail"]
-        subgraph Docker["Docker Container"]
-            NextJS["Next.js Server<br/>(standalone)"]
-            ImageOpt["/_next/image<br/>이미지 최적화 + 디스크 캐시"]
-        end
-    end
-
-    subgraph Supabase["Supabase"]
-        DB["PostgreSQL<br/>(RLS)"]
-        Auth["Auth"]
-        Storage["Storage<br/>(3 Buckets)"]
-    end
-
-    subgraph External["외부 서비스"]
-        GA4["Google Analytics 4"]
-        Clarity["Microsoft Clarity"]
-        SMTP["SMTP 서버<br/>(Nodemailer)"]
-    end
-
-    Browser -->|"HTTPS"| Edge
-    Edge -->|"프록시"| NextJS
-    Browser -->|"이미지 요청"| ImageOpt
-    ImageOpt -->|"원본 다운로드"| Storage
-    NextJS -->|"데이터 조회/변경"| DB
-    NextJS -->|"인증"| Auth
-    NextJS -->|"이미지 업로드"| Storage
-    NextJS -->|"이메일 발송"| SMTP
-    Browser -->|"이벤트 전송"| GA4
-    Browser -->|"세션 레코딩"| Clarity
-```
+<img src="docs/readme/architecture.png" alt="청소클라쓰" width="100%" />
 
 </div>
 
 <br/>
 
----
-
 ## 주요 기능
 
-### `01` · 공개 사이트
+### 공개 사이트
 
 <table>
 <tr>
@@ -179,8 +108,9 @@ graph TB
 </td>
 <td valign="top">
 
-#### 정책 및 RSS
-개인정보처리방침, 이용약관, 도움말 FAQ 페이지를 제공합니다.
+#### 정책 및 SEO
+개인정보처리방침, 이용약관, 도움말 FAQ 페이지를 제공합니다.</br>
+네이버 서치어드바이저 및 구글 서치콘솔 SEO 최적화를 제공합니다.
 
 </td>
 </tr>
@@ -188,16 +118,15 @@ graph TB
 
 <br/>
 
----
-
-### `02` 관리자 대시보드
+### 관리자 대시보드
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
 #### 유입 통계 대시보드
-방문자 유입 경로, 전환 이벤트, 기간별 추이 등 운영 지표를 집계해 시각화합니다.
+방문자 유입 경로, 전환 이벤트, 기간별 추이 등 운영 지표를 집계 및 시각화합니다.</br>
+Google GA4, MS Clarity, Cloudflare, GoAccess 통계 지표 및 자체 통계 데이터를 제공합니다.
 
 </td>
 <td width="50%" valign="top">
@@ -217,6 +146,7 @@ graph TB
 
 | 버전 | 날짜 | 주요 내용                                                                             | 노트 |
 |------|------|-----------------------------------------------------------------------------------|------|
+| [v1.3.0](docs/releases/v1.3.0.md) | 2026-07-01 | 내부 코드 품질·구조 개선(공통 UI 프리미티브·공유 훅 도입, 관리자 라우트 그룹화, 중복 제거) · nodemailer 보안 업데이트 | [→](docs/releases/v1.3.0.md) |
 | [v1.2.2](docs/releases/v1.2.2.md) | 2026-06-28 | 업체 로고 교체 · 관리자 메뉴 재정렬 및 레이블 변경 · 대시보드 통계 카드 제거 · 히어로 섹션 전화번호 레이아웃 수정              | [→](docs/releases/v1.2.2.md) |
 | [v1.2.1](docs/releases/v1.2.1.md) | 2026-06-19 | GA4·Microsoft Clarity 클라이언트 추적 재도입(자체 DB와 dual-write) · 견적폼 PII 마스킹 · 관리자 콘솔 바로가기 | [→](docs/releases/v1.2.1.md) |
 | [v1.2.0](docs/releases/v1.2.0.md) | 2026-06-16 | 관리자 트래픽 분석 대시보드 추가(Cloudflare·GoAccess) · 배포 빌드 인자 누락 수정 · npm audit 해결           | [→](docs/releases/v1.2.0.md) |

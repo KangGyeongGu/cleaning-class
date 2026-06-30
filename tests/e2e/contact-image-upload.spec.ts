@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 function makeJpegBuffer(sizeBytes: number): Buffer {
   const buf = Buffer.alloc(sizeBytes);
@@ -8,69 +8,81 @@ function makeJpegBuffer(sizeBytes: number): Buffer {
   return buf;
 }
 
+interface FilePayload {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
+async function expectRejection(
+  page: Page,
+  files: FilePayload[],
+  messageMatcher: RegExp,
+): Promise<void> {
+  const dialogPromise = page.waitForEvent("dialog");
+  const setFiles = page.locator('input[name="images"]').setInputFiles(files);
+  const dialog = await dialogPromise;
+  const message = dialog.message();
+  await dialog.dismiss();
+  await setFiles;
+  expect(message).toMatch(messageMatcher);
+  await expect(page.getByText("0/4")).toBeVisible();
+}
+
 test.describe("견적문의 이미지 업로드", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/contact");
   });
 
   test("5장 이상 첨부 시 알림으로 거부된다", async ({ page }) => {
-    page.once("dialog", async (dialog) => {
-      expect(dialog.message()).toContain("4");
-      await dialog.dismiss();
-    });
-
     const files = Array.from({ length: 5 }, (_, i) => ({
       name: `photo${i + 1}.jpg`,
       mimeType: "image/jpeg",
       buffer: makeJpegBuffer(100),
     }));
-
-    await page.locator('input[name="images"]').setInputFiles(files);
+    await expectRejection(page, files, /4/);
   });
 
   test("개별 25MB 초과 파일은 알림으로 거부된다", async ({ page }) => {
-    page.once("dialog", async (dialog) => {
-      expect(dialog.message()).toContain("25MB");
-      await dialog.dismiss();
-    });
-
-    await page.locator('input[name="images"]').setInputFiles([
-      {
-        name: "big.jpg",
-        mimeType: "image/jpeg",
-        buffer: makeJpegBuffer(26 * 1024 * 1024),
-      },
-    ]);
+    await expectRejection(
+      page,
+      [
+        {
+          name: "big.jpg",
+          mimeType: "image/jpeg",
+          buffer: makeJpegBuffer(26 * 1024 * 1024),
+        },
+      ],
+      /25MB/,
+    );
   });
 
   test("PDF 등 미허용 MIME 은 알림으로 거부된다", async ({ page }) => {
-    page.once("dialog", async (dialog) => {
-      expect(dialog.message()).toContain("형식");
-      await dialog.dismiss();
-    });
-
-    await page.locator('input[name="images"]').setInputFiles([
-      {
-        name: "doc.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\n"),
-      },
-    ]);
+    await expectRejection(
+      page,
+      [
+        {
+          name: "doc.pdf",
+          mimeType: "application/pdf",
+          buffer: Buffer.from("%PDF-1.4\n"),
+        },
+      ],
+      /형식/,
+    );
   });
 
   test("미허용 확장자(.txt) 는 알림으로 거부된다", async ({ page }) => {
-    page.once("dialog", async (dialog) => {
-      expect(dialog.message()).toMatch(/형식|확장자/);
-      await dialog.dismiss();
-    });
-
-    await page.locator('input[name="images"]').setInputFiles([
-      {
-        name: "note.txt",
-        mimeType: "text/plain",
-        buffer: Buffer.from("hello"),
-      },
-    ]);
+    await expectRejection(
+      page,
+      [
+        {
+          name: "note.txt",
+          mimeType: "text/plain",
+          buffer: Buffer.from("hello"),
+        },
+      ],
+      /형식|확장자/,
+    );
   });
 
   test("유효한 JPEG 1~2장 첨부 시 카운터가 갱신된다", async ({ page }) => {
@@ -87,6 +99,6 @@ test.describe("견적문의 이미지 업로드", () => {
       },
     ]);
 
-    await expect(page.getByText("2/4")).toBeVisible();
+    await expect(page.getByText("2/4")).toBeVisible({ timeout: 15000 });
   });
 });

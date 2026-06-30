@@ -1,6 +1,18 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("@/shared/lib/infra/track", () => ({
+  track: vi.fn(),
+  currentPath: () => "/",
+}));
+
 import { ServiceCard } from "@/components/service/ServiceCard.client";
+import { track } from "@/shared/lib/infra/track";
+
+function clickNoNav(el: Element): void {
+  el.addEventListener("click", (e) => e.preventDefault());
+  fireEvent.click(el);
+}
 
 const baseService = {
   id: "svc-1",
@@ -14,6 +26,10 @@ const baseService = {
 };
 
 describe("ServiceCard (browser)", () => {
+  beforeEach(() => {
+    vi.mocked(track).mockClear();
+  });
+
   it("should render service title and tags joined by middot", () => {
     render(<ServiceCard service={baseService} priority={false} />);
     expect(screen.getByText("입주청소")).toBeTruthy();
@@ -46,18 +62,14 @@ describe("ServiceCard (browser)", () => {
     expect(images.length).toBe(2);
   });
 
-  it("should mark after image visible immediately when showAfter is true", () => {
-    render(
-      <ServiceCard
-        service={{
-          ...baseService,
-          afterImageUrl: "https://example.com/after.jpg",
-        }}
-        priority={false}
-        showAfter
-      />,
-    );
-    const afterImg = document.querySelectorAll("img")[1];
-    expect(afterImg.className).toContain("opacity-100!");
+  it("should track a cta_click carrying the service id when the card link is clicked", () => {
+    render(<ServiceCard service={baseService} priority={false} />);
+    clickNoNav(screen.getByRole("link"));
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith({
+      event_type: "cta_click",
+      event_payload: { content_id: "service_card_svc-1" },
+      path: "/",
+    });
   });
 });

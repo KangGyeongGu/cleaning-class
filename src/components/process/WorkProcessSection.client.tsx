@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Phone, MapPin, Calendar, Check } from "lucide-react";
 
@@ -190,7 +190,7 @@ function DesktopStep({
         <p className="mb-1 text-xs font-bold tracking-widest text-slate-400">
           STEP {step.number}
         </p>
-        <h3 className="mb-2 flex items-baseline justify-center gap-1.5 text-lg font-bold text-slate-900">
+        <h3 className="text-heading-3 mb-2 flex items-baseline justify-center gap-1.5">
           {step.title}
           {step.note && (
             <span className="text-xs font-medium text-slate-400">
@@ -208,6 +208,18 @@ function DesktopStep({
 
 export function WorkProcessSection(): React.ReactElement {
   const sectionRef = useRef<HTMLElement>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const handle = (e: MediaQueryListEvent | MediaQueryList): void => {
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+      setIsDesktop(e.matches);
+    };
+    handle(mq);
+    mq.addEventListener("change", handle);
+    return () => mq.removeEventListener("change", handle);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -234,33 +246,35 @@ export function WorkProcessSection(): React.ReactElement {
           </p>
         </div>
 
-        <div className="relative md:hidden">
-          <div className="absolute top-0 left-[17px] h-full w-px bg-slate-200">
-            <motion.div
-              className="w-full bg-slate-900"
-              style={{ height: lineHeight }}
-            />
+        {isDesktop ? (
+          <div className="relative">
+            <div className="absolute top-[23px] right-0 left-0 mx-auto h-px w-[calc(100%-4rem)] bg-slate-200">
+              <motion.div
+                className="h-full bg-slate-900"
+                style={{ width: lineWidth }}
+              />
+            </div>
+            <div className="grid grid-cols-4 gap-6">
+              {PROCESS_STEPS.map((step, index) => (
+                <DesktopStep
+                  key={step.number}
+                  step={step}
+                  index={index}
+                  progress={scrollYProgress}
+                />
+              ))}
+            </div>
           </div>
-          {PROCESS_STEPS.map((step, index) => (
-            <MobileStep
-              key={step.number}
-              step={step}
-              index={index}
-              progress={scrollYProgress}
-            />
-          ))}
-        </div>
-
-        <div className="relative hidden md:block">
-          <div className="absolute top-[23px] right-0 left-0 mx-auto h-px w-[calc(100%-4rem)] bg-slate-200">
-            <motion.div
-              className="h-full bg-slate-900"
-              style={{ width: lineWidth }}
-            />
-          </div>
-          <div className="grid grid-cols-4 gap-6">
+        ) : (
+          <div className="relative">
+            <div className="absolute top-0 left-[17px] h-full w-px bg-slate-200">
+              <motion.div
+                className="w-full bg-slate-900"
+                style={{ height: lineHeight }}
+              />
+            </div>
             {PROCESS_STEPS.map((step, index) => (
-              <DesktopStep
+              <MobileStep
                 key={step.number}
                 step={step}
                 index={index}
@@ -268,7 +282,7 @@ export function WorkProcessSection(): React.ReactElement {
               />
             ))}
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

@@ -34,8 +34,9 @@ function makePromiseChain(result: ChainResult) {
 }
 
 const mockFrom = vi.hoisted(() => vi.fn());
+const mockRpc = vi.hoisted(() => vi.fn());
 const mockCreateClient = vi.hoisted(() =>
-  vi.fn(async () => ({ from: mockFrom })),
+  vi.fn(async () => ({ from: mockFrom, rpc: mockRpc })),
 );
 
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
@@ -49,6 +50,7 @@ vi.mock("@/shared/lib/supabase/storage-server", () => ({
 }));
 
 const VALID_ID = "00000000-0000-0000-0000-000000000001";
+const ANOTHER_ID = "00000000-0000-0000-0000-000000000002";
 
 function makeFile(name: string, size: number, type = "image/jpeg"): File {
   const bytes = new Uint8Array(size);
@@ -81,21 +83,46 @@ beforeEach(() => {
   vi.resetModules();
   mockGetUser.mockResolvedValue({ id: "u1" });
   mockUploadImage.mockResolvedValue("uploaded-path");
+  mockRpc.mockResolvedValue({ error: null });
 });
 
 describe("createService", () => {
-  it("returns success with valid form (no extra images)", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: null }),
-    );
+  it("returns success with valid form (no extra images) and inserts mapped fields", async () => {
+    const chains: Record<string, unknown>[] = [];
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain({ data: null, error: null });
+      chains.push(chain);
+      return chain;
+    });
     const { createService } = await import("@/shared/actions/service");
     expect((await createService(null, buildForm())).success).toBe(true);
+    expect(chains[0].insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "거주청소",
+        description: "설명",
+        category: "cleaning",
+        tags: ["깔끔"],
+        sort_order: 0,
+        is_published: true,
+        image_focal_x: 50,
+        image_focal_y: 50,
+        image_after_focal_x: 50,
+        image_after_focal_y: 50,
+        image_path: "uploaded-path",
+        image_after_path: "",
+        detail_image_path: "",
+        detail_image_after_path: "",
+      }),
+    );
   });
 
   it("applies fallback defaults when optional fields missing", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: null }),
-    );
+    const chains: Record<string, unknown>[] = [];
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain({ data: null, error: null });
+      chains.push(chain);
+      return chain;
+    });
     const { createService } = await import("@/shared/actions/service");
     const fd = buildForm();
     fd.delete("description");
@@ -105,6 +132,19 @@ describe("createService", () => {
     fd.delete("image_after_focal_x");
     fd.delete("image_after_focal_y");
     expect((await createService(null, fd)).success).toBe(true);
+    expect(chains[0].insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "",
+        sort_order: 0,
+        image_focal_x: 50,
+        image_focal_y: 50,
+        image_after_focal_x: 50,
+        image_after_focal_y: 50,
+        image_after_path: "",
+        detail_image_path: "",
+        detail_image_after_path: "",
+      }),
+    );
   });
 
   it("treats missing tags as empty (Zod fails on min(1))", async () => {
@@ -197,6 +237,41 @@ describe("createService", () => {
     consoleSpy.mockRestore();
   });
 
+  it("rolls back already-uploaded paths when a later upload throws", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockUploadImage
+      .mockResolvedValueOnce("before-path")
+      .mockResolvedValueOnce("after-path")
+      .mockRejectedValueOnce(new Error("detail upload fail"));
+    const { createService } = await import("@/shared/actions/service");
+    const fd = buildForm();
+    fd.set("image_after", makeFile("after.jpg", 1000));
+    fd.set("detail_image", makeFile("d.jpg", 1000));
+    expect((await createService(null, fd)).success).toBe(false);
+    expect(mockDeleteImage).toHaveBeenCalledWith(
+      "service-images",
+      "before-path",
+    );
+    expect(mockDeleteImage).toHaveBeenCalledWith(
+      "service-images",
+      "after-path",
+    );
+    expect(mockFrom).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it("cleans up before-image when after-image exceeds size limit", async () => {
+    mockUploadImage.mockResolvedValueOnce("before-path");
+    const { createService } = await import("@/shared/actions/service");
+    const fd = buildForm();
+    fd.set("image_after", makeFile("big.jpg", 11 * 1024 * 1024));
+    expect((await createService(null, fd)).success).toBe(false);
+    expect(mockDeleteImage).toHaveBeenCalledWith(
+      "service-images",
+      "before-path",
+    );
+  });
+
   it("returns failure on outer exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockGetUser.mockRejectedValueOnce(new Error("x"));
@@ -234,12 +309,15 @@ describe("updateService", () => {
   });
 
   it("applies fallback defaults when optional fields missing", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? existingChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateService } = await import("@/shared/actions/service");
     const fd = buildForm();
     fd.delete("description");
@@ -249,15 +327,28 @@ describe("updateService", () => {
     fd.delete("image_after_focal_x");
     fd.delete("image_after_focal_y");
     expect((await updateService(VALID_ID, null, fd)).success).toBe(true);
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "",
+        sort_order: 0,
+        image_focal_x: 50,
+        image_focal_y: 50,
+        image_after_focal_x: 50,
+        image_after_focal_y: 50,
+      }),
+    );
   });
 
-  it("uploads new images + deletes old paths on success", async () => {
+  it("uploads new images + deletes old paths on success and injects updated_at", async () => {
+    const chains: Record<string, unknown>[] = [];
     let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
+    mockFrom.mockImplementation(() => {
+      const chain = makePromiseChain(
         call++ === 0 ? existingChain() : { data: null, error: null },
-      ),
-    );
+      );
+      chains.push(chain);
+      return chain;
+    });
     const { updateService } = await import("@/shared/actions/service");
     const fd = buildForm();
     fd.set("image_after", makeFile("after.jpg", 1000));
@@ -265,6 +356,19 @@ describe("updateService", () => {
     fd.set("detail_image_after", makeFile("da.jpg", 1000));
     expect((await updateService(VALID_ID, null, fd)).success).toBe(true);
     expect(mockDeleteImage).toHaveBeenCalled();
+    expect(chains[1].update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "거주청소",
+        category: "cleaning",
+        tags: ["깔끔"],
+        image_path: "uploaded-path",
+        image_after_path: "uploaded-path",
+        detail_image_path: "uploaded-path",
+        detail_image_after_path: "uploaded-path",
+        updated_at: expect.any(String),
+      }),
+    );
+    expect(chains[1].eq).toHaveBeenCalledWith("id", VALID_ID);
   });
 
   it("logs cleanup failure but still returns success", async () => {
@@ -393,6 +497,26 @@ describe("updateService", () => {
     consoleSpy.mockRestore();
   });
 
+  it("rolls back all newly-uploaded paths when a later upload throws", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockFrom.mockImplementation(() => makePromiseChain(existingChain()));
+    mockUploadImage
+      .mockResolvedValueOnce("new-before")
+      .mockResolvedValueOnce("new-after")
+      .mockRejectedValueOnce(new Error("detail upload fail"));
+    const { updateService } = await import("@/shared/actions/service");
+    const fd = buildForm();
+    fd.set("image_after", makeFile("after.jpg", 1000));
+    fd.set("detail_image", makeFile("d.jpg", 1000));
+    expect((await updateService(VALID_ID, null, fd)).success).toBe(false);
+    expect(mockDeleteImage).toHaveBeenCalledWith(
+      "service-images",
+      "new-before",
+    );
+    expect(mockDeleteImage).toHaveBeenCalledWith("service-images", "new-after");
+    consoleSpy.mockRestore();
+  });
+
   it("rolls back new images on DB update error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     let call = 0;
@@ -429,14 +553,12 @@ describe("updateService", () => {
     consoleSpy.mockRestore();
   });
 
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
+  it("rejects an invalid (non-uuid) id before any DB access", async () => {
     const { updateService } = await import("@/shared/actions/service");
-    expect((await updateService(VALID_ID, null, buildForm())).success).toBe(
+    expect((await updateService("not-a-uuid", null, buildForm())).success).toBe(
       false,
     );
-    consoleSpy.mockRestore();
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
 
@@ -520,12 +642,10 @@ describe("deleteService", () => {
     consoleSpy.mockRestore();
   });
 
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
+  it("rejects an invalid (non-uuid) id before any DB access", async () => {
     const { deleteService } = await import("@/shared/actions/service");
-    expect((await deleteService(VALID_ID)).success).toBe(false);
-    consoleSpy.mockRestore();
+    expect((await deleteService("not-a-uuid")).success).toBe(false);
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
 
@@ -545,7 +665,7 @@ describe("toggleServicePublish", () => {
     const { toggleServicePublish } = await import("@/shared/actions/service");
     const r = await toggleServicePublish(VALID_ID, false);
     expect(r.success).toBe(true);
-    expect(r.message).toContain("비공개");
+    expect("message" in r ? r.message : undefined).toContain("비공개");
   });
 
   it("returns failure on DB error", async () => {
@@ -558,44 +678,45 @@ describe("toggleServicePublish", () => {
     consoleSpy.mockRestore();
   });
 
-  it("returns failure on exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
+  it("rejects an invalid (non-uuid) id before any DB access", async () => {
     const { toggleServicePublish } = await import("@/shared/actions/service");
-    expect((await toggleServicePublish(VALID_ID, true)).success).toBe(false);
-    consoleSpy.mockRestore();
+    expect((await toggleServicePublish("not-a-uuid", true)).success).toBe(
+      false,
+    );
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
 
 describe("reorderServices", () => {
-  it("returns success on valid batch", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: null }),
-    );
+  it("calls reorder_services RPC with positional order items", async () => {
     const { reorderServices } = await import("@/shared/actions/service");
-    expect((await reorderServices(["a", "b"])).success).toBe(true);
+    expect((await reorderServices([VALID_ID, ANOTHER_ID])).success).toBe(true);
+    expect(mockRpc).toHaveBeenCalledWith("reorder_services", {
+      items: [
+        { id: VALID_ID, order: 0 },
+        { id: ANOTHER_ID, order: 1 },
+      ],
+    });
   });
 
-  it("returns failure when any update errors", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? { data: null, error: null }
-          : { data: null, error: { message: "x" } },
-      ),
-    );
+  it("rejects malformed UUID before touching the DB", async () => {
     const { reorderServices } = await import("@/shared/actions/service");
-    expect((await reorderServices(["a", "b"])).success).toBe(false);
-    consoleSpy.mockRestore();
+    expect((await reorderServices(["not-a-uuid"])).success).toBe(false);
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
+  it("rejects more than MAX_REORDER_ITEMS", async () => {
+    const ids = Array.from({ length: 101 }, () => VALID_ID);
     const { reorderServices } = await import("@/shared/actions/service");
-    expect((await reorderServices(["a"])).success).toBe(false);
+    expect((await reorderServices(ids)).success).toBe(false);
+    expect(mockRpc).not.toHaveBeenCalled();
+  });
+
+  it("returns failure when RPC errors", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockRpc.mockResolvedValueOnce({ error: { message: "x" } });
+    const { reorderServices } = await import("@/shared/actions/service");
+    expect((await reorderServices([VALID_ID])).success).toBe(false);
     consoleSpy.mockRestore();
   });
 });

@@ -1,12 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/server";
 import { createStaticClient } from "@/shared/lib/supabase/static";
-import { getUser } from "@/shared/lib/supabase/auth";
+import { withAuthAction } from "@/shared/lib/server/with-auth-action";
 import { publicReviewFormSchema } from "@/shared/lib/schema/index";
+import { checkRateLimit } from "@/shared/lib/server/rate-limit";
+
+const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
 const REVALIDATE_PATHS = ["/", "/admin/customer-reviews"] as const;
+const REVIEW_RATE_LIMIT = 5;
+const REVIEW_RATE_WINDOW_MS = 60_000;
 
 function revalidateCustomerReviewPaths(): void {
   for (const path of REVALIDATE_PATHS) {
@@ -14,58 +21,58 @@ function revalidateCustomerReviewPaths(): void {
   }
 }
 
-export async function deleteCustomerReview(
+async function deleteCustomerReviewImpl(
   reviewId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    await getUser();
+  if (!uuidSchema.safeParse(reviewId).success) {
+    return { success: false, error: "올바른 리뷰 ID가 아닙니다." };
+  }
 
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("customer_reviews")
-      .delete()
-      .eq("id", reviewId);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("customer_reviews")
+    .delete()
+    .eq("id", reviewId);
 
-    if (error) {
-      console.error("[deleteCustomerReview] DB error:", error);
-      return { success: false, error: "리뷰 삭제 중 오류가 발생했습니다." };
-    }
-
-    revalidateCustomerReviewPaths();
-    return { success: true };
-  } catch (err) {
-    console.error("[deleteCustomerReview] error:", err);
+  if (error) {
+    console.error("[deleteCustomerReview] DB error:", error);
     return { success: false, error: "리뷰 삭제 중 오류가 발생했습니다." };
   }
+
+  revalidateCustomerReviewPaths();
+  return { success: true };
 }
 
-export async function toggleCustomerReviewPublish(
+export const deleteCustomerReview = withAuthAction(deleteCustomerReviewImpl);
+
+async function toggleCustomerReviewPublishImpl(
   reviewId: string,
   isPublished: boolean,
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    await getUser();
+  if (!uuidSchema.safeParse(reviewId).success) {
+    return { success: false, error: "올바른 리뷰 ID가 아닙니다." };
+  }
 
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("customer_reviews")
-      .update({ is_published: isPublished })
-      .eq("id", reviewId);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("customer_reviews")
+    .update({ is_published: isPublished })
+    .eq("id", reviewId);
 
-    if (error) {
-      console.error("[toggleCustomerReviewPublish] DB error:", error);
-      return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
-    }
-
-    revalidateCustomerReviewPaths();
-    return {
-      success: true,
-    };
-  } catch (err) {
-    console.error("[toggleCustomerReviewPublish] error:", err);
+  if (error) {
+    console.error("[toggleCustomerReviewPublish] DB error:", error);
     return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
   }
+
+  revalidateCustomerReviewPaths();
+  return {
+    success: true,
+  };
 }
+
+export const toggleCustomerReviewPublish = withAuthAction(
+  toggleCustomerReviewPublishImpl,
+);
 
 export async function submitPublicReview(
   prevState: unknown,
@@ -76,6 +83,13 @@ export async function submitPublicReview(
   errors?: Record<string, string[]>;
 }> {
   try {
+    const ip = (await headers()).get("x-forwarded-for") ?? "unknown";
+    if (
+      !checkRateLimit(`review:${ip}`, REVIEW_RATE_LIMIT, REVIEW_RATE_WINDOW_MS)
+    ) {
+      return { success: false, error: "잠시 후 다시 시도해주세요." };
+    }
+
     const rawData = {
       rating: Number(formData.get("rating")),
       comment: formData.get("comment"),

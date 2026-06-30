@@ -34,9 +34,7 @@ export function ServiceCategorySection({
     <div className={className}>
       <div className="mb-8 flex items-end justify-between">
         <div>
-          <p className="mb-1 text-xs font-bold tracking-widest text-slate-400 uppercase">
-            {label}
-          </p>
+          <p className="text-label mb-1 text-slate-400">{label}</p>
           <h3 className="text-lg font-black tracking-tight text-slate-900">
             {heading}
           </h3>

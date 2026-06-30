@@ -54,7 +54,7 @@ export function Modal({
     >
       <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+          <h2 className="text-heading-3">{title}</h2>
           {description && (
             <p className="mt-1 text-xs font-light text-slate-500">
               {description}

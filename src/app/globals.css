@@ -211,16 +211,6 @@
     }
   }
 
-  .slick-track {
-    display: flex !important;
-  }
-  .slick-slide {
-    height: auto !important;
-  }
-  .slick-slide > div {
-    height: 100%;
-  }
-
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -360,11 +350,6 @@
   .btn-filter-inactive {
     @apply border-slate-200 text-slate-500 hover:border-slate-400;
   }
-
-  .btn-icon {
-    @apply h-12 w-12 rounded-full border border-slate-200 bg-white text-slate-900 shadow-lg transition-colors hover:bg-slate-50;
-  }
-
 
   .form-label {
     @apply mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase;

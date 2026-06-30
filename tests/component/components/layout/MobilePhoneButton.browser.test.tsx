@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const usePathnameMock = vi.fn();
@@ -13,10 +13,17 @@ vi.mock("@/shared/lib/infra/track", () => ({
 }));
 
 import { MobilePhoneButton } from "@/components/layout/MobilePhoneButton.client";
+import { track } from "@/shared/lib/infra/track";
+
+function clickNoNav(el: Element): void {
+  el.addEventListener("click", (e) => e.preventDefault());
+  fireEvent.click(el);
+}
 
 describe("MobilePhoneButton (browser)", () => {
   beforeEach(() => {
     usePathnameMock.mockReset();
+    vi.mocked(track).mockClear();
   });
 
   it("should not render on /contact route", () => {
@@ -53,5 +60,42 @@ describe("MobilePhoneButton (browser)", () => {
     usePathnameMock.mockReturnValue("/services");
     render(<MobilePhoneButton phone="010-1111-2222" />);
     expect(screen.getByRole("link", { name: /전화 상담/ })).toBeTruthy();
+  });
+
+  it("should track a cleaning phone_click from the single button", () => {
+    usePathnameMock.mockReturnValue("/");
+    render(<MobilePhoneButton phone="010-1111-2222" />);
+    clickNoNav(screen.getByRole("link", { name: /전화 상담/ }));
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith({
+      event_type: "phone_click",
+      event_payload: {
+        phone_type: "cleaning",
+        click_location: "mobile_bottom",
+      },
+      path: "/",
+    });
+  });
+
+  it("should track the matching phone_type for each button when both phones exist", () => {
+    usePathnameMock.mockReturnValue("/");
+    render(
+      <MobilePhoneButton phone="010-1111-2222" movingPhone="010-3333-4444" />,
+    );
+    clickNoNav(screen.getByRole("link", { name: /청소 상담/ }));
+    clickNoNav(screen.getByRole("link", { name: /이사 상담/ }));
+    expect(track).toHaveBeenNthCalledWith(1, {
+      event_type: "phone_click",
+      event_payload: {
+        phone_type: "cleaning",
+        click_location: "mobile_bottom",
+      },
+      path: "/",
+    });
+    expect(track).toHaveBeenNthCalledWith(2, {
+      event_type: "phone_click",
+      event_payload: { phone_type: "moving", click_location: "mobile_bottom" },
+      path: "/",
+    });
   });
 });

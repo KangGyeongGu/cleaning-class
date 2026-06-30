@@ -32,43 +32,13 @@ function extractImports(content: string): string[] {
   return imports;
 }
 
-function findDirectPublicPages(publicDir: string): string[] {
-  const results: string[] = [];
-
-  const rootPage = join(publicDir, "page.tsx");
-  try {
-    statSync(rootPage);
-    results.push(rootPage);
-  } catch {
-    void 0;
-  }
-
-  const items = readdirSync(publicDir);
-  for (const item of items) {
-    const fullPath = join(publicDir, item);
-    const stat = statSync(fullPath);
-
-    if (stat.isDirectory() && !item.startsWith("[")) {
-      const pagePath = join(fullPath, "page.tsx");
-      try {
-        statSync(pagePath);
-        results.push(pagePath);
-      } catch {
-        void 0;
-      }
-    }
-  }
-
-  return results;
-}
-
 describe("ISR 및 데이터 패턴", () => {
   const projectRoot = process.cwd();
 
   it("공개 페이지는 revalidate를 export해야 한다", () => {
     const publicDir = join(projectRoot, "src/app/(public)");
 
-    const pages = findDirectPublicPages(publicDir);
+    const pages = findFiles(publicDir, /page\.tsx$/);
 
     const violations: string[] = [];
 

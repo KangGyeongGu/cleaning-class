@@ -65,7 +65,10 @@ describe("getAdminDashboardData", () => {
       await import("@/shared/lib/queries/admin");
     const r = await getAdminDashboardData();
     expect(r.serviceCount).toBe(0);
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("서비스 카운트 조회 실패"),
+      expect.anything(),
+    );
     consoleSpy.mockRestore();
   });
 
@@ -80,7 +83,10 @@ describe("getAdminDashboardData", () => {
     const { getAdminDashboardData } =
       await import("@/shared/lib/queries/admin");
     await getAdminDashboardData();
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("블로그 리뷰 카운트 조회 실패"),
+      expect.anything(),
+    );
     consoleSpy.mockRestore();
   });
 
@@ -95,7 +101,10 @@ describe("getAdminDashboardData", () => {
     const { getAdminDashboardData } =
       await import("@/shared/lib/queries/admin");
     await getAdminDashboardData();
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("고객 리뷰 카운트 조회 실패"),
+      expect.anything(),
+    );
     consoleSpy.mockRestore();
   });
 
@@ -110,7 +119,10 @@ describe("getAdminDashboardData", () => {
     const { getAdminDashboardData } =
       await import("@/shared/lib/queries/admin");
     await getAdminDashboardData();
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("FAQ 카운트 조회 실패"),
+      expect.anything(),
+    );
     consoleSpy.mockRestore();
   });
 
@@ -125,7 +137,10 @@ describe("getAdminDashboardData", () => {
     const { getAdminDashboardData } =
       await import("@/shared/lib/queries/admin");
     await getAdminDashboardData();
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("가격표 카운트 조회 실패"),
+      expect.anything(),
+    );
     consoleSpy.mockRestore();
   });
 });

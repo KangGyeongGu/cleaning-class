@@ -1,5 +1,5 @@
 import { getPublishedReviewsByCleaningTypes } from "@/shared/lib/queries/review";
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { getReviewImageUrl } from "@/shared/lib/supabase/storage";
 import { BlogReviews } from "@/components/review/BlogReviews.client";
 

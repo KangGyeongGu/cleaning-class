@@ -40,7 +40,31 @@ describe("contactFormSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("requires departure/destination to be optional for moving", () => {
+  it("accepts moving inquiry with only departure address", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "moving",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "원룸이사",
+      departureAddress: "전북 전주시 효자로 1",
+      message: VALID_MESSAGE,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts moving inquiry with only destination address", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "moving",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "원룸이사",
+      destinationAddress: "전북 전주시 효자로 2",
+      message: VALID_MESSAGE,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects moving inquiry with both addresses empty", () => {
     const result = contactFormSchema.safeParse({
       inquiryType: "moving",
       name: "홍길동",
@@ -48,7 +72,58 @@ describe("contactFormSchema", () => {
       serviceType: "원룸이사",
       message: VALID_MESSAGE,
     });
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error("expected failure");
+    expect(result.error.issues[0].path).toEqual(["departureAddress"]);
+  });
+
+  it("rejects moving inquiry with whitespace-only addresses", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "moving",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "원룸이사",
+      departureAddress: "   ",
+      destinationAddress: "  ",
+      message: VALID_MESSAGE,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts cleaning inquiry with '기타 문의' serviceType", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "cleaning",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "기타 문의",
+      address: "전북 전주시 효자로 1",
+      message: VALID_MESSAGE,
+    });
     expect(result.success).toBe(true);
+  });
+
+  it("accepts cleaning inquiry with DB-driven price-item serviceType", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "cleaning",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "짐 정리 및 폐기",
+      address: "전북 전주시 효자로 1",
+      message: VALID_MESSAGE,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects cleaning inquiry with empty serviceType", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "cleaning",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "",
+      address: "전북 전주시 효자로 1",
+      message: VALID_MESSAGE,
+    });
+    expect(result.success).toBe(false);
   });
 
   it("rejects cleaning inquiry with message shorter than 50 chars", () => {
@@ -81,9 +156,12 @@ describe("contactFormSchema", () => {
       phone: "010-1234-5678",
       serviceType: "거주청소",
       address: "",
-      message: "test",
+      message: VALID_MESSAGE,
     });
     expect(result.success).toBe(false);
+    if (result.success) throw new Error("expected failure");
+    expect(result.error.issues).toHaveLength(1);
+    expect(result.error.issues[0].path).toEqual(["address"]);
   });
 
   it("rejects message longer than 1000 chars", () => {
@@ -94,6 +172,29 @@ describe("contactFormSchema", () => {
       serviceType: "거주청소",
       address: "전북 전주시 효자로 1",
       message: "x".repeat(1001),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects when discriminator inquiryType is missing", () => {
+    const result = contactFormSchema.safeParse({
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "거주청소",
+      address: "전북 전주시 효자로 1",
+      message: VALID_MESSAGE,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects when discriminator inquiryType is misspelled", () => {
+    const result = contactFormSchema.safeParse({
+      inquiryType: "cleanin",
+      name: "홍길동",
+      phone: "010-1234-5678",
+      serviceType: "거주청소",
+      address: "전북 전주시 효자로 1",
+      message: VALID_MESSAGE,
     });
     expect(result.success).toBe(false);
   });
@@ -156,6 +257,17 @@ describe("reviewFormSchema", () => {
       is_published: true,
     });
     expect(result.success).toBe(false);
+  });
+
+  it("accepts empty-string link_url (no external link)", () => {
+    const result = reviewFormSchema.safeParse({
+      title: "후기",
+      summary: "후기 내용",
+      tags: ["거주청소"],
+      link_url: "",
+      is_published: true,
+    });
+    expect(result.success).toBe(true);
   });
 });
 
@@ -335,6 +447,26 @@ describe("siteConfigFormSchema", () => {
   it("rejects bad phone format", () => {
     expect(
       siteConfigFormSchema.safeParse({ ...base(), phone: "00-1-2" }).success,
+    ).toBe(false);
+  });
+
+  it("accepts all four PHONE_REGEX branches", () => {
+    for (const phone of [
+      "010-1234-5678",
+      "02-1234-5678",
+      "063-123-4567",
+      "0507-1234-5678",
+    ]) {
+      expect(siteConfigFormSchema.safeParse({ ...base(), phone }).success).toBe(
+        true,
+      );
+    }
+  });
+
+  it("rejects phone with too-short middle group", () => {
+    expect(
+      siteConfigFormSchema.safeParse({ ...base(), phone: "063-12-4567" })
+        .success,
     ).toBe(false);
   });
 });
