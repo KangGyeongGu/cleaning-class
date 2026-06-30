@@ -22,9 +22,15 @@ const mockFrom = vi.hoisted(() => vi.fn());
 const mockCreateClient = vi.hoisted(() =>
   vi.fn(async () => ({ from: mockFrom })),
 );
+const mockCreateStaticClient = vi.hoisted(() =>
+  vi.fn(() => ({ from: mockFrom })),
+);
 
 vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: mockCreateClient,
+}));
+vi.mock("@/shared/lib/supabase/static", () => ({
+  createStaticClient: mockCreateStaticClient,
 }));
 
 beforeEach(() => {
@@ -80,5 +86,16 @@ describe("getAdminCustomerReviews", () => {
       await import("@/shared/lib/queries/customer-review");
     await getAdminCustomerReviews(true);
     expect(chain.order).toHaveBeenCalledWith("created_at", { ascending: true });
+  });
+});
+
+describe("getPublishedCustomerReviews", () => {
+  it("filters by is_published = true", async () => {
+    const chain = makePromiseChain({ data: [], error: null });
+    mockFrom.mockImplementation(() => chain);
+    const { getPublishedCustomerReviews } =
+      await import("@/shared/lib/queries/customer-review");
+    await getPublishedCustomerReviews();
+    expect(chain.eq).toHaveBeenCalledWith("is_published", true);
   });
 });

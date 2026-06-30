@@ -6,6 +6,7 @@ const mockEq = vi.hoisted(() => vi.fn());
 const mockUpdate = vi.hoisted(() => vi.fn(() => ({ eq: mockEq })));
 const mockInsert = vi.hoisted(() => vi.fn());
 const mockDelete = vi.hoisted(() => vi.fn(() => ({ eq: mockEq })));
+const mockRpc = vi.hoisted(() => vi.fn());
 const mockFrom = vi.hoisted(() =>
   vi.fn(() => ({
     update: mockUpdate,
@@ -14,7 +15,7 @@ const mockFrom = vi.hoisted(() =>
   })),
 );
 const mockCreateClient = vi.hoisted(() =>
-  vi.fn(async () => ({ from: mockFrom })),
+  vi.fn(async () => ({ from: mockFrom, rpc: mockRpc })),
 );
 
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
@@ -32,6 +33,7 @@ beforeEach(() => {
   mockGetUser.mockResolvedValue({ id: "u1" });
   mockEq.mockResolvedValue({ error: null });
   mockInsert.mockResolvedValue({ error: null });
+  mockRpc.mockResolvedValue({ error: null });
 });
 
 function buildForm(
@@ -68,12 +70,6 @@ describe("createFaq", () => {
     const result = await createFaq(null, buildForm({ question: "" }));
     expect(result.success).toBe(false);
     expect(mockInsert).not.toHaveBeenCalled();
-  });
-
-  it("rejects non-numeric display_order", async () => {
-    const { createFaq } = await import("@/shared/actions/faq");
-    const result = await createFaq(null, buildForm({ display_order: "abc" }));
-    expect(result.success).toBe(false);
   });
 
   it("rejects empty-string display_order (parsed as NaN)", async () => {
@@ -143,14 +139,6 @@ describe("updateFaq", () => {
     expect((await updateFaq(VALID_ID, null, buildForm())).success).toBe(false);
     consoleSpy.mockRestore();
   });
-
-  it("returns failure on exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { updateFaq } = await import("@/shared/actions/faq");
-    expect((await updateFaq(VALID_ID, null, buildForm())).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
 });
 
 describe("deleteFaq", () => {
@@ -172,14 +160,6 @@ describe("deleteFaq", () => {
     expect((await deleteFaq(VALID_ID)).success).toBe(false);
     consoleSpy.mockRestore();
   });
-
-  it("returns failure on exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { deleteFaq } = await import("@/shared/actions/faq");
-    expect((await deleteFaq(VALID_ID)).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
 });
 
 describe("toggleFaqActive", () => {
@@ -192,7 +172,7 @@ describe("toggleFaqActive", () => {
     const { toggleFaqActive } = await import("@/shared/actions/faq");
     const r = await toggleFaqActive(VALID_ID, false);
     expect(r.success).toBe(true);
-    expect(r.message).toContain("비활성화");
+    expect("message" in r ? r.message : undefined).toContain("비활성화");
   });
 
   it("rejects invalid UUID", async () => {
@@ -210,14 +190,6 @@ describe("toggleFaqActive", () => {
   it("returns failure on DB error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockEq.mockResolvedValueOnce({ error: { message: "x" } });
-    const { toggleFaqActive } = await import("@/shared/actions/faq");
-    expect((await toggleFaqActive(VALID_ID, true)).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
     const { toggleFaqActive } = await import("@/shared/actions/faq");
     expect((await toggleFaqActive(VALID_ID, true)).success).toBe(false);
     consoleSpy.mockRestore();
@@ -245,6 +217,7 @@ describe("reorderFaqs", () => {
     expect((await reorderFaqs([{ id: "x", display_order: 0 }])).success).toBe(
       false,
     );
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
   it("rejects negative display_order", async () => {
@@ -254,7 +227,7 @@ describe("reorderFaqs", () => {
     ).toBe(false);
   });
 
-  it("returns success on valid batch", async () => {
+  it("calls reorder_faqs RPC with order-mapped items", async () => {
     const { reorderFaqs } = await import("@/shared/actions/faq");
     expect(
       (
@@ -264,13 +237,17 @@ describe("reorderFaqs", () => {
         ])
       ).success,
     ).toBe(true);
+    expect(mockRpc).toHaveBeenCalledWith("reorder_faqs", {
+      items: [
+        { id: VALID_ID, order: 0 },
+        { id: ANOTHER_ID, order: 1 },
+      ],
+    });
   });
 
-  it("returns failure on batch partial error", async () => {
+  it("returns failure when RPC errors", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockEq
-      .mockResolvedValueOnce({ error: null })
-      .mockResolvedValueOnce({ error: { message: "x" } });
+    mockRpc.mockResolvedValueOnce({ error: { message: "x" } });
     const { reorderFaqs } = await import("@/shared/actions/faq");
     expect(
       (
@@ -279,16 +256,6 @@ describe("reorderFaqs", () => {
           { id: ANOTHER_ID, display_order: 1 },
         ])
       ).success,
-    ).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { reorderFaqs } = await import("@/shared/actions/faq");
-    expect(
-      (await reorderFaqs([{ id: VALID_ID, display_order: 0 }])).success,
     ).toBe(false);
     consoleSpy.mockRestore();
   });

@@ -38,10 +38,6 @@ function fixDateTo(iso: string): void {
   vi.setSystemTime(new REAL_DATE(iso));
 }
 
-function kstCreatedAt(date: string, hour = 10): string {
-  return `${date}T${String(hour).padStart(2, "0")}:00:00+09:00`;
-}
-
 beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
@@ -54,49 +50,57 @@ afterEach(() => {
 });
 
 describe("getDailyTrend7d", () => {
-  it("groups raw events by KST date with cleaning/moving segmentation", async () => {
+  it("sums pre-aggregated counts by KST date with cleaning/moving segmentation", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
         {
+          date: "2026-06-05",
           event_type: "page_landing",
-          event_payload: { source: "naver" },
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "naver",
+          count: 2,
         },
         {
+          date: "2026-06-05",
           event_type: "page_landing",
-          event_payload: null,
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "google",
+          count: 1,
         },
         {
+          date: "2026-06-05",
           event_type: "quote_form_success",
-          event_payload: { inquiry_type: "cleaning" },
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "cleaning",
+          count: 1,
         },
         {
+          date: "2026-06-05",
           event_type: "quote_form_success",
-          event_payload: { inquiry_type: "moving" },
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "moving",
+          count: 1,
         },
         {
+          date: "2026-06-05",
           event_type: "phone_click",
-          event_payload: { phone_type: "cleaning" },
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "cleaning",
+          count: 1,
         },
         {
+          date: "2026-06-05",
           event_type: "phone_click",
-          event_payload: { phone_type: "moving" },
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "moving",
+          count: 1,
         },
         {
+          date: "2026-06-04",
           event_type: "quote_form_success",
-          event_payload: { inquiry_type: "cleaning" },
-          created_at: kstCreatedAt("2026-06-04"),
+          dimension: "cleaning",
+          count: 1,
         },
         {
-          event_type: "unmatched_event",
-          event_payload: null,
-          created_at: kstCreatedAt("2026-06-04"),
+          date: "2026-06-04",
+          event_type: "cta_click",
+          dimension: "navbar_contact",
+          count: 3,
         },
       ],
       error: null,
@@ -107,7 +111,7 @@ describe("getDailyTrend7d", () => {
     const today = rows.find((r) => r.date === "2026-06-05");
     expect(today).toEqual({
       date: "2026-06-05",
-      visitors: 2,
+      visitors: 3,
       quoteCleaning: 1,
       quoteMoving: 1,
       phoneCleaning: 1,
@@ -124,24 +128,27 @@ describe("getDailyTrend7d", () => {
     });
   });
 
-  it("ignores unknown segments and dates outside the 7-day window", async () => {
+  it("ignores unknown dimensions and dates outside the 7-day window", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
         {
+          date: "2026-06-05",
           event_type: "quote_form_success",
-          event_payload: { inquiry_type: "unknown" },
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "unknown",
+          count: 2,
         },
         {
+          date: "2026-06-05",
           event_type: "phone_click",
-          event_payload: { phone_type: "unknown" },
-          created_at: kstCreatedAt("2026-06-05"),
+          dimension: "unknown",
+          count: 2,
         },
         {
+          date: "2099-12-31",
           event_type: "page_landing",
-          event_payload: null,
-          created_at: kstCreatedAt("2099-12-31"),
+          dimension: "naver",
+          count: 5,
         },
       ],
       error: null,
@@ -177,20 +184,47 @@ describe("getDailyTrend7d", () => {
     expect(rows).toHaveLength(7);
     expect(rows.every((r) => r.visitors === 0)).toBe(true);
   });
+
+  it("buckets a UTC-night event by KST date and starts the 7d window at KST", async () => {
+    fixDateTo("2026-06-04T22:00:00.000Z");
+    const chain = chainFactory.make();
+    mockFrom.mockImplementation(() => chain);
+    mockFinal.mockResolvedValueOnce({
+      data: [
+        {
+          date: "2026-06-05",
+          event_type: "quote_form_success",
+          dimension: "cleaning",
+          count: 2,
+        },
+      ],
+      error: null,
+    });
+    const { getDailyTrend7d } = await import("@/shared/lib/queries/dashboard");
+    const rows = await getDailyTrend7d();
+    expect(rows[rows.length - 1].date).toBe("2026-06-05");
+    expect(rows.find((r) => r.date === "2026-06-05")).toEqual({
+      date: "2026-06-05",
+      visitors: 0,
+      quoteCleaning: 2,
+      quoteMoving: 0,
+      phoneCleaning: 0,
+      phoneMoving: 0,
+    });
+    expect(chain.gte).toHaveBeenCalledWith("date", "2026-05-30");
+  });
 });
 
 describe("getTrafficSources30d", () => {
-  it("counts raw page_landing events by source and sorts desc", async () => {
+  it("sums pre-aggregated page_landing counts by dimension and sorts desc", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
-        { event_payload: { source: "google" } },
-        { event_payload: { source: "naver" } },
-        { event_payload: { source: "naver" } },
-        { event_payload: { source: "naver" } },
-        { event_payload: { source: "google" } },
-        { event_payload: { source: "" } },
-        { event_payload: null },
+        { dimension: "google", count: 2 },
+        { dimension: "naver", count: 1 },
+        { dimension: "naver", count: 2 },
+        { dimension: "", count: 1 },
+        { dimension: null, count: 1 },
       ],
       error: null,
     });
@@ -223,44 +257,58 @@ describe("getTrafficSources30d", () => {
       await import("@/shared/lib/queries/dashboard");
     expect(await getTrafficSources30d()).toEqual([]);
   });
+
+  it("starts the 30d window at the KST date for a UTC-night clock", async () => {
+    fixDateTo("2026-06-04T22:00:00.000Z");
+    const chain = chainFactory.make();
+    mockFrom.mockImplementation(() => chain);
+    mockFinal.mockResolvedValueOnce({ data: [], error: null });
+    const { getTrafficSources30d } =
+      await import("@/shared/lib/queries/dashboard");
+    await getTrafficSources30d();
+    expect(chain.gte).toHaveBeenCalledWith("date", "2026-05-07");
+  });
 });
 
 describe("getCustomerActions30d", () => {
-  it("counts raw events by event_type x segment", async () => {
+  it("sums pre-aggregated counts by event_type x segment", async () => {
     fixDateTo("2026-06-05T05:00:00.000Z");
     mockFinal.mockResolvedValueOnce({
       data: [
         {
           event_type: "quote_form_success",
-          event_payload: { inquiry_type: "cleaning" },
+          dimension: "cleaning",
+          count: 1,
         },
         {
           event_type: "quote_form_success",
-          event_payload: { inquiry_type: "moving" },
+          dimension: "moving",
+          count: 1,
         },
         {
           event_type: "quote_form_success",
-          event_payload: { inquiry_type: "unknown" },
+          dimension: "unknown",
+          count: 5,
         },
         {
           event_type: "phone_click",
-          event_payload: { phone_type: "cleaning" },
+          dimension: "cleaning",
+          count: 2,
         },
         {
           event_type: "phone_click",
-          event_payload: { phone_type: "cleaning" },
+          dimension: "moving",
+          count: 1,
         },
         {
           event_type: "phone_click",
-          event_payload: { phone_type: "moving" },
+          dimension: "unknown",
+          count: 9,
         },
         {
-          event_type: "phone_click",
-          event_payload: { phone_type: "unknown" },
-        },
-        {
-          event_type: "unmatched_event",
-          event_payload: null,
+          event_type: "cta_click",
+          dimension: "navbar_contact",
+          count: 7,
         },
       ],
       error: null,

@@ -22,7 +22,7 @@ describe("getSiteConfig", () => {
       data: { id: "c0", business_name: "x" },
       error: null,
     });
-    const { getSiteConfig } = await import("@/shared/lib/domain/site-config");
+    const { getSiteConfig } = await import("@/shared/lib/queries/site-config");
     const result = await getSiteConfig();
     expect(result).toEqual({ id: "c0", business_name: "x" });
     expect(mockFrom).toHaveBeenCalledWith("site_config");
@@ -33,14 +33,14 @@ describe("getSiteConfig", () => {
       data: null,
       error: { message: "DB error" },
     });
-    const { getSiteConfig } = await import("@/shared/lib/domain/site-config");
+    const { getSiteConfig } = await import("@/shared/lib/queries/site-config");
     const result = await getSiteConfig();
     expect(result).toBeNull();
   });
 
   it("returns null when supabase call throws", async () => {
     mockSingle.mockRejectedValueOnce(new Error("network"));
-    const { getSiteConfig } = await import("@/shared/lib/domain/site-config");
+    const { getSiteConfig } = await import("@/shared/lib/queries/site-config");
     const result = await getSiteConfig();
     expect(result).toBeNull();
   });

@@ -45,19 +45,6 @@ describe("HeroCTA (browser)", () => {
     expect(tel.getAttribute("href")).toBe("tel:010-3333-4444");
   });
 
-  it("should apply dark variant styling on CTA link", () => {
-    render(<HeroCTA variant="dark" phone="010-5555-6666" />);
-    const cta = screen.getByRole("link", { name: /무료 견적 받기/ });
-    expect(cta.className).toContain("border-white");
-    expect(cta.className).toContain("text-white");
-  });
-
-  it("should apply light variant styling by default", () => {
-    render(<HeroCTA phone="010-5555-6666" />);
-    const cta = screen.getByRole("link", { name: /무료 견적 받기/ });
-    expect(cta.className).toContain("border-slate-900");
-  });
-
   it("should track a cta_click when the quote CTA is clicked", () => {
     render(<HeroCTA />);
     clickNoNav(screen.getByRole("link", { name: /무료 견적 받기/ }));

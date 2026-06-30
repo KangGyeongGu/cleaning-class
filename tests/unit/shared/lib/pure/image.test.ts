@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
+import { BLUR_PLACEHOLDER } from "@/shared/lib/pure/constants";
 
 describe("BLUR_PLACEHOLDER", () => {
   it("is a data URL with image/webp MIME", () => {

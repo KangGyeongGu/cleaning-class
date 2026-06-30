@@ -3,14 +3,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockSendContactEmail = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined),
 );
+const mockHeaders = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/lib/infra/mail", () => ({
   sendContactEmail: mockSendContactEmail,
 }));
+vi.mock("next/headers", () => ({ headers: mockHeaders }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.resetModules();
+  mockHeaders.mockResolvedValue(new Headers({ "x-forwarded-for": "1.2.3.4" }));
 });
 
 const SAMPLE_MESSAGE_50 =
@@ -49,6 +52,21 @@ function buildMovingForm(): FormData {
 
 function makeFile(name: string, size: number, type = "image/jpeg"): File {
   const bytes = new Uint8Array(size);
+  bytes.set([0xff, 0xd8, 0xff].slice(0, size));
+  const file = new File([bytes], name, { type });
+  if (typeof file.arrayBuffer !== "function") {
+    Object.defineProperty(file, "arrayBuffer", {
+      value: async () => bytes.buffer,
+    });
+  }
+  return file;
+}
+
+function makeFileWithBytes(
+  name: string,
+  bytes: Uint8Array<ArrayBuffer>,
+  type = "image/jpeg",
+): File {
   const file = new File([bytes], name, { type });
   if (typeof file.arrayBuffer !== "function") {
     Object.defineProperty(file, "arrayBuffer", {
@@ -104,6 +122,18 @@ describe("submitContactForm — cleaning path", () => {
       expect.objectContaining({ address: "전북 전주시 효자로 1" }),
     );
   });
+
+  it("rejects cleaning inquiry missing required address", async () => {
+    mockHeaders.mockResolvedValueOnce(
+      new Headers({ "x-forwarded-for": "10.0.0.1" }),
+    );
+    const fd = buildCleaningForm();
+    fd.delete("address");
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    const result = await submitContactForm(null, fd);
+    expect(result.success).toBe(false);
+    expect(mockSendContactEmail).not.toHaveBeenCalled();
+  });
 });
 
 describe("submitContactForm — moving path", () => {
@@ -119,6 +149,19 @@ describe("submitContactForm — moving path", () => {
         address: undefined,
       }),
     );
+  });
+
+  it("rejects moving inquiry missing both departure and destination", async () => {
+    mockHeaders.mockResolvedValueOnce(
+      new Headers({ "x-forwarded-for": "10.0.0.2" }),
+    );
+    const fd = buildMovingForm();
+    fd.set("departureAddress", "");
+    fd.set("destinationAddress", "");
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    const result = await submitContactForm(null, fd);
+    expect(result.success).toBe(false);
+    expect(mockSendContactEmail).not.toHaveBeenCalled();
   });
 });
 
@@ -201,6 +244,53 @@ describe("submitContactForm — image validation", () => {
     expect(result.success).toBe(true);
     const call = mockSendContactEmail.mock.calls[0][0];
     expect(call.images).toBeUndefined();
+  });
+});
+
+describe("submitContactForm — magic bytes", () => {
+  it("rejects an image whose bytes are not a real image", async () => {
+    const fd = buildCleaningForm();
+    fd.append(
+      "images",
+      makeFileWithBytes(
+        "fake.jpg",
+        new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31]),
+        "image/jpeg",
+      ),
+    );
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    const result = await submitContactForm(null, fd);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("유효하지 않은 이미지");
+    expect(mockSendContactEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe("submitContactForm — anti-abuse", () => {
+  it("treats a filled honeypot as silent success without sending", async () => {
+    const fd = buildCleaningForm({ website: "http://spam.example" });
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    const result = await submitContactForm(null, fd);
+    expect(result.success).toBe(true);
+    expect(mockSendContactEmail).not.toHaveBeenCalled();
+  });
+
+  it("rate-limits once the per-IP submission limit is exceeded", async () => {
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    let last: Awaited<ReturnType<typeof submitContactForm>> | undefined;
+    for (let i = 0; i < 6; i++) {
+      last = await submitContactForm(null, buildCleaningForm());
+    }
+    expect(last?.success).toBe(false);
+    expect(last?.error).toContain("잠시");
+    expect(mockSendContactEmail).toHaveBeenCalledTimes(5);
+  });
+
+  it("falls back to 'unknown' IP when x-forwarded-for is absent", async () => {
+    mockHeaders.mockResolvedValueOnce(new Headers());
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    const result = await submitContactForm(null, buildCleaningForm());
+    expect(result.success).toBe(true);
   });
 });
 

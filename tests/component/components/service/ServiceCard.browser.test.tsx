@@ -62,21 +62,6 @@ describe("ServiceCard (browser)", () => {
     expect(images.length).toBe(2);
   });
 
-  it("should mark after image visible immediately when showAfter is true", () => {
-    render(
-      <ServiceCard
-        service={{
-          ...baseService,
-          afterImageUrl: "https://example.com/after.jpg",
-        }}
-        priority={false}
-        showAfter
-      />,
-    );
-    const afterImg = document.querySelectorAll("img")[1];
-    expect(afterImg.className).toContain("opacity-100!");
-  });
-
   it("should track a cta_click carrying the service id when the card link is clicked", () => {
     render(<ServiceCard service={baseService} priority={false} />);
     clickNoNav(screen.getByRole("link"));

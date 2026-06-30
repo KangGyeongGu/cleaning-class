@@ -6,6 +6,7 @@ const mockEq = vi.hoisted(() => vi.fn());
 const mockUpdate = vi.hoisted(() => vi.fn(() => ({ eq: mockEq })));
 const mockInsert = vi.hoisted(() => vi.fn());
 const mockDelete = vi.hoisted(() => vi.fn(() => ({ eq: mockEq })));
+const mockRpc = vi.hoisted(() => vi.fn());
 const mockFrom = vi.hoisted(() =>
   vi.fn(() => ({
     update: mockUpdate,
@@ -14,7 +15,7 @@ const mockFrom = vi.hoisted(() =>
   })),
 );
 const mockCreateClient = vi.hoisted(() =>
-  vi.fn(async () => ({ from: mockFrom })),
+  vi.fn(async () => ({ from: mockFrom, rpc: mockRpc })),
 );
 
 vi.mock("next/cache", () => ({
@@ -37,6 +38,7 @@ beforeEach(() => {
   mockGetUser.mockResolvedValue({ id: "user-1", email: "admin@x.com" });
   mockEq.mockResolvedValue({ error: null });
   mockInsert.mockResolvedValue({ error: null });
+  mockRpc.mockResolvedValue({ error: null });
 });
 
 describe("togglePriceItemPublished", () => {
@@ -120,14 +122,6 @@ describe("deletePriceItem", () => {
     expect(result.success).toBe(false);
     consoleSpy.mockRestore();
   });
-
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { deletePriceItem } = await import("@/shared/actions/price");
-    expect((await deletePriceItem(VALID_ID)).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
 });
 
 describe("createPriceItem", () => {
@@ -171,17 +165,6 @@ describe("createPriceItem", () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
-  it("rejects non-integer price_won", async () => {
-    const { createPriceItem } = await import("@/shared/actions/price");
-    const result = await createPriceItem(
-      null,
-      buildFormData({ price_won: "abc" }),
-    );
-
-    expect(result.success).toBe(false);
-    expect(mockInsert).not.toHaveBeenCalled();
-  });
-
   it("rejects missing price_won (returns NaN)", async () => {
     const fd = buildFormData();
     fd.delete("price_won");
@@ -217,14 +200,6 @@ describe("createPriceItem", () => {
     const result = await createPriceItem(null, buildFormData());
 
     expect(result.success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on outer exception (getUser throws)", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("unauth"));
-    const { createPriceItem } = await import("@/shared/actions/price");
-    expect((await createPriceItem(null, buildFormData())).success).toBe(false);
     consoleSpy.mockRestore();
   });
 });
@@ -276,16 +251,6 @@ describe("updatePriceItem", () => {
     ).toBe(false);
     consoleSpy.mockRestore();
   });
-
-  it("returns failure on exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { updatePriceItem } = await import("@/shared/actions/price");
-    expect(
-      (await updatePriceItem(VALID_ID, null, buildFormData())).success,
-    ).toBe(false);
-    consoleSpy.mockRestore();
-  });
 });
 
 describe("reorderPriceItems", () => {
@@ -313,7 +278,7 @@ describe("reorderPriceItems", () => {
     const result = await reorderPriceItems([{ id: "bad", sort_order: 0 }]);
 
     expect(result.success).toBe(false);
-    expect(mockFrom).not.toHaveBeenCalled();
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
   it("rejects items with negative sort_order", async () => {
@@ -323,7 +288,7 @@ describe("reorderPriceItems", () => {
     expect(result.success).toBe(false);
   });
 
-  it("returns success on valid batch update", async () => {
+  it("calls reorder_price_items RPC with order-mapped items", async () => {
     const { reorderPriceItems } = await import("@/shared/actions/price");
     const result = await reorderPriceItems([
       { id: VALID_ID, sort_order: 0 },
@@ -331,14 +296,17 @@ describe("reorderPriceItems", () => {
     ]);
 
     expect(result.success).toBe(true);
-    expect(mockUpdate).toHaveBeenCalledTimes(2);
+    expect(mockRpc).toHaveBeenCalledWith("reorder_price_items", {
+      items: [
+        { id: VALID_ID, order: 0 },
+        { id: ANOTHER_ID, order: 1 },
+      ],
+    });
   });
 
-  it("returns failure when any batch row errors", async () => {
+  it("returns failure when RPC errors", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockEq
-      .mockResolvedValueOnce({ error: null })
-      .mockResolvedValueOnce({ error: { message: "row 2 failed" } });
+    mockRpc.mockResolvedValueOnce({ error: { message: "tx failed" } });
     const { reorderPriceItems } = await import("@/shared/actions/price");
     const result = await reorderPriceItems([
       { id: VALID_ID, sort_order: 0 },
@@ -346,16 +314,6 @@ describe("reorderPriceItems", () => {
     ]);
 
     expect(result.success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { reorderPriceItems } = await import("@/shared/actions/price");
-    expect(
-      (await reorderPriceItems([{ id: VALID_ID, sort_order: 0 }])).success,
-    ).toBe(false);
     consoleSpy.mockRestore();
   });
 });

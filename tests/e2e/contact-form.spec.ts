@@ -32,7 +32,8 @@ test.describe("견적문의 폼", () => {
 
   test("전화번호 입력 시 자동 포맷팅이 동작한다", async ({ page }) => {
     const phoneInput = page.locator("#phone");
-    await phoneInput.fill("01012345678");
+    await phoneInput.click();
+    await phoneInput.pressSequentially("01012345678");
     await expect(phoneInput).toHaveValue("010-1234-5678");
   });
 

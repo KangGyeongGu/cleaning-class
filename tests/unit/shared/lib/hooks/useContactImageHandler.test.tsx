@@ -147,16 +147,34 @@ describe("useContactImageHandler", () => {
   });
 
   it("ignores re-entry while converting", async () => {
+    const heic2anyModule = await import("heic2any");
+    vi.mocked(heic2anyModule.default).mockClear();
+    let resolveConv!: (blob: Blob) => void;
+    vi.mocked(heic2anyModule.default).mockReturnValueOnce(
+      new Promise<Blob>((r) => {
+        resolveConv = r;
+      }),
+    );
     const { result } = renderHook(() => useContactImageHandler());
     const heic = makeFile("a.heic", "image/heic");
-    const promise = act(async () => {
-      await result.current.handleChange(makeChangeEvent([heic]));
+
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.handleChange(makeChangeEvent([heic]));
     });
+    await waitFor(() => expect(result.current.isConverting).toBe(true));
+
     await act(async () => {
       await result.current.handleChange(makeChangeEvent([heic]));
     });
-    await promise;
-    expect(result.current.images.length).toBeLessThanOrEqual(1);
+
+    await act(async () => {
+      resolveConv(new Blob(["jpeg"], { type: "image/jpeg" }));
+      await first;
+    });
+
+    expect(result.current.images).toHaveLength(1);
+    expect(vi.mocked(heic2anyModule.default)).toHaveBeenCalledTimes(1);
   });
 
   it("removes image by index", async () => {
