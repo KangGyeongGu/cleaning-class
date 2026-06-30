@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 interface TagManagerProps {
   label: string;
@@ -56,20 +57,21 @@ export function TagManager({
               }
             }
           }}
-          className="flex-1 border-b border-slate-200 bg-transparent pb-3 text-lg font-light transition-colors outline-none placeholder:text-slate-300 focus:border-slate-900"
+          className="form-input-lg flex-1"
           placeholder={
             placeholder ??
             `태그 입력 후 추가 버튼 클릭 또는 Enter (최대 ${maxLength}자)`
           }
         />
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="none"
           onClick={commitAdd}
-          className="border border-slate-900 px-4 py-2 text-xs font-bold text-slate-900 transition-colors hover:bg-slate-900 hover:text-white"
           aria-label="태그 추가"
+          className="px-4 py-2 text-xs hover:bg-slate-900 hover:text-white"
         >
           <Plus size={14} />
-        </button>
+        </Button>
       </div>
       <div className="flex flex-wrap gap-2">
         {tags.map((tag, index) => (

@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
+
 export default function Error({
   error,
   reset,
@@ -19,13 +21,9 @@ export default function Error({
             {error.message}
           </p>
         )}
-        <button
-          type="button"
-          onClick={reset}
-          className="bg-slate-900 px-8 py-3 text-sm font-bold tracking-widest text-white transition-colors hover:bg-slate-800"
-        >
+        <Button onClick={reset} size="none" className="px-8 py-3">
           다시 시도
-        </button>
+        </Button>
       </div>
     </main>
   );

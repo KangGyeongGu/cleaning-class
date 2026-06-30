@@ -1,4 +1,4 @@
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { getAllPublishedReviews } from "@/shared/lib/queries/review";
 import {
   getPublishedServicesWithImageUrls,

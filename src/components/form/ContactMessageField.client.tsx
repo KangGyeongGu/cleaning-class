@@ -32,6 +32,7 @@ export function ContactMessageField({
         onChange={(e) => onChange(e.currentTarget.value)}
         className="scrollbar-thin form-input resize-none overflow-y-auto"
         placeholder={placeholder}
+        data-clarity-mask="True"
       />
       <div className="mt-1 flex justify-between">
         <div>{error && <p className="form-error">{error}</p>}</div>

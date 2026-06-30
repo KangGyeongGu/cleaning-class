@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getPublishedPriceItems } from "@/shared/lib/queries/price";
 import { ContactCta } from "@/components/common/ContactCta";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { PriceItemRow } from "@/shared/types/database";
 
 interface PriceRowProps {
@@ -57,24 +58,13 @@ export async function PriceSection() {
         className="px-6 py-12 md:py-16"
       >
         <div className="mx-auto max-w-5xl">
-          <p className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
-            Price List
-          </p>
-          <h2
-            id="price-list-heading"
-            className="mb-10 text-3xl font-black tracking-tight text-slate-900 md:text-4xl"
-          >
+          <p className="text-label mb-3 text-slate-400">Price List</p>
+          <h2 id="price-list-heading" className="text-heading-1 mb-10">
             서비스별 기준 요금
           </h2>
 
           {items.length === 0 ? (
-            <div className="border-y border-slate-100 py-16 text-center">
-              <p className="text-sm text-slate-400">
-                가격표를 준비 중입니다.
-                <br />
-                자세한 요금은 견적 문의를 통해 안내해 드립니다.
-              </p>
-            </div>
+            <EmptyState message="가격표를 준비 중입니다. 자세한 요금은 견적 문의를 통해 안내해 드립니다." />
           ) : (
             <ul
               role="list"

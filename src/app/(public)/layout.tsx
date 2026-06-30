@@ -2,7 +2,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar.client";
 import { MobilePhoneButton } from "@/components/layout/MobilePhoneButton.client";
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import ClarityInit from "@/components/analytics/ClarityInit.client";
 
 export const revalidate = 3600;

@@ -30,3 +30,8 @@ next-env.d.ts
 
 .local-traffic/
 /traffic-data/
+
+REPORT.md
+REVIEW.md
+TECH-DECISIONS.md
+CLOUDFLARE.md

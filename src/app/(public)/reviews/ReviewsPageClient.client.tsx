@@ -6,25 +6,27 @@ import Image from "next/image";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Review } from "@/shared/types/database";
 import { getReviewImageUrl } from "@/shared/lib/supabase/storage";
-import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
+import {
+  CLEANING_SERVICE_TYPES,
+  BLUR_PLACEHOLDER,
+} from "@/shared/lib/pure/constants";
+import { isSafeUrl } from "@/shared/lib/pure/format";
+import { ReviewCard } from "@/components/review/ReviewCard";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
-import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface ReviewsPageClientProps {
   reviews: Review[];
 }
 
-function isSafeUrl(url: string): boolean {
-  return /^https?:\/\//i.test(url);
-}
-
-function ReviewCard({ review }: { review: Review }) {
+function ReviewItem({ review }: { review: Review }) {
   const rawUrl = review.link_url || null;
   const cardUrl = rawUrl && isSafeUrl(rawUrl) ? rawUrl : null;
 
   const inner = (
-    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-300 hover:border-slate-400 hover:shadow-lg">
+    <ReviewCard className="group flex h-full flex-col overflow-hidden transition-all duration-300 hover:border-slate-400 hover:shadow-lg">
       <div className="relative aspect-square shrink-0 overflow-hidden bg-slate-100">
         <Image
           src={getReviewImageUrl(review.image_path)}
@@ -40,9 +42,9 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="flex flex-1 flex-col px-4 py-3">
         <div className="mb-2 flex min-h-5 flex-wrap gap-1.5">
           {review.tags.map((tag) => (
-            <span key={tag} className="tag-pill text-xs">
+            <Badge key={tag} className="text-xs">
               {tag}
-            </span>
+            </Badge>
           ))}
         </div>
 
@@ -62,7 +64,7 @@ function ReviewCard({ review }: { review: Review }) {
           </div>
         )}
       </div>
-    </article>
+    </ReviewCard>
   );
 
   if (cardUrl) {
@@ -175,31 +177,29 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
 
   return (
     <div>
-      <div
-        className="scrollbar-hide mb-10 flex gap-2 overflow-x-auto"
-        role="tablist"
-        aria-label="서비스 유형 필터"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeFilter === null}
+      <div className="scrollbar-hide mb-10 flex gap-2 overflow-x-auto">
+        <Button
+          variant="filter"
+          size="none"
+          active={activeFilter === null}
+          aria-pressed={activeFilter === null}
           onClick={() => handleFilterChange(null)}
-          className={`btn-filter shrink-0 ${activeFilter === null ? "btn-filter-active" : "btn-filter-inactive"}`}
+          className="shrink-0"
         >
           전체
-        </button>
+        </Button>
         {CLEANING_SERVICE_TYPES.map((type) => (
-          <button
+          <Button
             key={type}
-            type="button"
-            role="tab"
-            aria-selected={activeFilter === type}
+            variant="filter"
+            size="none"
+            active={activeFilter === type}
+            aria-pressed={activeFilter === type}
             onClick={() => handleFilterChange(type)}
-            className={`btn-filter shrink-0 ${activeFilter === type ? "btn-filter-active" : "btn-filter-inactive"}`}
+            className="shrink-0"
           >
             {type}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -222,7 +222,7 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
           >
             {pagedReviews.map((review) => (
               <li key={review.id}>
-                <ReviewCard review={review} />
+                <ReviewItem review={review} />
               </li>
             ))}
           </ul>

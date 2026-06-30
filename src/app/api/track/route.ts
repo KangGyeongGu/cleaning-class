@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/shared/lib/supabase/server";
 import { isSearchBot } from "@/shared/lib/infra/analytics-server";
 import { trackRequestSchema } from "@/shared/lib/schema/analytics";
+import { checkRateLimit } from "@/shared/lib/server/rate-limit";
+
+const TRACK_RATE_LIMIT = 60;
+const TRACK_RATE_WINDOW_MS = 60_000;
 
 export async function POST(request: Request): Promise<NextResponse> {
   if (isSearchBot(request.headers.get("user-agent"))) {
     return new NextResponse(null, { status: 204 });
+  }
+
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  if (!checkRateLimit(`track:${ip}`, TRACK_RATE_LIMIT, TRACK_RATE_WINDOW_MS)) {
+    return new NextResponse(null, { status: 429 });
   }
 
   let body: unknown;

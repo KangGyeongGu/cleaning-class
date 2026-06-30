@@ -1,5 +1,5 @@
 import { createClient } from "@/shared/lib/supabase/server";
-import { SUPABASE_NOT_FOUND_CODE } from "@/shared/lib/pure/constants";
+import { getNextOrder } from "@/shared/lib/queries/order";
 import { createStaticClient } from "@/shared/lib/supabase/static";
 import type { FaqRow } from "@/shared/types/database";
 
@@ -53,20 +53,5 @@ export async function getFaqById(id: string): Promise<FaqRow | null> {
 }
 
 export async function getNextFaqDisplayOrder(): Promise<number> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("faqs")
-    .select("display_order")
-    .order("display_order", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error) {
-    if (error.code !== SUPABASE_NOT_FOUND_CODE) {
-      console.error("[getNextFaqDisplayOrder] display_order 조회 실패:", error);
-    }
-    return 0;
-  }
-
-  return (data?.display_order ?? -1) + 1;
+  return getNextOrder("faqs", "display_order");
 }

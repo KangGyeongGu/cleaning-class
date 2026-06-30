@@ -4,10 +4,23 @@ import {
   MOVING_SERVICE_TYPES,
 } from "@/shared/lib/pure/constants";
 
+const httpUrl = () =>
+  z
+    .string()
+    .url("올바른 URL 형식이 아닙니다")
+    .refine((url) => /^https?:\/\//i.test(url), {
+      message: "URL은 http:// 또는 https://로 시작해야 합니다",
+    });
+
 const movingServiceTypeEnum = z.enum([...MOVING_SERVICE_TYPES, "기타 문의"] as [
   string,
   ...string[],
 ]);
+
+const cleaningServiceTypeEnum = z.enum([
+  ...CLEANING_SERVICE_TYPES,
+  "기타 문의",
+] as [string, ...string[]]);
 
 const cleaningContactSchema = z.object({
   inquiryType: z.literal("cleaning"),
@@ -16,10 +29,7 @@ const cleaningContactSchema = z.object({
     .string()
     .min(1, "연락처를 입력해주세요")
     .regex(/^[0-9-]+$/, "올바른 전화번호 형식이 아닙니다"),
-  serviceType: z
-    .string()
-    .min(1, "서비스 종류를 선택해주세요")
-    .max(100, "서비스 종류가 너무 깁니다"),
+  serviceType: cleaningServiceTypeEnum,
   address: z.string().min(1, "주소를 입력해주세요"),
   addressDetail: z.string().optional().default(""),
   message: z
@@ -46,10 +56,20 @@ const movingContactSchema = z.object({
     .max(1000, "문의 내용은 1000자 이하로 작성해주세요"),
 });
 
-export const contactFormSchema = z.discriminatedUnion("inquiryType", [
-  cleaningContactSchema,
-  movingContactSchema,
-]);
+export const contactFormSchema = z
+  .discriminatedUnion("inquiryType", [
+    cleaningContactSchema,
+    movingContactSchema,
+  ])
+  .refine(
+    (d) =>
+      d.inquiryType !== "moving" ||
+      Boolean(d.departureAddress?.trim() || d.destinationAddress?.trim()),
+    {
+      message: "출발지 또는 도착지 주소 중 최소 1개를 입력해주세요",
+      path: ["departureAddress"],
+    },
+  );
 
 export const loginFormSchema = z.object({
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
@@ -66,14 +86,7 @@ export const reviewFormSchema = z.object({
     .min(1, "소개글을 입력해주세요")
     .max(500, "소개글은 500자 이하여야 합니다"),
   tags: z.array(z.string()).min(1, "최소 1개 이상의 태그를 입력해주세요"),
-  link_url: z
-    .string()
-    .url("올바른 URL 형식이 아닙니다")
-    .refine((url) => /^https?:\/\//i.test(url), {
-      message: "URL은 http:// 또는 https://로 시작해야 합니다",
-    })
-    .or(z.literal(""))
-    .optional(),
+  link_url: httpUrl().or(z.literal("")).optional(),
   is_published: z.boolean(),
 });
 
@@ -110,33 +123,10 @@ export const siteConfigFormSchema = z.object({
       "올바른 전화번호 형식이 아닙니다 (예: 010-1234-5678, 02-1234-5678)",
     ),
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
-  blog_url: z
-    .string()
-    .url("올바른 URL 형식이 아닙니다")
-    .refine((url) => /^https?:\/\//i.test(url), {
-      message: "URL은 http:// 또는 https://로 시작해야 합니다",
-    })
-    .or(z.literal("")),
-  instagram_url: z
-    .string()
-    .url("올바른 URL 형식이 아닙니다")
-    .refine((url) => /^https?:\/\//i.test(url), {
-      message: "URL은 http:// 또는 https://로 시작해야 합니다",
-    })
-    .or(z.literal("")),
-  daangn_url: z
-    .string()
-    .url("올바른 URL 형식이 아닙니다")
-    .refine((url) => /^https?:\/\//i.test(url), {
-      message: "URL은 http:// 또는 https://로 시작해야 합니다",
-    })
-    .or(z.literal("")),
-  site_url: z
-    .string()
-    .url("올바른 URL 형식이 아닙니다")
-    .refine((url) => /^https?:\/\//i.test(url), {
-      message: "URL은 http:// 또는 https://로 시작해야 합니다",
-    }),
+  blog_url: httpUrl().or(z.literal("")),
+  instagram_url: httpUrl().or(z.literal("")),
+  daangn_url: httpUrl().or(z.literal("")),
+  site_url: httpUrl(),
   description: z.string().max(500, "설명은 500자 이하여야 합니다").optional(),
   address_region: z.string().optional().default(""),
   address_locality: z.string().optional().default(""),

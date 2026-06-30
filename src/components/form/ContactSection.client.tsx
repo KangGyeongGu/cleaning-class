@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { track, currentPath } from "@/shared/lib/infra/track";
 import { useInViewport } from "@/shared/lib/hooks/useInViewport";
-import { CleaningContactForm } from "@/components/form/CleaningContactForm.client";
-import { MovingContactForm } from "@/components/form/MovingContactForm.client";
+import { ContactForm } from "@/components/form/ContactForm.client";
+import { MOVING_INQUIRY_OPTIONS } from "@/shared/lib/pure/constants";
 
 type InquiryType = "cleaning" | "moving";
+
+const OTHER_INQUIRY_OPTION = "기타 문의";
 
 interface ContactSectionProps {
   phone?: string;
@@ -88,12 +90,16 @@ export function ContactSection({
           </div>
 
           {inquiryType === "cleaning" ? (
-            <CleaningContactForm
-              serviceOptions={cleaningServiceOptions}
+            <ContactForm
+              inquiryType="cleaning"
+              serviceOptions={[...cleaningServiceOptions, OTHER_INQUIRY_OPTION]}
               initialServiceType={initialServiceType}
             />
           ) : (
-            <MovingContactForm />
+            <ContactForm
+              inquiryType="moving"
+              serviceOptions={MOVING_INQUIRY_OPTIONS}
+            />
           )}
         </div>
       </div>

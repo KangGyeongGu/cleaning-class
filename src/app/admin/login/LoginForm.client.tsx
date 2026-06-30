@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useActionState } from "react";
 import { login } from "@/shared/actions/auth";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Eye, EyeOff } from "lucide-react";
 
 export function LoginForm() {
   const [state, formAction, isPending] = useActionState(login, null);
@@ -21,10 +22,7 @@ export function LoginForm() {
 
         <form action={formAction} className="space-y-8">
           <div>
-            <label
-              htmlFor="email"
-              className="mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase"
-            >
+            <label htmlFor="email" className="form-label">
               Email
             </label>
             <input
@@ -32,16 +30,13 @@ export function LoginForm() {
               name="email"
               type="email"
               required
-              className="w-full border-b border-slate-200 bg-transparent pb-3 text-lg font-light transition-colors outline-none placeholder:text-slate-300 focus:border-slate-900"
+              className="form-input-lg"
               placeholder="이메일을 입력하세요"
             />
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase"
-            >
+            <label htmlFor="password" className="form-label">
               Password
             </label>
             <div className="relative">
@@ -51,7 +46,7 @@ export function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 required
                 autoComplete="current-password"
-                className="w-full border-b border-slate-200 bg-transparent pr-10 pb-3 text-lg font-light transition-colors outline-none placeholder:text-slate-300 focus:border-slate-900"
+                className="form-input-lg pr-10"
                 placeholder="비밀번호를 입력하세요"
               />
               <button
@@ -73,19 +68,15 @@ export function LoginForm() {
             <p className="text-sm text-red-500">{state.error}</p>
           )}
 
-          <button
+          <Button
             type="submit"
-            disabled={isPending}
-            className="w-full bg-slate-900 px-8 py-4 text-sm font-bold tracking-widest text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            variant="primary"
+            size="lg"
+            className="w-full"
+            loading={isPending}
           >
-            {isPending ? (
-              <span className="flex items-center justify-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> 로그인 중...
-              </span>
-            ) : (
-              "로그인"
-            )}
-          </button>
+            {isPending ? "로그인 중..." : "로그인"}
+          </Button>
         </form>
       </div>
     </div>

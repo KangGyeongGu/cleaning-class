@@ -7,8 +7,10 @@ interface UseInViewportResult {
   isVisible: boolean;
 }
 
+const DEFAULT_OPTIONS: IntersectionObserverInit = { threshold: 0.1 };
+
 export function useInViewport(
-  options: IntersectionObserverInit = { threshold: 0.1 },
+  options: IntersectionObserverInit = DEFAULT_OPTIONS,
 ): UseInViewportResult {
   const [isVisible, setIsVisible] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);

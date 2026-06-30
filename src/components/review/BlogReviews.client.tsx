@@ -1,17 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Instagram } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowUpRight, Instagram } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import Slider, { type CustomArrowProps } from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 import type { Review } from "@/shared/types/database";
 import { NaverBlogIcon } from "@/components/icons/SocialIcons";
-import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
+import {
+  CLEANING_SERVICE_TYPES,
+  BLUR_PLACEHOLDER,
+} from "@/shared/lib/pure/constants";
+import { isSafeUrl } from "@/shared/lib/pure/format";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
-import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface ReviewWithUrl extends Review {
@@ -23,34 +25,6 @@ interface BlogReviewsProps {
   blogUrl?: string;
   instagramUrl?: string;
   reviewDescription?: string;
-}
-
-function NextArrow(props: CustomArrowProps) {
-  const { onClick } = props;
-  return (
-    <button
-      type="button"
-      aria-label="다음 리뷰"
-      className="btn-icon absolute top-1/2 -right-4 z-20 flex -translate-y-1/2 items-center justify-center hover:border-slate-900 hover:bg-slate-900 hover:text-white md:-right-8 lg:-right-12"
-      onClick={onClick}
-    >
-      <ArrowRight className="h-5 w-5" />
-    </button>
-  );
-}
-
-function PrevArrow(props: CustomArrowProps) {
-  const { onClick } = props;
-  return (
-    <button
-      type="button"
-      aria-label="이전 리뷰"
-      className="btn-icon absolute top-1/2 -left-4 z-20 flex -translate-y-1/2 items-center justify-center hover:border-slate-900 hover:bg-slate-900 hover:text-white md:-left-8 lg:-left-12"
-      onClick={onClick}
-    >
-      <ArrowLeft className="h-5 w-5" />
-    </button>
-  );
 }
 
 function ReviewCard({ review }: { review: ReviewWithUrl }) {
@@ -71,9 +45,7 @@ function ReviewCard({ review }: { review: ReviewWithUrl }) {
       <div className="flex flex-1 flex-col px-3.5 pb-4 md:px-5 md:pb-6">
         <div className="mb-1 flex min-h-4 flex-wrap gap-1.5 md:mb-1.5 md:min-h-5 md:gap-2">
           {review.tags.map((tag) => (
-            <span key={tag} className="tag-pill">
-              {tag}
-            </span>
+            <Badge key={tag}>{tag}</Badge>
           ))}
         </div>
 
@@ -98,10 +70,6 @@ function ReviewCard({ review }: { review: ReviewWithUrl }) {
       </div>
     </div>
   );
-}
-
-function isSafeUrl(url: string): boolean {
-  return /^https?:\/\//i.test(url);
 }
 
 interface ReviewSnsLinksProps {
@@ -219,27 +187,8 @@ export function BlogReviews({
   reviewDescription,
 }: BlogReviewsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const sliderRef = useRef<Slider>(null);
-  const [, setActiveIndex] = useState(0);
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const scrollLeft = el.scrollLeft;
-    const cardWidth = el.firstElementChild?.clientWidth ?? 1;
-    const gap = 16;
-    const index = Math.round(scrollLeft / (cardWidth + gap));
-    setActiveIndex(index);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
 
   if (!reviews || reviews.length === 0) {
     return null;
@@ -260,8 +209,6 @@ export function BlogReviews({
 
   const handleFilterChange = (filter: string | null) => {
     setActiveFilter(filter);
-    setActiveIndex(0);
-    sliderRef.current?.slickGoTo(0);
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ left: 0, behavior: "instant" });
     }
@@ -274,26 +221,6 @@ export function BlogReviews({
       },
       path: currentPath(),
     });
-  };
-
-  const slickSettings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    nextArrow: <NextArrow />,
-    prevArrow: <PrevArrow />,
-    responsive: [
-      {
-        breakpoint: 1280,
-        settings: { slidesToShow: 3 },
-      },
-      {
-        breakpoint: 1024,
-        settings: { slidesToShow: 3 },
-      },
-    ],
   };
 
   return (
@@ -321,22 +248,26 @@ export function BlogReviews({
         </div>
 
         <div className="scrollbar-hide mb-5 flex gap-1.5 overflow-x-auto md:mb-8 md:gap-2 md:px-2">
-          <button
-            type="button"
+          <Button
+            variant="filter"
+            size="none"
+            active={activeFilter === null}
             onClick={() => handleFilterChange(null)}
-            className={`btn-filter shrink-0 ${activeFilter === null ? "btn-filter-active" : "btn-filter-inactive"}`}
+            className="shrink-0"
           >
             전체
-          </button>
+          </Button>
           {CLEANING_SERVICE_TYPES.map((type) => (
-            <button
+            <Button
               key={type}
-              type="button"
+              variant="filter"
+              size="none"
+              active={activeFilter === type}
               onClick={() => handleFilterChange(type)}
-              className={`btn-filter shrink-0 ${activeFilter === type ? "btn-filter-active" : "btn-filter-inactive"}`}
+              className="shrink-0"
             >
               {type}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -350,12 +281,12 @@ export function BlogReviews({
           <>
             <div
               ref={scrollRef}
-              className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 md:hidden"
+              className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 md:gap-6 md:py-4"
             >
               {filteredReviews.map((review) => (
                 <div
                   key={review.id}
-                  className="relative w-4/5 shrink-0 snap-center md:w-11/12"
+                  className="relative w-4/5 shrink-0 snap-center md:w-1/3 md:snap-start xl:w-1/4"
                 >
                   <ReviewCardWrapper review={review} blogUrl={blogUrl} />
                 </div>
@@ -379,16 +310,6 @@ export function BlogReviews({
                 />
               </div>
             )}
-
-            <div className="relative hidden px-2 md:block">
-              <Slider ref={sliderRef} {...slickSettings}>
-                {filteredReviews.map((review) => (
-                  <div key={review.id} className="relative h-full px-3 py-4">
-                    <ReviewCardWrapper review={review} blogUrl={blogUrl} />
-                  </div>
-                ))}
-              </Slider>
-            </div>
           </>
         )}
 

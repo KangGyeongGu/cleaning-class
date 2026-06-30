@@ -1,9 +1,7 @@
 import { createClient } from "@/shared/lib/supabase/server";
 import { createStaticClient } from "@/shared/lib/supabase/static";
-import {
-  DEFAULT_FOCAL_POINT,
-  SUPABASE_NOT_FOUND_CODE,
-} from "@/shared/lib/pure/constants";
+import { DEFAULT_FOCAL_POINT } from "@/shared/lib/pure/constants";
+import { getNextOrder } from "@/shared/lib/queries/order";
 import { getServiceImageUrl } from "@/shared/lib/supabase/storage";
 import type { Service } from "@/shared/types/database";
 
@@ -145,20 +143,5 @@ export async function getPublishedServicesWithImageUrls(
 }
 
 export async function getNextServiceSortOrder(): Promise<number> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("services")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error) {
-    if (error.code !== SUPABASE_NOT_FOUND_CODE) {
-      console.error("[getNextServiceSortOrder] sort_order 조회 실패:", error);
-    }
-    return 0;
-  }
-
-  return (data?.sort_order ?? -1) + 1;
+  return getNextOrder("services", "sort_order");
 }

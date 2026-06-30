@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { submitPublicReview } from "@/shared/actions/customer-review";
+import { Button } from "@/components/ui/Button";
 import { StarRating } from "@/components/review/StarRating";
 import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 
@@ -274,20 +274,14 @@ export function ReviewSubmitForm() {
           </div>
 
           <div className="pt-2">
-            <button
+            <Button
               type="submit"
+              size="full"
+              loading={isPending}
               disabled={isPending || rating === 0}
-              className="btn-primary w-full py-3"
             >
-              {isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  등록 중...
-                </span>
-              ) : (
-                "후기 등록하기"
-              )}
-            </button>
+              {isPending ? "등록 중..." : "후기 등록하기"}
+            </Button>
 
             {state?.error && (
               <p className="form-error mt-4 text-center">{state.error}</p>

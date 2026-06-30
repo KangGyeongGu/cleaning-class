@@ -5,7 +5,7 @@ import {
   generatePriceListJsonLd,
 } from "@/shared/lib/domain/json-ld";
 import { getPublishedPriceItems } from "@/shared/lib/queries/price";
-import { getSiteConfig } from "@/shared/lib/domain/site-config";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { PriceSection } from "@/components/price/PriceSection";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 

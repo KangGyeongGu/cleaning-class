@@ -14,8 +14,6 @@ interface AddressInputProps {
   required?: boolean;
   addressName: string;
   detailName: string;
-  defaultAddress?: string;
-  defaultDetail?: string;
   error?: string;
   onChange?: (address: string, detail: string) => void;
 }
@@ -25,13 +23,11 @@ export function AddressInput({
   required,
   addressName,
   detailName,
-  defaultAddress = "",
-  defaultDetail = "",
   error,
   onChange,
 }: AddressInputProps): React.ReactElement {
-  const [address, setAddress] = useState(defaultAddress);
-  const [detail, setDetail] = useState(defaultDetail);
+  const [address, setAddress] = useState("");
+  const [detail, setDetail] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { BLUR_PLACEHOLDER } from "@/shared/lib/domain/image";
+import { BLUR_PLACEHOLDER } from "@/shared/lib/pure/constants";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
 export interface ServiceCardProps {

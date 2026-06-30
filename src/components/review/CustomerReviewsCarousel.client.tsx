@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { ReviewCard } from "@/components/review/ReviewCard";
 import { StarRating } from "@/components/review/StarRating";
 
 interface ReviewCardData {
   id: string;
   rating: number;
   comment: string;
-  nickname: string;
   serviceType: string | null;
   relativeDate: string;
 }
@@ -16,9 +16,9 @@ interface CustomerReviewsCarouselProps {
   cards: ReviewCardData[];
 }
 
-function ReviewCard({ card }: { card: ReviewCardData }): React.ReactElement {
+function ReviewItem({ card }: { card: ReviewCardData }): React.ReactElement {
   return (
-    <article className="flex h-full min-h-40 flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 transition-all duration-300 hover:border-slate-400 hover:shadow-lg md:min-h-0 md:p-4">
+    <ReviewCard className="flex h-full min-h-40 flex-col justify-between p-3 transition-all duration-300 hover:border-slate-400 hover:shadow-lg md:min-h-0 md:p-4">
       <div>
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
@@ -45,7 +45,7 @@ function ReviewCard({ card }: { card: ReviewCardData }): React.ReactElement {
           </>
         )}
       </div>
-    </article>
+    </ReviewCard>
   );
 }
 
@@ -78,7 +78,7 @@ export function CustomerReviewsCarousel({
       >
         {duplicated.map((card, i) => (
           <div key={`${card.id}-${i}`} className="w-52 shrink-0 md:w-72">
-            <ReviewCard card={card} />
+            <ReviewItem card={card} />
           </div>
         ))}
       </div>

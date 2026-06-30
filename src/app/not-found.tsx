@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ButtonLink } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "페이지를 찾을 수 없습니다",
@@ -20,12 +20,9 @@ export default function NotFound() {
         <p className="mb-8 text-lg font-light text-slate-600">
           페이지를 찾을 수 없습니다.
         </p>
-        <Link
-          href="/"
-          className="inline-block bg-slate-900 px-8 py-3 text-sm font-bold tracking-widest text-white transition-colors hover:bg-slate-800"
-        >
+        <ButtonLink href="/" size="none" className="px-8 py-3">
           홈으로 돌아가기
-        </Link>
+        </ButtonLink>
       </div>
     </main>
   );

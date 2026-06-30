@@ -46,9 +46,7 @@ export function AdminSidebar() {
     <>
       <header className="fixed top-0 right-0 left-0 z-40 bg-slate-100 md:hidden">
         <div className="flex items-center justify-between p-4">
-          <div className="text-xl font-black text-slate-900">
-            청소클라쓰 관리자
-          </div>
+          <div className="text-heading-2">청소클라쓰 관리자</div>
           <button
             type="button"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}

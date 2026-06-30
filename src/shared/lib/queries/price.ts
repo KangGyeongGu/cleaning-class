@@ -1,5 +1,5 @@
 import { createClient } from "@/shared/lib/supabase/server";
-import { SUPABASE_NOT_FOUND_CODE } from "@/shared/lib/pure/constants";
+import { getNextOrder } from "@/shared/lib/queries/order";
 import { createStaticClient } from "@/shared/lib/supabase/static";
 import type { PriceItemRow } from "@/shared/types/database";
 
@@ -58,20 +58,5 @@ export async function getPriceItemById(
 }
 
 export async function getNextPriceItemSortOrder(): Promise<number> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("price_items")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error) {
-    if (error.code !== SUPABASE_NOT_FOUND_CODE) {
-      console.error("[getNextPriceItemSortOrder] sort_order 조회 실패:", error);
-    }
-    return 0;
-  }
-
-  return (data?.sort_order ?? -1) + 1;
+  return getNextOrder("price_items", "sort_order");
 }
