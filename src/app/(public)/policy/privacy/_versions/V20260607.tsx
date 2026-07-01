@@ -53,7 +53,7 @@ export function PrivacyV20260607(): React.ReactElement {
           <li>
             · 고충처리 부서:{" "}
             <strong className="font-medium text-slate-900">
-              대표 강승구 (010-6711-6712)
+              대표 강승구 (010-9972-6712)
             </strong>
           </li>
         </ul>
@@ -488,10 +488,10 @@ export function PrivacyV20260607(): React.ReactElement {
                     <td className="border border-slate-300 px-4 py-3 text-xs font-medium text-slate-900">
                       <strong>
                         <a
-                          href="tel:010-6711-6712"
+                          href="tel:010-9972-6712"
                           className="transition-colors hover:text-slate-600"
                         >
-                          010-6711-6712
+                          010-9972-6712
                         </a>
                       </strong>
                     </td>
