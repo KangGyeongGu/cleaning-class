@@ -52,5 +52,6 @@ jobs:
               --env-file ~/cleaning-class/.env \
               -v /home/ubuntu/traffic-data/goaccess:/data/goaccess:ro \
               -v /home/ubuntu/traffic-data/cloudflare:/data/cloudflare:rw \
+              -v cleaning-class-img-cache:/app/.next/cache/images \
               rudrn0110/cleaning-class-web:latest
             docker image prune -f
