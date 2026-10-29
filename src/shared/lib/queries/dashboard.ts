@@ -1,157 +1,77 @@
+import "server-only";
 import { createClient } from "@/shared/lib/supabase/server";
-import { KST_OFFSET_MS } from "@/shared/lib/pure/constants";
+import { ANALYTICS_PAGE_SIZE, offsetDate } from "@/shared/lib/pure/analytics";
+import {
+  dashboardRange,
+  dashboardRowSchema,
+  legacyDashboardRows,
+} from "@/shared/lib/pure/dashboard";
+import type {
+  DashboardSnapshot,
+  DailyActivity,
+  RawActivity,
+} from "@/shared/lib/pure/dashboard";
 
-export interface DailyTrendRow {
-  date: string;
-  visitors: number;
-  quoteCleaning: number;
-  quoteMoving: number;
-  phoneCleaning: number;
-  phoneMoving: number;
-}
+const ACTIVITY_TYPES = ["phone_click", "quote_form_success"];
 
-export interface TrafficSourceRow {
-  source: string;
-  count: number;
-}
-
-export interface CustomerActionTotals {
-  quoteCleaning: number;
-  quoteMoving: number;
-  phoneCleaning: number;
-  phoneMoving: number;
-}
-
-function nDaysAgoKst(n: number): string {
-  const now = new Date();
-  const kst = new Date(now.getTime() + KST_OFFSET_MS);
-  kst.setUTCDate(kst.getUTCDate() - n);
-  return kst.toISOString().slice(0, 10);
-}
-
-type DailyRow = {
-  date: string;
-  event_type: string;
-  dimension: string | null;
-  count: number;
-};
-
-function asSegment(dimension: string | null): "cleaning" | "moving" | null {
-  if (dimension === "cleaning" || dimension === "moving") return dimension;
-  return null;
-}
-
-export async function getDailyTrend7d(): Promise<DailyTrendRow[]> {
+async function getExistingActivities(
+  start: string,
+  end: string,
+): Promise<DashboardSnapshot> {
   const supabase = await createClient();
-  const startDate = nDaysAgoKst(6);
-
-  const { data, error } = await supabase
-    .from("analytics_daily")
-    .select("date, event_type, dimension, count")
-    .gte("date", startDate)
-    .in("event_type", ["page_landing", "quote_form_success", "phone_click"]);
-
-  if (error) {
-    console.error("[getDailyTrend7d]", error);
-    return [];
+  const daily: DailyActivity[] = [];
+  const events: RawActivity[] = [];
+  for (let offset = 0; ; offset += ANALYTICS_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("analytics_daily")
+      .select("date,event_type,dimension,count")
+      .gte("date", start)
+      .lte("date", end)
+      .in("event_type", ACTIVITY_TYPES)
+      .order("date")
+      .order("event_type")
+      .order("dimension")
+      .range(offset, offset + ANALYTICS_PAGE_SIZE - 1);
+    if (error) throw new Error(`일별 통계 조회 실패: ${error.code}`);
+    const page = data ?? [];
+    daily.push(...page);
+    if (page.length < ANALYTICS_PAGE_SIZE) break;
   }
-
-  const byDate = new Map<string, DailyTrendRow>();
-  for (let i = 6; i >= 0; i -= 1) {
-    const d = nDaysAgoKst(i);
-    byDate.set(d, {
-      date: d,
-      visitors: 0,
-      quoteCleaning: 0,
-      quoteMoving: 0,
-      phoneCleaning: 0,
-      phoneMoving: 0,
-    });
+  for (let offset = 0; ; offset += ANALYTICS_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("analytics_events")
+      .select("created_at,event_type,event_payload,id")
+      .gte("created_at", `${start}T00:00:00+09:00`)
+      .lt("created_at", `${offsetDate(end, 1)}T00:00:00+09:00`)
+      .in("event_type", ACTIVITY_TYPES)
+      .order("created_at")
+      .order("id")
+      .range(offset, offset + ANALYTICS_PAGE_SIZE - 1);
+    if (error) throw new Error(`활동 통계 조회 실패: ${error.code}`);
+    const page = data ?? [];
+    events.push(...page);
+    if (page.length < ANALYTICS_PAGE_SIZE) break;
   }
-
-  for (const row of (data as DailyRow[] | null) ?? []) {
-    const target = byDate.get(row.date);
-    if (!target) continue;
-    if (row.event_type === "page_landing") {
-      target.visitors += row.count;
-    } else if (row.event_type === "quote_form_success") {
-      const seg = asSegment(row.dimension);
-      if (seg === "cleaning") target.quoteCleaning += row.count;
-      else if (seg === "moving") target.quoteMoving += row.count;
-    } else if (row.event_type === "phone_click") {
-      const seg = asSegment(row.dimension);
-      if (seg === "cleaning") target.phoneCleaning += row.count;
-      else if (seg === "moving") target.phoneMoving += row.count;
-    }
-  }
-
-  return Array.from(byDate.values());
-}
-
-export async function getTrafficSources30d(): Promise<TrafficSourceRow[]> {
-  const supabase = await createClient();
-  const startDate = nDaysAgoKst(29);
-
-  const { data, error } = await supabase
-    .from("analytics_daily")
-    .select("dimension, count")
-    .eq("event_type", "page_landing")
-    .gte("date", startDate);
-
-  if (error) {
-    console.error("[getTrafficSources30d]", error);
-    return [];
-  }
-
-  const totals = (
-    (data as Pick<DailyRow, "dimension" | "count">[] | null) ?? []
-  ).reduce<Record<string, number>>((acc, row) => {
-    const key = row.dimension || "direct";
-    acc[key] = (acc[key] ?? 0) + row.count;
-    return acc;
-  }, {});
-
-  return Object.entries(totals)
-    .map(([source, count]) => ({ source, count }))
-    .sort((a, b) => b.count - a.count);
-}
-
-export async function getCustomerActions30d(): Promise<CustomerActionTotals> {
-  const supabase = await createClient();
-  const startDate = nDaysAgoKst(29);
-
-  const { data, error } = await supabase
-    .from("analytics_daily")
-    .select("event_type, dimension, count")
-    .in("event_type", ["quote_form_success", "phone_click"])
-    .gte("date", startDate);
-
-  const empty: CustomerActionTotals = {
-    quoteCleaning: 0,
-    quoteMoving: 0,
-    phoneCleaning: 0,
-    phoneMoving: 0,
+  return {
+    rows: legacyDashboardRows(start, end, daily, events),
+    updatedAt: new Date().toISOString(),
   };
+}
 
-  if (error) {
-    console.error("[getCustomerActions30d]", error);
-    return empty;
-  }
-
-  const result = empty;
-  for (const row of (data as
-    | Pick<DailyRow, "event_type" | "dimension" | "count">[]
-    | null) ?? []) {
-    if (row.event_type === "quote_form_success") {
-      const seg = asSegment(row.dimension);
-      if (seg === "cleaning") result.quoteCleaning += row.count;
-      else if (seg === "moving") result.quoteMoving += row.count;
-    } else if (row.event_type === "phone_click") {
-      const seg = asSegment(row.dimension);
-      if (seg === "cleaning") result.phoneCleaning += row.count;
-      else if (seg === "moving") result.phoneMoving += row.count;
-    }
-  }
-
-  return result;
+export async function getDashboardSnapshot(
+  start: string,
+  end: string,
+): Promise<DashboardSnapshot> {
+  dashboardRange({ start, end });
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("dashboard_snapshot", {
+    p_start: start,
+    p_end: end,
+  });
+  if (error?.code === "PGRST202") return getExistingActivities(start, end);
+  if (error) throw new Error(`대시보드 조회 실패: ${error.code}`);
+  return {
+    rows: dashboardRowSchema.array().parse(data),
+    updatedAt: new Date().toISOString(),
+  };
 }

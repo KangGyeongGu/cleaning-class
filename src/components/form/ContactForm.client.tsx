@@ -60,7 +60,6 @@ export function ContactForm({
     formValid,
     showSuccess,
     clearReset,
-    trackClick,
   } = useContactForm({
     inquiryType,
     initialServiceType,
@@ -186,7 +185,6 @@ export function ContactForm({
           className="px-10 py-3"
           loading={isPending}
           disabled={isPending || imageHandler.isConverting || !formValid}
-          onClick={trackClick}
         >
           {isPending ? (
             "문의 중..."

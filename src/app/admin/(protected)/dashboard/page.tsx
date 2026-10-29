@@ -1,81 +1,43 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-
-import { DashboardStats } from "@/app/admin/components/DashboardStats";
-import { DailyTrendChart } from "@/app/admin/(protected)/dashboard/DailyTrendChart.client";
-import { TrafficSourceTable } from "@/app/admin/(protected)/dashboard/TrafficSourceTable";
-import { CustomerActionTable } from "@/app/admin/(protected)/dashboard/CustomerActionTable";
-import { getAdminDashboardData } from "@/shared/lib/queries/admin";
-import {
-  getDailyTrend7d,
-  getTrafficSources30d,
-  getCustomerActions30d,
-} from "@/shared/lib/queries/dashboard";
+import { Dashboard } from "@/app/admin/(protected)/dashboard/Dashboard.client";
+import { getDashboardSnapshot } from "@/shared/lib/queries/dashboard";
+import { dashboardRange } from "@/shared/lib/pure/dashboard";
+import type { DashboardSnapshot } from "@/shared/lib/pure/dashboard";
 
 export const metadata: Metadata = { title: "대시보드" };
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage(): Promise<React.ReactElement> {
-  const [content, trend, sources, actions] = await Promise.all([
-    getAdminDashboardData(),
-    getDailyTrend7d(),
-    getTrafficSources30d(),
-    getCustomerActions30d(),
-  ]);
-
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ start?: string; end?: string }>;
+}) {
+  const params = await searchParams;
+  let range;
+  let rangeError: string | null = null;
+  try {
+    range = dashboardRange(params);
+  } catch {
+    range = dashboardRange({});
+    rangeError = "올바르지 않은 조회 기간입니다. 최근 7일 통계를 표시합니다.";
+  }
+  let initial: DashboardSnapshot | null = null;
+  let error: string | null = rangeError;
+  try {
+    initial = await getDashboardSnapshot(range.start, range.end);
+  } catch (cause) {
+    console.error("[dashboard] 초기 조회 실패", cause);
+    error =
+      "통계를 불러오지 못했습니다. DB 마이그레이션 적용 여부와 서버 로그를 확인해주세요.";
+  }
   return (
-    <div className="px-4 py-6 md:p-10">
-      <h1 className="mb-8 text-2xl font-black text-slate-900 md:text-3xl">
-        대시보드
-      </h1>
-
-      <div className="mb-6 flex gap-4">
-        <Link
-          href="/admin/traffic"
-          className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-        >
-          트래픽 분석
-        </Link>
-        {process.env.ADMIN_GA4_CONSOLE_URL && (
-          <a
-            href={process.env.ADMIN_GA4_CONSOLE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-          >
-            GA4 콘솔
-          </a>
-        )}
-        {process.env.ADMIN_CLARITY_CONSOLE_URL && (
-          <a
-            href={process.env.ADMIN_CLARITY_CONSOLE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-          >
-            Clarity 콘솔
-          </a>
-        )}
-      </div>
-
-      <DashboardStats data={content} />
-      <DailyTrendChart rows={trend} />
-
-      <section className="mb-10">
-        <h2 className="mb-3 text-sm font-bold tracking-widest text-slate-500 uppercase">
-          최근 30일
-        </h2>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div>
-            <h3 className="mb-2 text-xs font-bold text-slate-600">유입 채널</h3>
-            <TrafficSourceTable rows={sources} />
-          </div>
-          <div>
-            <h3 className="mb-2 text-xs font-bold text-slate-600">고객 행동</h3>
-            <CustomerActionTable data={actions} />
-          </div>
-        </div>
-      </section>
-    </div>
+    <Dashboard
+      key={`${range.start}:${range.end}`}
+      ga4ConsoleUrl={process.env.ADMIN_GA4_CONSOLE_URL}
+      clarityConsoleUrl={process.env.ADMIN_CLARITY_CONSOLE_URL}
+      initial={initial}
+      initialError={error}
+      range={range}
+    />
   );
 }

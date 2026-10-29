@@ -12,6 +12,13 @@ export type Database = {
   };
   public: {
     Tables: {
+      analytics_daily_visitors: {
+        Row: { visit_date: string; visitor_key: string };
+        Insert: { visit_date: string; visitor_key: string };
+        Update: { visit_date?: string; visitor_key?: string };
+        Relationships: [];
+      };
+
       analytics_daily: {
         Row: {
           count: number;
@@ -347,6 +354,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      record_daily_visitor: {
+        Args: { p_key: string; p_date: string };
+        Returns: undefined;
+      };
+      dashboard_snapshot: {
+        Args: { p_start: string; p_end: string };
+        Returns: Json;
+      };
+
       aggregate_analytics_daily: { Args: never; Returns: undefined };
       cleanup_analytics_events: { Args: never; Returns: undefined };
       reorder_faqs: { Args: { items: Json }; Returns: undefined };

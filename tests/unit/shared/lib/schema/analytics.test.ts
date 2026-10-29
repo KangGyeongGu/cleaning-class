@@ -2,20 +2,20 @@ import { describe, it, expect } from "vitest";
 import { EVENT_TYPES, trackRequestSchema } from "@/shared/lib/schema/analytics";
 
 describe("EVENT_TYPES", () => {
-  it("should contain 10 distinct event types", () => {
-    expect(EVENT_TYPES.length).toBe(10);
-    expect(new Set(EVENT_TYPES).size).toBe(10);
+  it("should contain 9 distinct event types", () => {
+    expect(EVENT_TYPES.length).toBe(9);
+    expect(new Set(EVENT_TYPES).size).toBe(9);
   });
 });
 
 describe("trackRequestSchema", () => {
-  it("should accept valid quote_form_click", () => {
+  it("should reject removed quote_form_click", () => {
     const result = trackRequestSchema.safeParse({
       event_type: "quote_form_click",
       event_payload: { inquiry_type: "cleaning", service_type: "입주청소" },
       path: "/",
     });
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it("should accept valid quote_form_success with has_images", () => {

@@ -132,7 +132,7 @@ export default async function TrafficPage({
             트래픽 분석
           </h1>
           <p className="mt-1 text-xs font-light text-slate-500">
-            Cloudflare 엣지 · GoAccess 오리진 — 핵심 지표
+            Cloudflare · GoAccess
           </p>
         </div>
         <Card className="inline-flex p-1">

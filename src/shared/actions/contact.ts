@@ -1,5 +1,7 @@
 "use server";
 
+import { createAnalyticsClient } from "@/shared/lib/server/analytics-client";
+import { shouldRecordAnalytics } from "@/shared/lib/server/analytics-request";
 import { headers } from "next/headers";
 import { contactFormSchema } from "@/shared/lib/schema/index";
 import { sendContactEmail } from "@/shared/lib/infra/mail";
@@ -22,7 +24,9 @@ export async function submitContactForm(
     return { success: true, message: SUCCESS_MESSAGE };
   }
 
-  const ip = (await headers()).get("x-forwarded-for") ?? "unknown";
+  const requestHeaders = await headers();
+  const analyticsEligible = shouldRecordAnalytics(requestHeaders);
+  const ip = requestHeaders.get("x-forwarded-for") ?? "unknown";
   if (
     !checkRateLimit(`contact:${ip}`, CONTACT_RATE_LIMIT, CONTACT_RATE_WINDOW_MS)
   ) {
@@ -118,9 +122,28 @@ export async function submitContactForm(
       images: imageAttachments.length > 0 ? imageAttachments : undefined,
     });
 
+    if (analyticsEligible) {
+      try {
+        const supabase = createAnalyticsClient();
+        const { error } = await supabase.from("analytics_events").insert({
+          event_type: "quote_form_success",
+          event_payload: {
+            inquiry_type: data.inquiryType,
+            service_type: data.serviceType,
+            has_images: imageAttachments.length > 0,
+          },
+          path: "/contact",
+        });
+        if (error) console.error("[analytics] 견적 성공 기록 실패", error);
+      } catch (trackingError) {
+        console.error("[analytics] 견적 성공 기록 실패", trackingError);
+      }
+    }
+
     return {
       success: true,
       message: SUCCESS_MESSAGE,
+      analyticsEligible,
     };
   } catch (error) {
     console.error("Contact email send error:", error);

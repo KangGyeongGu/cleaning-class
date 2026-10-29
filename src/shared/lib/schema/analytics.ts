@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const EVENT_TYPES = [
-  "quote_form_click",
   "quote_form_success",
   "quote_form_error",
   "phone_click",
@@ -14,14 +13,6 @@ export const EVENT_TYPES = [
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
-
-const quoteFormClickSchema = z.object({
-  event_type: z.literal("quote_form_click"),
-  event_payload: z.object({
-    inquiry_type: z.enum(["cleaning", "moving"]),
-    service_type: z.string().optional(),
-  }),
-});
 
 const quoteFormSuccessSchema = z.object({
   event_type: z.literal("quote_form_success"),
@@ -96,7 +87,6 @@ const pageLandingSchema = z.object({
 
 export const trackRequestSchema = z
   .discriminatedUnion("event_type", [
-    quoteFormClickSchema,
     quoteFormSuccessSchema,
     quoteFormErrorSchema,
     phoneClickSchema,

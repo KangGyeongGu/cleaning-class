@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { submitContactForm } from "@/shared/actions/contact";
-import { track, currentPath } from "@/shared/lib/infra/track";
+import { track, trackGaEvent, currentPath } from "@/shared/lib/infra/track";
 
 type InquiryType = "cleaning" | "moving";
 
@@ -37,7 +37,28 @@ export function useContactForm({
   const isFailure = state?.success === false;
   const showSuccess = isSuccess && !isReset;
 
-  const hasTrackedLead = useRef(false);
+  const lastTrackedSuccess = useRef<typeof state>(null);
+  useEffect(() => {
+    if (
+      !state ||
+      !("analyticsEligible" in state) ||
+      !state.analyticsEligible ||
+      !state.success ||
+      lastTrackedSuccess.current === state
+    )
+      return;
+    lastTrackedSuccess.current = state;
+    trackGaEvent({
+      event_type: "quote_form_success",
+      event_payload: {
+        inquiry_type: inquiryType,
+        service_type: serviceType,
+        has_images: hasImages,
+      },
+      path: currentPath(),
+    });
+  }, [state, inquiryType, serviceType, hasImages]);
+
   const hasTrackedError = useRef(false);
 
   const formValid = useMemo(
@@ -49,22 +70,6 @@ export function useContactForm({
       message.trim().length >= 50,
     [name, phone, serviceType, addressValid, message],
   );
-
-  useEffect(() => {
-    if (isSuccess && !hasTrackedLead.current) {
-      hasTrackedLead.current = true;
-      track({
-        event_type: "quote_form_success",
-        event_payload: {
-          inquiry_type: inquiryType,
-          service_type: serviceType,
-          has_images: hasImages,
-        },
-        path: currentPath(),
-      });
-    }
-    if (!isSuccess) hasTrackedLead.current = false;
-  }, [isSuccess, serviceType, hasImages, inquiryType]);
 
   useEffect(() => {
     if (isFailure && !hasTrackedError.current) {
@@ -105,14 +110,6 @@ export function useContactForm({
     if (isReset) setIsReset(false);
   }
 
-  function trackClick(): void {
-    track({
-      event_type: "quote_form_click",
-      event_payload: { inquiry_type: inquiryType, service_type: serviceType },
-      path: currentPath(),
-    });
-  }
-
   return {
     state,
     formAction,
@@ -129,6 +126,5 @@ export function useContactForm({
     formValid,
     showSuccess,
     clearReset,
-    trackClick,
   };
 }

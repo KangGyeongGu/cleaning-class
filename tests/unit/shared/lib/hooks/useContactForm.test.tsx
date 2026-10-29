@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
 const mockSubmit = vi.hoisted(() => vi.fn());
+const mockGa = vi.hoisted(() => vi.fn());
 const mockTrack = vi.hoisted(() => vi.fn());
 const mockCurrentPath = vi.hoisted(() => vi.fn(() => "/contact"));
 
@@ -11,6 +12,7 @@ vi.mock("@/shared/actions/contact", () => ({
 
 vi.mock("@/shared/lib/infra/track", () => ({
   track: mockTrack,
+  trackGaEvent: mockGa,
   currentPath: mockCurrentPath,
 }));
 
@@ -56,24 +58,10 @@ describe("useContactForm", () => {
     expect(mockTrack).not.toHaveBeenCalled();
   });
 
-  it("성공 시 quote_form_success 추적", async () => {
-    const { result } = await submitWith(
-      { success: true, message: "ok" },
-      { inquiryType: "moving", hasImages: true },
-    );
+  it("접수 성공은 브라우저에서 중복 기록하지 않음", async () => {
+    const { result } = await submitWith({ success: true, message: "ok" });
     expect(result.current.showSuccess).toBe(true);
-    await waitFor(() =>
-      expect(mockTrack).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event_type: "quote_form_success",
-          event_payload: expect.objectContaining({
-            inquiry_type: "moving",
-            has_images: true,
-          }),
-        }),
-      ),
-    );
-    expect(mockTrack).toHaveBeenCalledTimes(1);
+    expect(mockTrack).not.toHaveBeenCalled();
   });
 
   it("검증 실패 시 error_kind=validation", async () => {
@@ -89,7 +77,7 @@ describe("useContactForm", () => {
     expect(mockTrack).toHaveBeenCalledTimes(1);
   });
 
-  it("성공→비성공 전이 후 다시 성공 시 재트래킹 (hasTrackedLead 리셋)", async () => {
+  it("성공을 반복해도 브라우저 접수 성공 이벤트를 보내지 않음", async () => {
     const successCount = (): number =>
       mockTrack.mock.calls.filter(
         (c) =>
@@ -103,7 +91,7 @@ describe("useContactForm", () => {
     await act(async () => {
       hook.result.current.formAction(new FormData());
     });
-    await waitFor(() => expect(successCount()).toBe(1));
+    expect(successCount()).toBe(0);
 
     mockSubmit.mockReturnValue({ success: false, error: "잠시 후 다시" });
     await act(async () => {
@@ -115,13 +103,13 @@ describe("useContactForm", () => {
         error: "잠시 후 다시",
       }),
     );
-    expect(successCount()).toBe(1);
+    expect(successCount()).toBe(0);
 
     mockSubmit.mockReturnValue({ success: true, message: "ok" });
     await act(async () => {
       hook.result.current.formAction(new FormData());
     });
-    await waitFor(() => expect(successCount()).toBe(2));
+    expect(successCount()).toBe(0);
   });
 
   it("이미지 오류 시 error_kind=upload_fail", async () => {
@@ -195,12 +183,27 @@ describe("useContactForm", () => {
     expect(result.current.formValid).toBe(false);
   });
 
-  it("trackClick 호출 시 quote_form_click 추적", () => {
-    const { result } = renderHook(() => useContactForm(baseParams()));
-    act(() => result.current.trackClick());
-    expect(mockTrack).toHaveBeenCalledWith(
-      expect.objectContaining({ event_type: "quote_form_click" }),
+  it("서버가 확인한 성공만 GA4로 보내고 다시 렌더링해도 중복 전송하지 않음", async () => {
+    const hook = await submitWith({
+      success: true,
+      message: "ok",
+      analyticsEligible: true,
+    });
+    expect(mockGa).toHaveBeenCalledTimes(1);
+    expect(mockGa).toHaveBeenCalledWith(
+      expect.objectContaining({ event_type: "quote_form_success" }),
     );
+    hook.rerender(baseParams({ hasImages: true }));
+    expect(mockGa).toHaveBeenCalledTimes(1);
+    expect(mockTrack).not.toHaveBeenCalled();
+  });
+  it("로컬 접수 성공은 GA4에 보내지 않음", async () => {
+    await submitWith({
+      success: true,
+      message: "ok",
+      analyticsEligible: false,
+    });
+    expect(mockGa).not.toHaveBeenCalled();
   });
 
   it("clearReset: isReset false면 무동작", () => {
