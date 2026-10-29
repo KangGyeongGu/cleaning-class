@@ -53,8 +53,10 @@ describe("ISR 및 데이터 패턴", () => {
   });
 
   it("server action은 중앙화된 revalidation 패턴을 사용해야 한다", () => {
-    const actionsDir = join(projectRoot, "src/shared/actions");
-    const actionFiles = findFiles(actionsDir, /\.ts$/);
+    const actionFiles = [
+      ...findFiles(join(projectRoot, "src/shared/actions"), /\.ts$/),
+      ...findFiles(join(projectRoot, "src/app/admin"), /^actions\.ts$/),
+    ];
 
     const violations: string[] = [];
 

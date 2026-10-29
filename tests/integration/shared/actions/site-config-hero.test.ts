@@ -1,332 +1,231 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { HeroAsset } from "@/shared/lib/domain/hero-images";
 
-const mockGetUser = vi.hoisted(() => vi.fn());
-const mockRevalidatePath = vi.hoisted(() => vi.fn());
-const mockUploadImage = vi.hoisted(() =>
-  vi.fn().mockResolvedValue("uploaded-path"),
-);
-const mockDeleteImage = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
-
-interface ChainResult {
-  data: unknown;
-  error: unknown;
-}
-
-function makePromiseChain(result: ChainResult) {
-  const promise = Promise.resolve(result);
-  const chain: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "update", "limit", "single"]) {
-    chain[method] = vi.fn(() => chain);
-  }
-  chain.then = (
-    onfulfilled?: (v: ChainResult) => unknown,
-    onrejected?: (r: unknown) => unknown,
-  ) => promise.then(onfulfilled, onrejected);
-  return chain;
-}
-
-const mockFrom = vi.hoisted(() => vi.fn());
-const mockCreateClient = vi.hoisted(() =>
-  vi.fn(async () => ({ from: mockFrom })),
-);
-
-vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
-vi.mock("@/shared/lib/supabase/auth", () => ({ getUser: mockGetUser }));
+const mocks = vi.hoisted(() => ({
+  getUser: vi.fn(),
+  from: vi.fn(),
+  rpc: vi.fn(),
+  upload: vi.fn(),
+  remove: vi.fn(),
+  revalidate: vi.fn(),
+}));
+vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));
+vi.mock("@/shared/lib/supabase/auth", () => ({ getUser: mocks.getUser }));
 vi.mock("@/shared/lib/supabase/server", () => ({
-  createClient: mockCreateClient,
+  createClient: vi.fn(async () => ({ from: mocks.from, rpc: mocks.rpc })),
 }));
 vi.mock("@/shared/lib/supabase/storage-server", () => ({
-  uploadImage: mockUploadImage,
-  deleteImage: mockDeleteImage,
+  uploadImage: mocks.upload,
+  deleteImage: mocks.remove,
 }));
-
-function makeFile(name: string, size: number, type = "image/jpeg"): File {
-  const bytes = new Uint8Array(size);
-  return new File([bytes], name, { type });
+import { updateHeroImage } from "@/shared/actions/site-config-hero";
+const asset: HeroAsset = {
+  displayPath: "result.webp",
+  focalX: 50,
+  focalY: 50,
+};
+function config(
+  images: unknown = {
+    pc: { left: asset, right: null },
+    mobile: { left: null, right: null },
+  },
+) {
+  return {
+    id: "config",
+    hero_images: images,
+    hero_image_path: null,
+    hero_image_path_2: null,
+  };
 }
-
+function form(expected: HeroAsset | null = asset) {
+  const data = new FormData();
+  data.set("device", "pc");
+  data.set("side", "left");
+  data.set("expected", JSON.stringify(expected));
+  data.set(
+    "hero_image",
+    new File(["result"], "cropped.webp", { type: "image/webp" }),
+  );
+  return data;
+}
+function fetchResult(data: unknown, error: unknown = null) {
+  const chain: Record<string, unknown> = {};
+  for (const method of ["select", "limit", "eq"])
+    chain[method] = vi.fn(() => chain);
+  chain.single = vi.fn().mockResolvedValue({ data, error });
+  mocks.from.mockReturnValue(chain);
+}
 beforeEach(() => {
-  vi.clearAllMocks();
-  vi.resetModules();
-  mockGetUser.mockResolvedValue({ id: "u1" });
-  mockUploadImage.mockResolvedValue("uploaded-path");
-  mockDeleteImage.mockResolvedValue(undefined);
+  vi.resetAllMocks();
+  mocks.getUser.mockResolvedValue({ id: "admin" });
+  mocks.upload.mockResolvedValue("new-result.webp");
+  mocks.remove.mockResolvedValue(undefined);
+  mocks.rpc.mockResolvedValue({ data: ["result.webp"], error: null });
+  fetchResult(config());
 });
 
-describe("updateHeroImage", () => {
-  function heroFetchChain() {
-    return {
-      data: {
-        id: "cfg-1",
-        hero_image_path: "old-1.jpg",
-        hero_image_path_2: "old-2.jpg",
+describe("hero variant save", () => {
+  it("uploads cropped result and atomically updates only selected target", async () => {
+    const data = form();
+    data.set("device", "mobile");
+    data.set("side", "right");
+    fetchResult(
+      config({
+        pc: { left: null, right: null },
+        mobile: { left: null, right: asset },
+      }),
+    );
+    expect(await updateHeroImage(null, data)).toEqual({ success: true });
+    expect(mocks.upload).toHaveBeenCalledTimes(1);
+    expect(mocks.rpc).toHaveBeenCalledWith("update_hero_image_variant", {
+      p_id: "config",
+      p_device: "mobile",
+      p_side: "right",
+      p_expected: asset,
+      p_asset: {
+        displayPath: "new-result.webp",
+        focalX: 50,
+        focalY: 50,
       },
-      error: null,
-    };
-  }
-
-  function buildForm(
-    overrides: Record<string, FormDataEntryValue> = {},
-  ): FormData {
-    const fd = new FormData();
-    fd.set("slot", "1");
-    fd.set("focal_x", "50");
-    fd.set("focal_y", "50");
-    for (const [k, v] of Object.entries(overrides)) {
-      fd.set(k, v);
-    }
-    return fd;
-  }
-
-  it("uploads new image + replaces existing (slot 1 → hero_image_path column)", async () => {
-    const chains: Record<string, unknown>[] = [];
-    let call = 0;
-    mockFrom.mockImplementation(() => {
-      const chain = makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
+    });
+    expect(mocks.remove).toHaveBeenCalledWith("hero-images", "result.webp");
+    expect(mocks.revalidate.mock.calls).toEqual([["/"], ["/admin/config"]]);
+  });
+  it("uploads one cropped result for an empty target", async () => {
+    fetchResult(
+      config({
+        pc: { left: null, right: null },
+        mobile: { left: null, right: null },
+      }),
+    );
+    mocks.rpc.mockResolvedValue({ data: null, error: null });
+    expect((await updateHeroImage(null, form(null))).success).toBe(true);
+    expect(mocks.upload).toHaveBeenCalledTimes(1);
+    expect(mocks.remove).not.toHaveBeenCalled();
+  });
+  it("rejects unauthenticated requests before accessing database or storage", async () => {
+    mocks.getUser.mockRejectedValue(new Error("Unauthorized"));
+    expect((await updateHeroImage(null, form())).success).toBe(false);
+    expect(mocks.from).not.toHaveBeenCalled();
+    expect(mocks.upload).not.toHaveBeenCalled();
+  });
+  it.each(["device", "side", "expected"])("rejects invalid %s", async (key) => {
+    const data = form();
+    data.set(key, key === "expected" ? "{}" : "invalid");
+    expect((await updateHeroImage(null, data)).success).toBe(false);
+    expect(mocks.from).not.toHaveBeenCalled();
+  });
+  it("rejects malformed JSON", async () => {
+    const data = form();
+    data.set("expected", "bad");
+    expect((await updateHeroImage(null, data)).success).toBe(false);
+  });
+  it.each(["missing", "text", "empty"] as const)(
+    "rejects missing or empty result %s",
+    async (kind) => {
+      const data = form();
+      data.delete("hero_image");
+      if (kind !== "missing")
+        data.set(
+          "hero_image",
+          kind === "text" ? "text" : new File([], "empty.webp"),
+        );
+      expect((await updateHeroImage(null, data)).success).toBe(false);
+      expect(mocks.upload).not.toHaveBeenCalled();
+    },
+  );
+  it.each(["hero_image"])("rejects oversized %s", async (key) => {
+    const data = form();
+    data.set(
+      key,
+      new File([new Uint8Array(10 * 1024 * 1024 + 1)], "large.png"),
+    );
+    expect((await updateHeroImage(null, data)).error).toContain("10MB");
+    expect(mocks.upload).not.toHaveBeenCalled();
+  });
+  it.each([
+    [null, { message: "fetch failed" }],
+    [null, null],
+  ])("handles absent settings", async (data, error) => {
+    fetchResult(data, error);
+    expect((await updateHeroImage(null, form())).success).toBe(false);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("prevents stale editor from overwriting a more recent edit", async () => {
+    const data = form({ ...asset, displayPath: "older.webp" });
+    expect((await updateHeroImage(null, data)).error).toContain("새로고침");
+    expect(mocks.upload).not.toHaveBeenCalled();
+  });
+  it.each(["40001", "P0001"])(
+    "rolls back cropped upload on RPC error %s",
+    async (code) => {
+      mocks.rpc.mockResolvedValue({ data: null, error: { code } });
+      expect((await updateHeroImage(null, form())).success).toBe(false);
+      expect(mocks.remove.mock.calls).toEqual([
+        ["hero-images", "new-result.webp"],
+      ]);
+      expect(mocks.revalidate).not.toHaveBeenCalled();
+    },
+  );
+  it("handles upload failure without changing settings", async () => {
+    mocks.upload.mockRejectedValueOnce(new Error("upload failed"));
+    expect((await updateHeroImage(null, form())).success).toBe(false);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
+  });
+  it("recovers a committed save when the RPC response is lost", async () => {
+    mocks.rpc.mockImplementationOnce(async () => {
+      fetchResult(
+        config({
+          pc: {
+            left: { ...asset, displayPath: "new-result.webp" },
+            right: null,
+          },
+          mobile: { left: null, right: null },
+        }),
       );
-      chains.push(chain);
-      return chain;
+      return { data: null, error: { message: "response lost" } };
     });
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ hero_image: makeFile("new.jpg", 1000) });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-1.jpg");
-    expect(chains[1].update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        hero_image_path: "uploaded-path",
-        hero_image_focal_x: 50,
-        hero_image_focal_y: 50,
-        updated_at: expect.any(String),
-      }),
-    );
+    expect(await updateHeroImage(null, form())).toEqual({ success: true });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.revalidate).toHaveBeenCalled();
   });
-
-  it("uploads first image without deleting when no existing path", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? {
-              data: {
-                id: "cfg-1",
-                hero_image_path: "",
-                hero_image_path_2: "",
-              },
-              error: null,
-            }
-          : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ hero_image: makeFile("first.jpg", 1000) });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).not.toHaveBeenCalled();
-  });
-
-  it("skips deleteImage on delete request when path already empty", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? {
-              data: {
-                id: "cfg-1",
-                hero_image_path: "",
-                hero_image_path_2: "",
-              },
-              error: null,
-            }
-          : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ delete_hero_image: "true" });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).not.toHaveBeenCalled();
-  });
-
-  it("uses slot 2 → hero_image_path_2 / focal_*_2 columns", async () => {
-    const chains: Record<string, unknown>[] = [];
-    let call = 0;
-    mockFrom.mockImplementation(() => {
-      const chain = makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      );
-      chains.push(chain);
-      return chain;
+  it("retains uploads when the verification request also fails", async () => {
+    mocks.rpc.mockImplementationOnce(async () => {
+      fetchResult(null, { message: "offline" });
+      return { data: null, error: "offline" };
     });
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({
-      slot: "2",
-      focal_x: "30",
-      focal_y: "70",
-      hero_image: makeFile("new.jpg", 1000),
+    expect((await updateHeroImage(null, form())).error).toContain("저장 결과");
+    expect(mocks.remove).not.toHaveBeenCalled();
+  });
+  it("retains uploads when verification throws", async () => {
+    mocks.rpc.mockImplementationOnce(async () => {
+      mocks.from.mockImplementation(() => {
+        throw new Error("offline");
+      });
+      throw new Error("response lost");
     });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-2.jpg");
-    expect(chains[1].update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        hero_image_path_2: "uploaded-path",
-        hero_image_focal_x_2: 30,
-        hero_image_focal_y_2: 70,
-        updated_at: expect.any(String),
-      }),
-    );
+    expect((await updateHeroImage(null, form())).success).toBe(false);
+    expect(mocks.remove).not.toHaveBeenCalled();
   });
-
-  it("deletes hero image when delete_hero_image=true and path exists (clears column)", async () => {
-    const chains: Record<string, unknown>[] = [];
-    let call = 0;
-    mockFrom.mockImplementation(() => {
-      const chain = makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      );
-      chains.push(chain);
-      return chain;
+  it("verifies storage references after a thrown RPC error", async () => {
+    mocks.rpc.mockRejectedValueOnce(new Error("offline"));
+    expect((await updateHeroImage(null, form())).success).toBe(false);
+    expect(mocks.remove).toHaveBeenCalledWith("hero-images", "new-result.webp");
+  });
+  it("keeps successful saves successful when old-file cleanup fails", async () => {
+    mocks.remove.mockRejectedValueOnce(new Error("cleanup failed"));
+    expect((await updateHeroImage(null, form())).success).toBe(true);
+  });
+  it("does not mask a save failure when cleanup fails", async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: null, error: "offline" });
+    mocks.remove.mockRejectedValueOnce(new Error("cleanup failed"));
+    expect((await updateHeroImage(null, form())).success).toBe(false);
+  });
+  it("logs revalidation errors without reporting a completed save as failed", async () => {
+    mocks.revalidate.mockImplementation(() => {
+      throw new Error("cache failed");
     });
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ delete_hero_image: "true" });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-    expect(mockDeleteImage).toHaveBeenCalledWith("hero-images", "old-1.jpg");
-    expect(chains[1].update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        hero_image_path: "",
-        hero_image_focal_x: 50,
-        hero_image_focal_y: 50,
-        updated_at: expect.any(String),
-      }),
-    );
-  });
-
-  it("returns failure on delete DB error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? heroFetchChain()
-          : { data: null, error: { message: "x" } },
-      ),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ delete_hero_image: "true" });
-    expect((await updateHeroImage(null, fd)).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("uses default focal when focal_x/y missing", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = new FormData();
-    fd.set("slot", "1");
-    fd.set("hero_image", makeFile("new.jpg", 1000));
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-  });
-
-  it("updates focal only when file empty and currentPath exists", async () => {
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0 ? heroFetchChain() : { data: null, error: null },
-      ),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ hero_image: makeFile("e.jpg", 0) });
-    expect((await updateHeroImage(null, fd)).success).toBe(true);
-  });
-
-  it("returns failure when focal update fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? heroFetchChain()
-          : { data: null, error: { message: "x" } },
-      ),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure when no file and no currentPath", async () => {
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({
-        data: {
-          id: "cfg-1",
-          hero_image_path: null,
-          hero_image_path_2: null,
-        },
-        error: null,
-      }),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-  });
-
-  it("rejects file > 10MB", async () => {
-    mockFrom.mockImplementation(() => makePromiseChain(heroFetchChain()));
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ hero_image: makeFile("big.jpg", 11 * 1024 * 1024) });
-    expect((await updateHeroImage(null, fd)).success).toBe(false);
-  });
-
-  it("rolls back uploaded image on DB error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let call = 0;
-    mockFrom.mockImplementation(() =>
-      makePromiseChain(
-        call++ === 0
-          ? heroFetchChain()
-          : { data: null, error: { message: "x" } },
-      ),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    const fd = buildForm({ hero_image: makeFile("new.jpg", 1000) });
-    expect((await updateHeroImage(null, fd)).success).toBe(false);
-    expect(mockDeleteImage).toHaveBeenCalledWith(
-      "hero-images",
-      "uploaded-path",
-    );
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on fetch error", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockFrom.mockImplementation(() =>
-      makePromiseChain({ data: null, error: { message: "x" } }),
-    );
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-    consoleSpy.mockRestore();
-  });
-
-  it("returns failure on outer exception", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockRejectedValueOnce(new Error("x"));
-    const { updateHeroImage } =
-      await import("@/shared/actions/site-config-hero");
-    expect((await updateHeroImage(null, buildForm())).success).toBe(false);
-    consoleSpy.mockRestore();
+    expect((await updateHeroImage(null, form())).success).toBe(true);
   });
 });

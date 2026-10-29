@@ -4,7 +4,19 @@ interface FieldProps {
   id: string;
   label: string;
   error?: string;
+  labelHidden?: boolean;
   className?: string;
+}
+
+function describedBy(
+  id: string,
+  error?: string,
+  existing?: string,
+): string | undefined {
+  return (
+    [existing, error ? `${id}-error` : undefined].filter(Boolean).join(" ") ||
+    undefined
+  );
 }
 
 function controlClass(error?: string): string {
@@ -17,6 +29,7 @@ function controlClass(error?: string): string {
 function FieldFrame({
   id,
   label,
+  labelHidden,
   error,
   required,
   className = "",
@@ -28,7 +41,11 @@ function FieldFrame({
         {children}
         <label
           htmlFor={id}
-          className={`absolute top-0 left-2 z-10 -translate-y-1/2 bg-white px-1 text-xs font-medium peer-disabled:bg-slate-50 peer-disabled:text-slate-400 ${error ? "text-red-600" : "text-slate-500 peer-focus:text-slate-900"}`}
+          className={
+            labelHidden
+              ? "sr-only"
+              : `absolute top-0 left-2 z-10 -translate-y-1/2 bg-white px-1 text-xs font-medium peer-disabled:bg-slate-50 peer-disabled:text-slate-400 ${error ? "text-red-600" : "text-slate-500 peer-focus:text-slate-900"}`
+          }
         >
           {label}
           {required && (
@@ -52,19 +69,17 @@ type OutlinedFieldProps = FieldProps &
 export function OutlinedField({
   id,
   label,
+  labelHidden,
   error,
   className,
   required,
   ...props
 }: OutlinedFieldProps) {
-  const describedBy =
-    [props["aria-describedby"], error ? `${id}-error` : undefined]
-      .filter(Boolean)
-      .join(" ") || undefined;
   return (
     <FieldFrame
       id={id}
       label={label}
+      labelHidden={labelHidden}
       error={error}
       required={required}
       className={className}
@@ -74,9 +89,78 @@ export function OutlinedField({
         id={id}
         required={required}
         aria-invalid={error ? true : props["aria-invalid"]}
-        aria-describedby={describedBy}
+        aria-describedby={describedBy(id, error, props["aria-describedby"])}
         className={`${controlClass(error)} h-11`}
       />
+    </FieldFrame>
+  );
+}
+
+type OutlinedTextareaProps = FieldProps &
+  Omit<ComponentPropsWithRef<"textarea">, "id" | "className">;
+export function OutlinedTextarea({
+  id,
+  label,
+  labelHidden,
+  error,
+  className,
+  required,
+  rows = 4,
+  ...props
+}: OutlinedTextareaProps) {
+  return (
+    <FieldFrame
+      id={id}
+      label={label}
+      labelHidden={labelHidden}
+      error={error}
+      required={required}
+      className={className}
+    >
+      <textarea
+        {...props}
+        id={id}
+        required={required}
+        rows={rows}
+        aria-invalid={error ? true : props["aria-invalid"]}
+        aria-describedby={describedBy(id, error, props["aria-describedby"])}
+        className={`${controlClass(error)} resize-y py-3 leading-relaxed`}
+      />
+    </FieldFrame>
+  );
+}
+
+type OutlinedSelectProps = FieldProps &
+  Omit<ComponentPropsWithRef<"select">, "id" | "className">;
+export function OutlinedSelect({
+  id,
+  label,
+  labelHidden,
+  error,
+  className,
+  required,
+  children,
+  ...props
+}: OutlinedSelectProps) {
+  return (
+    <FieldFrame
+      id={id}
+      label={label}
+      labelHidden={labelHidden}
+      error={error}
+      required={required}
+      className={className}
+    >
+      <select
+        {...props}
+        id={id}
+        required={required}
+        aria-invalid={error ? true : props["aria-invalid"]}
+        aria-describedby={describedBy(id, error, props["aria-describedby"])}
+        className={`${controlClass(error)} h-11 pr-8`}
+      >
+        {children}
+      </select>
     </FieldFrame>
   );
 }

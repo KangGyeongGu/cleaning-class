@@ -1,7 +1,6 @@
-import Image from "next/image";
 import { getSiteConfig } from "@/shared/lib/queries/site-config";
-import { getHeroImageUrl } from "@/shared/lib/supabase/storage";
-import { BLUR_PLACEHOLDER } from "@/shared/lib/pure/constants";
+import { HeroBackground } from "@/components/hero/HeroBackground";
+import { getHeroImages } from "@/shared/lib/domain/hero-images";
 import { HeroCTA } from "@/components/hero/HeroCTA.client";
 
 export async function Hero(): Promise<React.JSX.Element> {
@@ -12,29 +11,17 @@ export async function Hero(): Promise<React.JSX.Element> {
   const phone = siteConfig?.phone;
   const movingPhone = siteConfig?.moving_phone;
 
-  const heroImage1 = siteConfig?.hero_image_path
-    ? getHeroImageUrl(siteConfig.hero_image_path)
-    : "";
-  const heroImage2 = siteConfig?.hero_image_path_2
-    ? getHeroImageUrl(siteConfig.hero_image_path_2)
-    : "";
-
-  const focal1 = {
-    x: siteConfig?.hero_image_focal_x ?? 50,
-    y: siteConfig?.hero_image_focal_y ?? 50,
-  };
-  const focal2 = {
-    x: siteConfig?.hero_image_focal_x_2 ?? 50,
-    y: siteConfig?.hero_image_focal_y_2 ?? 50,
-  };
-
-  const hasImage1 = heroImage1 !== "";
-  const hasImage2 = heroImage2 !== "";
-  const hasBothImages = hasImage1 && hasImage2;
-  const hasAnyImage = hasImage1 || hasImage2;
+  const images = getHeroImages(siteConfig);
+  const hasAnyImage = Boolean(
+    images.pc.left ||
+    images.pc.right ||
+    images.mobile.left ||
+    images.mobile.right,
+  );
 
   return (
     <section
+      data-hero
       className={[
         "relative flex w-full flex-col items-center justify-center overflow-hidden",
         "h-[50svh] py-12 md:h-auto md:min-h-[50svh] md:py-20",
@@ -43,74 +30,7 @@ export async function Hero(): Promise<React.JSX.Element> {
     >
       {hasAnyImage ? (
         <>
-          <div className="absolute inset-0">
-            {hasImage1 && (
-              <div
-                className="absolute top-0 bottom-0 left-0 overflow-hidden"
-                style={{
-                  width: "100%",
-                  animation: hasBothImages
-                    ? "heroImageSlideLeft 1.4s cubic-bezier(0.16,1,0.3,1) both"
-                    : "heroImageReveal 1.6s cubic-bezier(0.16,1,0.3,1) both",
-                }}
-              >
-                <div
-                  className={
-                    hasBothImages
-                      ? "absolute inset-0 [clip-path:polygon(0_0,100%_0,0_100%)] md:w-[60%] md:[clip-path:polygon(0_0,91.67%_0,75%_100%,0_100%)]"
-                      : "absolute inset-0"
-                  }
-                >
-                  <Image
-                    src={heroImage1}
-                    fill
-                    priority
-                    placeholder="blur"
-                    blurDataURL={BLUR_PLACEHOLDER}
-                    alt={`${displayName} 청소 서비스`}
-                    className="object-cover"
-                    style={{ objectPosition: `${focal1.x}% ${focal1.y}%` }}
-                    sizes={
-                      hasBothImages ? "(max-width: 768px) 100vw, 60vw" : "100vw"
-                    }
-                  />
-                </div>
-              </div>
-            )}
-            {hasImage2 && (
-              <div
-                className="absolute top-0 right-0 bottom-0 overflow-hidden"
-                style={{
-                  width: "100%",
-                  animation: hasImage1
-                    ? "heroImageSlideRight 1.4s 0.15s cubic-bezier(0.16,1,0.3,1) both"
-                    : "heroImageReveal 1.6s cubic-bezier(0.16,1,0.3,1) both",
-                }}
-              >
-                <div
-                  className={
-                    hasImage1
-                      ? "absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)] md:absolute md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-[60%] md:[clip-path:polygon(25%_0,100%_0,100%_100%,8.33%_100%)]"
-                      : "absolute inset-0"
-                  }
-                >
-                  <Image
-                    src={heroImage2}
-                    fill
-                    priority
-                    placeholder="blur"
-                    blurDataURL={BLUR_PLACEHOLDER}
-                    alt={`${displayName} 청소 서비스 현장`}
-                    className="object-cover"
-                    style={{ objectPosition: `${focal2.x}% ${focal2.y}%` }}
-                    sizes={
-                      hasImage1 ? "(max-width: 768px) 100vw, 60vw" : "100vw"
-                    }
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          <HeroBackground images={images} displayName={displayName} />
 
           <div
             className="absolute inset-0 bg-slate-900/55"

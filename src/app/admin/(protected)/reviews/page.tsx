@@ -1,5 +1,6 @@
+import { ManagementPage } from "@/app/admin/components/ManagementPage";
 import Link from "next/link";
-import { Plus, ArrowDownNarrowWide, ArrowUpWideNarrow } from "lucide-react";
+import { ArrowDownNarrowWide, ArrowUpWideNarrow } from "lucide-react";
 import { AdminDescriptionSection } from "@/app/admin/components/AdminDescriptionSection";
 import { ReviewListSection } from "@/app/admin/(protected)/reviews/ReviewListSection";
 import { updateReviewDescription } from "@/shared/actions/site-config";
@@ -21,25 +22,20 @@ export default async function ReviewsPage({
   const inactiveClass = "text-slate-400 hover:text-slate-600";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 md:p-8">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="md:text-heading-1 text-lg font-black">리뷰 관리</h1>
-        <Link
-          href="/admin/reviews/new"
-          className="btn-primary flex shrink-0 items-center gap-1.5 px-3 py-2 text-xs whitespace-nowrap md:gap-2 md:px-6 md:py-3 md:text-sm"
-        >
-          <Plus size={16} className="md:h-[18px] md:w-[18px]" />
-          신규 등록
-        </Link>
-      </div>
-
-      <AdminDescriptionSection
-        field="review_description"
-        placeholder="리뷰 섹션 안내 문구를 입력하세요"
-        emptyText="리뷰 섹션 안내 문구가 없습니다."
-        onSave={updateReviewDescription}
-      />
-
+    <ManagementPage
+      section="reviews"
+      active="/admin/reviews"
+      createHref="/admin/reviews/new"
+      description={
+        <AdminDescriptionSection
+          label="작업후기 영역 안내 문구"
+          field="review_description"
+          placeholder="리뷰 섹션 안내 문구를 입력하세요"
+          emptyText="리뷰 섹션 안내 문구가 없습니다."
+          onSave={updateReviewDescription}
+        />
+      }
+    >
       <nav
         aria-label="리뷰 정렬"
         className="mb-3 flex items-center justify-end gap-4"
@@ -63,6 +59,6 @@ export default async function ReviewsPage({
       </nav>
 
       <ReviewListSection sort={sort} />
-    </div>
+    </ManagementPage>
   );
 }

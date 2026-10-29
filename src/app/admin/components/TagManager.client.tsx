@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
+import { OutlinedField } from "@/components/ui/OutlinedField";
 import { Button } from "@/components/ui/Button";
 
 interface TagManagerProps {
@@ -36,15 +37,11 @@ export function TagManager({
 
   return (
     <div>
-      <label
-        htmlFor={inputId}
-        className="mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase"
-      >
-        {label}
-      </label>
-      <div className="mb-3 flex gap-2">
-        <input
+      <div className="mb-3 flex items-start gap-2">
+        <OutlinedField
           id={inputId}
+          label={label}
+          error={error}
           type="text"
           value={value}
           maxLength={maxLength}
@@ -57,18 +54,15 @@ export function TagManager({
               }
             }
           }}
-          className="form-input-lg flex-1"
-          placeholder={
-            placeholder ??
-            `태그 입력 후 추가 버튼 클릭 또는 Enter (최대 ${maxLength}자)`
-          }
+          className="flex-1"
+          placeholder={placeholder ?? "태그 입력"}
         />
         <Button
           variant="outline"
           size="none"
           onClick={commitAdd}
           aria-label="태그 추가"
-          className="px-4 py-2 text-xs hover:bg-slate-900 hover:text-white"
+          className="mt-2 h-11 px-4 text-xs"
         >
           <Plus size={14} />
         </Button>
@@ -91,7 +85,6 @@ export function TagManager({
           </span>
         ))}
       </div>
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   );
 }

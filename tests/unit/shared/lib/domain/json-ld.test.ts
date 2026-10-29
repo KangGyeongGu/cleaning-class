@@ -28,6 +28,7 @@ const FULL_CONFIG: SiteConfig = {
   representative: "대표",
   faq_description: null,
   daangn_url: "https://daangn.example.com",
+  hero_images: null,
   hero_image_path: null,
   moving_representative: "",
   moving_phone: "",

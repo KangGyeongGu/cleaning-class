@@ -9,7 +9,7 @@ interface ModalProps {
   title: string;
   description?: string;
   children: React.ReactNode;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
   bodyClassName?: string;
   closeDisabled?: boolean;
   headerDivider?: boolean;
@@ -55,7 +55,11 @@ export function Modal({
   }
 
   const widthClass =
-    size === "lg" ? "w-[min(100vw,48rem)]" : "w-[min(100vw,36rem)]";
+    size === "xl"
+      ? "w-[min(calc(100vw-2rem),72rem)]"
+      : size === "lg"
+        ? "w-[min(100vw,48rem)]"
+        : "w-[min(100vw,36rem)]";
 
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events

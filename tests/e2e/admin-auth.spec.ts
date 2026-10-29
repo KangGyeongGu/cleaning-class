@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-const REPRESENTATIVE_ROUTES = ["/admin", "/admin/services", "/admin/dashboard"];
+const REPRESENTATIVE_ROUTES = [
+  "/admin",
+  "/admin/services",
+  "/admin/dashboard",
+  "/admin/hero-preview",
+];
 
 test.describe("관리자 인증 게이트", () => {
   for (const path of REPRESENTATIVE_ROUTES) {

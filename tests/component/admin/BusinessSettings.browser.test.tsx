@@ -72,6 +72,7 @@ const config: SiteConfig = {
   price_description: null,
   review_description: null,
   service_description: null,
+  hero_images: null,
   hero_image_path: null,
   hero_image_path_2: null,
   hero_image_focal_x: null,
@@ -110,7 +111,7 @@ describe("업체 정보 설정 팝업", () => {
     ).toBeTruthy();
     expect(screen.queryByRole("link", { name: "업체 정보" })).toBeNull();
     expect(
-      screen.getByRole("link", { name: "배경 이미지" }).getAttribute("href"),
+      screen.getByRole("link", { name: "홈화면 관리" }).getAttribute("href"),
     ).toBe("/admin/config");
     fireEvent.click(settings);
     await screen.findByRole("dialog");

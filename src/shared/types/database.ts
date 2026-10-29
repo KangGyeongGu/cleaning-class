@@ -267,6 +267,7 @@ export type Database = {
           hero_image_focal_x_2: number | null;
           hero_image_focal_y: number | null;
           hero_image_focal_y_2: number | null;
+          hero_images: Json;
           hero_image_path: string | null;
           hero_image_path_2: string | null;
           id: string;
@@ -299,6 +300,7 @@ export type Database = {
           hero_image_focal_x_2?: number | null;
           hero_image_focal_y?: number | null;
           hero_image_focal_y_2?: number | null;
+          hero_images?: Json;
           hero_image_path?: string | null;
           hero_image_path_2?: string | null;
           id?: string;
@@ -331,6 +333,7 @@ export type Database = {
           hero_image_focal_x_2?: number | null;
           hero_image_focal_y?: number | null;
           hero_image_focal_y_2?: number | null;
+          hero_images?: Json;
           hero_image_path?: string | null;
           hero_image_path_2?: string | null;
           id?: string;
@@ -354,6 +357,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      update_hero_image_variant: {
+        Args: {
+          p_id: string;
+          p_device: string;
+          p_side: string;
+          p_expected: Json;
+          p_asset: Json;
+        };
+        Returns: string[];
+      };
       record_daily_visitor: {
         Args: { p_key: string; p_date: string };
         Returns: undefined;

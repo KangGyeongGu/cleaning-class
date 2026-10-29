@@ -1,30 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { Plus } from "lucide-react";
 
 interface ImageUploadFieldProps {
   id: string;
   name: string;
   label: string;
   required?: boolean;
+  accept?: string;
   previewUrl?: string | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   selectLabel?: string;
   replaceLabel?: string;
-  previewSize?: "sm" | "md" | "lg";
+  previewSize?: "md" | "lg";
   error?: string;
   children?: React.ReactNode;
 }
 
 const PREVIEW_CLASS = {
-  sm: "h-48 w-full max-w-sm",
   md: "h-64 w-full max-w-md",
   lg: "aspect-video w-full max-w-md",
 };
 
 const PREVIEW_SIZES = {
-  sm: "(max-width: 768px) 100vw, 384px",
   md: "(max-width: 768px) 100vw, 448px",
   lg: "(max-width: 768px) 100vw, 448px",
 };
@@ -34,6 +32,7 @@ export function ImageUploadField({
   name,
   label,
   required,
+  accept = "image/*",
   previewUrl,
   onChange,
   selectLabel = "이미지 선택",
@@ -51,21 +50,22 @@ export function ImageUploadField({
         {label}
         {required && <span className="ml-1 text-red-500">*</span>}
       </label>
-      <input
-        id={id}
-        name={name}
-        type="file"
-        accept="image/*"
-        onChange={onChange}
-        className="hidden"
-      />
-      <label
-        htmlFor={id}
-        className="mb-4 inline-flex cursor-pointer items-center gap-2 border border-slate-200 px-6 py-3 text-xs font-bold text-slate-500 transition-colors hover:border-slate-900 hover:text-slate-900"
-      >
-        <Plus size={16} />
-        {previewUrl ? replaceLabel : selectLabel}
-      </label>
+      <div className="relative mb-4 inline-flex min-h-11 items-center border border-slate-300 bg-white px-4 text-xs font-medium text-slate-700 transition-colors focus-within:ring-1 focus-within:ring-slate-900 hover:border-slate-900">
+        <span aria-hidden="true">
+          {previewUrl ? replaceLabel : selectLabel}
+        </span>
+        <input
+          id={id}
+          name={name}
+          type="file"
+          accept={accept}
+          required={required}
+          onChange={onChange}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        />
+      </div>
       {previewUrl && (
         <div
           className={`relative ${PREVIEW_CLASS[previewSize]} border border-slate-200`}
@@ -80,7 +80,11 @@ export function ImageUploadField({
           />
         </div>
       )}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && (
+        <p id={`${id}-error`} className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
       {children}
     </div>
   );
