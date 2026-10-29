@@ -7,7 +7,7 @@ import {
   siteConfigFormSchema,
   movingSiteConfigSchema,
 } from "@/shared/lib/schema/index";
-import type { SiteConfigUpdate } from "@/shared/types/database";
+import type { SiteConfig, SiteConfigUpdate } from "@/shared/types/database";
 
 const REVALIDATE_PATHS = ["/", "/admin/config"] as const;
 
@@ -99,6 +99,25 @@ export async function updateServiceDescription(description: string) {
   return updateSiteConfigField("service_description", description);
 }
 
+export async function getBusinessSettings(): Promise<SiteConfig | null> {
+  try {
+    await getUser();
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("site_config")
+      .select("*")
+      .single();
+    if (error) {
+      console.error("getBusinessSettings error:", error);
+      return null;
+    }
+    return data;
+  } catch (error) {
+    console.error("getBusinessSettings error:", error);
+    return null;
+  }
+}
+
 export async function updateSiteConfig(prevState: unknown, formData: FormData) {
   try {
     await getUser();
@@ -134,7 +153,6 @@ export async function updateSiteConfig(prevState: unknown, formData: FormData) {
       instagram_url: formData.get("instagram_url") || "",
       daangn_url: formData.get("daangn_url") || "",
       site_url: current.site_url,
-      description: formData.get("description") || "",
       address_region: current.address_region,
       address_locality: current.address_locality,
       address: formData.get("address") || "",
@@ -153,7 +171,6 @@ export async function updateSiteConfig(prevState: unknown, formData: FormData) {
       blog_url: validationResult.data.blog_url || "",
       instagram_url: validationResult.data.instagram_url || "",
       daangn_url: validationResult.data.daangn_url || "",
-      description: validationResult.data.description || "",
       address: validationResult.data.address || "",
       updated_at: new Date().toISOString(),
     };

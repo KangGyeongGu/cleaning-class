@@ -125,7 +125,6 @@ export const siteConfigFormSchema = z.object({
   instagram_url: httpUrl().or(z.literal("")),
   daangn_url: httpUrl().or(z.literal("")),
   site_url: httpUrl(),
-  description: z.string().max(500, "설명은 500자 이하여야 합니다").optional(),
   address_region: z.string().optional().default(""),
   address_locality: z.string().optional().default(""),
   address: z.string().max(200, "주소는 200자 이하여야 합니다").optional(),

@@ -16,11 +16,14 @@ import {
   Star,
   Tag,
 } from "lucide-react";
+import { BusinessSettingsDialog } from "@/app/admin/components/BusinessSettingsDialog.client";
+import type { SiteConfig } from "@/shared/types/database";
+import { getBusinessSettings } from "@/shared/actions/site-config";
 import { logout } from "@/shared/actions/auth";
 
 const navItems = [
   { href: "/admin/dashboard", label: "대시보드", icon: LayoutDashboard },
-  { href: "/admin/config", label: "업체 정보", icon: Settings },
+  { href: "/admin/config", label: "배경 이미지", icon: Image },
   { href: "/admin/services", label: "서비스 관리", icon: Layers },
   { href: "/admin/reviews", label: "작업후기 관리", icon: Image },
   { href: "/admin/faq", label: "FAQ 관리", icon: HelpCircle },
@@ -35,6 +38,20 @@ const navItemInactive =
   "text-slate-500 hover:bg-slate-200/40 hover:text-slate-900";
 
 export function AdminSidebar() {
+  const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  async function loadSettings() {
+    setLoadingSettings(true);
+    try {
+      setConfig(await getBusinessSettings());
+    } catch {
+      setConfig(null);
+    } finally {
+      setLoadingSettings(false);
+      setIsSettingsOpen(true);
+    }
+  }
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
 
@@ -90,6 +107,16 @@ export function AdminSidebar() {
           </nav>
         </div>
         <div className="mt-auto p-8 pt-0">
+          <button
+            type="button"
+            onClick={loadSettings}
+            disabled={loadingSettings}
+            aria-haspopup="dialog"
+            className={`mb-1 w-full rounded ${navItemBase} ${navItemInactive}`}
+          >
+            <Settings size={18} />
+            업체 정보
+          </button>
           <form action={handleLogout}>
             <button
               type="submit"
@@ -132,6 +159,16 @@ export function AdminSidebar() {
             </Link>
           </nav>
           <div className="mt-auto px-4 pb-8">
+            <button
+              type="button"
+              onClick={loadSettings}
+              disabled={loadingSettings}
+              aria-haspopup="dialog"
+              className={`mb-1 w-full rounded ${navItemBase} ${navItemInactive}`}
+            >
+              <Settings size={18} />
+              업체 정보
+            </button>
             <form action={handleLogout}>
               <button
                 type="submit"
@@ -143,6 +180,14 @@ export function AdminSidebar() {
             </form>
           </div>
         </div>
+      )}
+      {isSettingsOpen && (
+        <BusinessSettingsDialog
+          config={config}
+          onRetry={loadSettings}
+          loading={loadingSettings}
+          onClose={() => setIsSettingsOpen(false)}
+        />
       )}
     </>
   );

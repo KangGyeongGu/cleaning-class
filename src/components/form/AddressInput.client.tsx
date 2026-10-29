@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import dynamic from "next/dynamic";
+import { PostcodeSearch } from "@/components/form/PostcodeSearch.client";
 import { Search, X } from "lucide-react";
-
-const DaumPostcode = dynamic(() => import("react-daum-postcode"), {
-  ssr: false,
-});
 
 interface AddressInputProps {
   label: string;
@@ -132,7 +128,7 @@ export function AddressInput({
                 </button>
               </div>
               <div data-clarity-mask="True">
-                <DaumPostcode
+                <PostcodeSearch
                   onComplete={handleSelectComplete}
                   style={{ height: 480 }}
                 />

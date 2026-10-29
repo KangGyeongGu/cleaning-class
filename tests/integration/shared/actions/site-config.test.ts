@@ -224,6 +224,9 @@ describe("updateSiteConfig", () => {
     const { updateSiteConfig } = await import("@/shared/actions/site-config");
     expect((await updateSiteConfig(null, buildForm())).success).toBe(true);
     expect(chains[1].update).toHaveBeenCalledWith(
+      expect.not.objectContaining({ description: expect.anything() }),
+    );
+    expect(chains[1].update).toHaveBeenCalledWith(
       expect.objectContaining({
         business_name: "청소클라쓰",
         representative: "홍길동",
@@ -411,5 +414,32 @@ describe("updateMovingSiteConfig", () => {
       false,
     );
     consoleSpy.mockRestore();
+  });
+});
+
+describe("getBusinessSettings", () => {
+  it("인증 후 최신 설정 조회", async () => {
+    const chain = makePromiseChain({ data: { id: "latest" }, error: null });
+    mockFrom.mockReturnValue(chain);
+    const { getBusinessSettings } =
+      await import("@/shared/actions/site-config");
+    expect(await getBusinessSettings()).toEqual({ id: "latest" });
+    expect(mockGetUser).toHaveBeenCalled();
+    expect(chain.select).toHaveBeenCalledWith("*");
+  });
+  it("조회 오류 시 null 반환", async () => {
+    mockFrom.mockReturnValue(
+      makePromiseChain({ data: null, error: new Error("db") }),
+    );
+    const { getBusinessSettings } =
+      await import("@/shared/actions/site-config");
+    expect(await getBusinessSettings()).toBeNull();
+  });
+  it("인증 실패 시 조회하지 않음", async () => {
+    mockGetUser.mockRejectedValueOnce(new Error("unauthorized"));
+    const { getBusinessSettings } =
+      await import("@/shared/actions/site-config");
+    expect(await getBusinessSettings()).toBeNull();
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
