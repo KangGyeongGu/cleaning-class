@@ -1,3 +1,4 @@
+import { DEFAULT_SERVICE_DESCRIPTION } from "@/shared/lib/pure/constants";
 import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { getPublishedServicesWithImageUrls } from "@/shared/lib/queries/service";
 import { generateServiceJsonLd } from "@/shared/lib/domain/json-ld";
@@ -14,7 +15,8 @@ export async function Services() {
     return null;
   }
 
-  const serviceDescription = siteConfig?.service_description ?? undefined;
+  const serviceDescription =
+    siteConfig?.service_description?.trim() || DEFAULT_SERVICE_DESCRIPTION;
 
   const serviceJsonLd = generateServiceJsonLd(
     servicesWithImageUrls,
@@ -35,9 +37,8 @@ export async function Services() {
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
         <div className="mb-16 text-center">
           <h2 className="text-heading-1 mb-4">SERVICE</h2>
-          <p className="text-body-sm tracking-wide text-slate-500 md:text-base">
-            {serviceDescription ||
-              "공간의 성격에 맞는 최적의 서비스를 제공합니다."}
+          <p className="text-body-sm tracking-wide whitespace-pre-line text-slate-500 md:text-base">
+            {serviceDescription}
           </p>
         </div>
 

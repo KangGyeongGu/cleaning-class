@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
+import { DEFAULT_REVIEW_DESCRIPTION } from "@/shared/lib/pure/constants";
 import { getAllPublishedReviews } from "@/shared/lib/queries/review";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
 import { ReviewsPageClient } from "@/app/(public)/reviews/ReviewsPageClient.client";
@@ -37,7 +39,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ReviewsPage() {
-  const reviews = await getAllPublishedReviews();
+  const [reviews, siteConfig] = await Promise.all([
+    getAllPublishedReviews(),
+    getSiteConfig(),
+  ]);
 
   const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
     { name: "홈", url: "https://www.cleaningclass.co.kr" },
@@ -69,10 +74,9 @@ export default async function ReviewsPage() {
             </nav>
 
             <h1 className="text-heading-1 mb-4">작업후기</h1>
-            <p className="text-body-sm max-w-lg text-slate-500">
-              실제 작업 현장의 비포&amp;애프터를 확인하세요.
-              <br className="hidden sm:block" />
-              청소 전후의 변화를 사진과 함께 기록합니다.
+            <p className="text-body-sm max-w-lg whitespace-pre-line text-slate-500">
+              {siteConfig?.review_description?.trim() ||
+                DEFAULT_REVIEW_DESCRIPTION}
             </p>
           </div>
         </section>

@@ -8,6 +8,7 @@ import type { Review } from "@/shared/types/database";
 import { NaverBlogIcon } from "@/components/icons/SocialIcons";
 import {
   CLEANING_SERVICE_TYPES,
+  DEFAULT_REVIEW_DESCRIPTION,
   BLUR_PLACEHOLDER,
 } from "@/shared/lib/pure/constants";
 import { isSafeUrl } from "@/shared/lib/pure/format";
@@ -232,9 +233,8 @@ export function BlogReviews({
         <div className="mb-6 flex flex-col items-start justify-between md:mb-10 md:flex-row md:items-end md:px-2">
           <div>
             <h2 className="text-heading-1 mb-4">REVIEW</h2>
-            <p className="text-body-sm max-w-lg tracking-wide text-slate-500 md:text-base">
-              {reviewDescription ||
-                "의뢰 전 업체의 작업 방식을 확인할 수 있는 후기들을 확인해보세요."}
+            <p className="text-body-sm max-w-lg tracking-wide whitespace-pre-line text-slate-500 md:text-base">
+              {reviewDescription?.trim() || DEFAULT_REVIEW_DESCRIPTION}
             </p>
           </div>
 

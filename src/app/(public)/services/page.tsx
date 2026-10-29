@@ -6,7 +6,11 @@ import { getPublishedServicesWithImageUrls } from "@/shared/lib/queries/service"
 import type { ServiceWithImageUrls } from "@/shared/lib/queries/service";
 import { ServiceBeforeAfter } from "@/components/service/ServiceBeforeAfter.client";
 import { HashHighlight } from "@/app/(public)/services/HashHighlight.client";
-import { BLUR_PLACEHOLDER } from "@/shared/lib/pure/constants";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
+import {
+  BLUR_PLACEHOLDER,
+  DEFAULT_SERVICE_DESCRIPTION,
+} from "@/shared/lib/pure/constants";
 import { ContactCta } from "@/components/common/ContactCta";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
@@ -194,9 +198,10 @@ function ServiceCategorySection({
 }
 
 export default async function ServicesPage() {
-  const [cleaningServices, movingServices] = await Promise.all([
+  const [cleaningServices, movingServices, siteConfig] = await Promise.all([
     getPublishedServicesWithImageUrls("cleaning"),
     getPublishedServicesWithImageUrls("moving"),
+    getSiteConfig(),
   ]);
 
   return (
@@ -225,10 +230,9 @@ export default async function ServicesPage() {
           </nav>
 
           <h1 className="text-heading-1 mb-4">서비스 소개</h1>
-          <p className="text-body-sm max-w-lg text-slate-500">
-            전문 청소 서비스부터 이사 서비스까지,
-            <br className="hidden sm:block" />
-            청소클라쓰가 깔끔하게 처리합니다.
+          <p className="text-body-sm max-w-lg whitespace-pre-line text-slate-500">
+            {siteConfig?.service_description?.trim() ||
+              DEFAULT_SERVICE_DESCRIPTION}
           </p>
         </div>
       </section>

@@ -25,7 +25,7 @@ type DescriptionField =
   | "service_description";
 
 const FIELD_REVALIDATE_MAP: Record<DescriptionField, readonly string[]> = {
-  customer_review_description: ["/", "/admin/customer-reviews"],
+  customer_review_description: ["/admin/customer-reviews"],
   faq_description: ["/help", "/admin/faq"],
   price_description: ["/price", "/admin/price"],
   review_description: ["/reviews", "/admin/reviews"],

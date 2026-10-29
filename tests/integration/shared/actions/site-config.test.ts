@@ -51,6 +51,10 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
     const { updateCustomerReviewDescription } =
       await import("@/shared/actions/site-config");
     expect((await updateCustomerReviewDescription("d")).success).toBe(true);
+    expect(
+      mockRevalidatePath.mock.calls.filter(([path]) => path === "/"),
+    ).toHaveLength(1);
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/customer-reviews");
   });
 
   it("revalidates field-specific extra paths (faq) and writes faq_description column", async () => {
@@ -69,6 +73,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updateFaqDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/help");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
     expect(chains[1].update).toHaveBeenCalledWith(
       expect.objectContaining({
         faq_description: "d",
@@ -91,6 +96,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updateReviewDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/reviews");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
 
   it("revalidates service_description extra paths", async () => {
@@ -106,6 +112,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updateServiceDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/services");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
 
   it("updatePriceDescription succeeds, writes price_description column and revalidates price path", async () => {
@@ -124,6 +131,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updatePriceDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/price");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
     expect(chains[1].update).toHaveBeenCalledWith(
       expect.objectContaining({
         price_description: "d",
