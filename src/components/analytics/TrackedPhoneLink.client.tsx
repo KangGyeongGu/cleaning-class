@@ -5,7 +5,6 @@ import { track, currentPath } from "@/shared/lib/infra/track";
 export type PhoneClickLocation =
   | "mobile_bottom"
   | "hero_cta"
-  | "services_section"
   | "contact_form"
   | "contact_aside"
   | "footer";

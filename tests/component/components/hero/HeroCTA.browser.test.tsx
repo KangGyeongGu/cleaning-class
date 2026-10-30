@@ -21,7 +21,7 @@ describe("HeroCTA (browser)", () => {
 
   it("should render quote CTA link to /contact", () => {
     render(<HeroCTA />);
-    const cta = screen.getByRole("link", { name: /무료 견적 받기/ });
+    const cta = screen.getByRole("link", { name: /무료 견적 문의/ });
     expect(cta.getAttribute("href")).toBe("/contact");
   });
 
@@ -47,7 +47,7 @@ describe("HeroCTA (browser)", () => {
 
   it("should track a cta_click when the quote CTA is clicked", () => {
     render(<HeroCTA />);
-    clickNoNav(screen.getByRole("link", { name: /무료 견적 받기/ }));
+    clickNoNav(screen.getByRole("link", { name: /무료 견적 문의/ }));
     expect(track).toHaveBeenCalledTimes(1);
     expect(track).toHaveBeenCalledWith({
       event_type: "cta_click",

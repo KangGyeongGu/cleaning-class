@@ -130,16 +130,16 @@ describe("generateLocalBusinessJsonLd", () => {
 describe("generateServiceJsonLd", () => {
   it("maps each service to a Service JSON-LD entry", () => {
     const result = generateServiceJsonLd([
-      { title: "거주청소", tags: ["원룸", "투룸"] },
-      { title: "이사청소", tags: ["입주전", "퇴실"] },
+      { title: "거주청소", description: "생활 중인 공간을 청소합니다." },
+      { title: "이사청소", description: "입주 전 공간을 청소합니다." },
     ]);
     expect(result).toHaveLength(2);
     expect(result[0].serviceType).toBe("거주청소");
-    expect(result[0].description).toBe("원룸, 투룸");
+    expect(result[0].description).toBe("생활 중인 공간을 청소합니다.");
   });
 
   it("uses provider id with default siteUrl", () => {
-    const result = generateServiceJsonLd([{ title: "x", tags: [] }]);
+    const result = generateServiceJsonLd([{ title: "x", description: "" }]);
     expect(result[0].provider["@id"]).toBe(
       "https://www.cleaningclass.co.kr/#organization",
     );
@@ -147,7 +147,7 @@ describe("generateServiceJsonLd", () => {
 
   it("uses provider id with custom siteUrl", () => {
     const result = generateServiceJsonLd(
-      [{ title: "x", tags: [] }],
+      [{ title: "x", description: "" }],
       "https://custom.example.com",
     );
     expect(result[0].provider["@id"]).toBe(
@@ -159,8 +159,8 @@ describe("generateServiceJsonLd", () => {
     expect(generateServiceJsonLd([])).toEqual([]);
   });
 
-  it("handles services with empty tags (empty description)", () => {
-    const result = generateServiceJsonLd([{ title: "x", tags: [] }]);
+  it("handles services with an empty description", () => {
+    const result = generateServiceJsonLd([{ title: "x", description: "" }]);
     expect(result[0].description).toBe("");
   });
 });

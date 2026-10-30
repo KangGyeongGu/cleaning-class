@@ -62,25 +62,9 @@ function ServiceTextCard({ service }: ServiceTextCardProps) {
         {service.title}
       </h3>
       {service.description && (
-        <p className="mb-5 text-sm leading-relaxed text-slate-600">
+        <p className="mb-5 text-sm leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] whitespace-pre-line text-slate-600">
           {service.description}
         </p>
-      )}
-      {service.tags.length > 0 && (
-        <ul className="space-y-1.5">
-          {service.tags.map((tag) => (
-            <li
-              key={tag}
-              className="flex items-start gap-2 text-sm text-slate-500"
-            >
-              <span
-                className="mt-2 h-px w-3 shrink-0 bg-slate-300"
-                aria-hidden="true"
-              />
-              {tag}
-            </li>
-          ))}
-        </ul>
       )}
     </article>
   );
@@ -156,25 +140,9 @@ function ServiceCategorySection({
                         {service.title}
                       </h3>
                       {service.description && (
-                        <p className="mb-6 text-sm leading-relaxed text-slate-600">
+                        <p className="mb-6 text-sm leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] whitespace-pre-line text-slate-600">
                           {service.description}
                         </p>
-                      )}
-                      {service.tags.length > 0 && (
-                        <ul className="space-y-2">
-                          {service.tags.map((tag) => (
-                            <li
-                              key={tag}
-                              className="flex items-start gap-2 text-sm text-slate-500"
-                            >
-                              <span
-                                className="mt-2 h-px w-4 shrink-0 bg-slate-300"
-                                aria-hidden="true"
-                              />
-                              {tag}
-                            </li>
-                          ))}
-                        </ul>
                       )}
                     </div>
                   </div>

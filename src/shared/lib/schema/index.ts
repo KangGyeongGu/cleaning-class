@@ -171,7 +171,6 @@ export const serviceFormSchema = z.object({
   category: z.enum(["cleaning", "moving"], {
     errorMap: () => ({ message: "카테고리를 선택해주세요" }),
   }),
-  tags: z.array(z.string()).min(1, "최소 1개 이상의 태그를 입력해주세요"),
   sort_order: z
     .number()
     .int("정렬 순서는 정수여야 합니다")

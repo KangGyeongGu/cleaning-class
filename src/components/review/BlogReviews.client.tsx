@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { ArrowUpRight, Instagram } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Instagram } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Review } from "@/shared/types/database";
@@ -191,6 +191,49 @@ export function BlogReviews({
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
+  const [scrollable, setScrollable] = useState({
+    previous: false,
+    next: false,
+  });
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+    const update = () => {
+      setScrollable({
+        previous: element.scrollLeft > 1,
+        next:
+          element.scrollLeft + element.clientWidth < element.scrollWidth - 1,
+      });
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    element.addEventListener("scroll", update, { passive: true });
+    const frame = requestAnimationFrame(update);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      element.removeEventListener("scroll", update);
+    };
+  }, [reviews, activeFilter]);
+
+  function scrollReviews(direction: number): void {
+    const element = scrollRef.current;
+    if (!element) return;
+    const card = element.firstElementChild;
+    if (!(card instanceof HTMLElement)) return;
+    const gap = Number.parseFloat(getComputedStyle(element).columnGap) || 0;
+    const step = card.offsetWidth + gap;
+    const visibleCards = Math.max(
+      1,
+      Math.round((element.clientWidth + gap) / step),
+    );
+    element.scrollBy({
+      left: direction * step * visibleCards,
+      behavior: "smooth",
+    });
+  }
+
   if (!reviews || reviews.length === 0) {
     return null;
   }
@@ -279,18 +322,38 @@ export function BlogReviews({
           </div>
         ) : (
           <>
-            <div
-              ref={scrollRef}
-              className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 md:gap-6 md:py-4"
-            >
-              {filteredReviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="relative w-4/5 shrink-0 snap-center md:w-1/3 md:snap-start xl:w-1/4"
-                >
-                  <ReviewCardWrapper review={review} blogUrl={blogUrl} />
-                </div>
-              ))}
+            <div className="relative px-12">
+              <button
+                type="button"
+                aria-label="이전 리뷰"
+                disabled={!scrollable.previous}
+                onClick={() => scrollReviews(-1)}
+                className="absolute top-1/2 left-0 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition-colors hover:border-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-default disabled:opacity-30"
+              >
+                <ArrowLeft size={20} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label="다음 리뷰"
+                disabled={!scrollable.next}
+                onClick={() => scrollReviews(1)}
+                className="absolute top-1/2 right-0 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition-colors hover:border-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-default disabled:opacity-30"
+              >
+                <ArrowRight size={20} aria-hidden="true" />
+              </button>
+              <div
+                ref={scrollRef}
+                className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 md:gap-6 md:py-4"
+              >
+                {filteredReviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="relative w-full shrink-0 snap-start md:w-[calc((100%-3rem)/3)] xl:w-[calc((100%-4.5rem)/4)]"
+                  >
+                    <ReviewCardWrapper review={review} blogUrl={blogUrl} />
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="mt-6 text-center md:hidden">
               <Link

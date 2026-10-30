@@ -69,7 +69,7 @@ export function ServiceListClient({
         <div className="text-label col-span-1 text-slate-500">이미지</div>
         <div className="text-label col-span-2 text-slate-500">서비스명</div>
         <div className="text-label col-span-1 text-slate-500">카테고리</div>
-        <div className="text-label col-span-3 text-slate-500">태그</div>
+        <div className="text-label col-span-3 text-slate-500">설명</div>
         <div className="text-label col-span-1 text-center text-slate-500">
           게시
         </div>
@@ -125,15 +125,10 @@ export function ServiceListClient({
                   <span className="text-[10px] text-slate-400">
                     {service.category === "moving" ? "이사" : "청소"}
                   </span>
-                  {(service.tags ?? []).map((tag) => (
-                    <span
-                      key={tag}
-                      className="bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500"
-                    >
-                      {tag}
-                    </span>
-                  ))}
                 </div>
+                <p className="mt-2 line-clamp-2 text-xs leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] text-slate-500">
+                  {service.description}
+                </p>
                 <div className="mt-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <PublishToggle
@@ -200,16 +195,9 @@ export function ServiceListClient({
             </div>
 
             <div className="hidden md:col-span-3 md:block">
-              <div className="flex flex-wrap gap-1">
-                {(service.tags ?? []).map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded bg-slate-100 px-2 py-0.5 text-xs whitespace-nowrap text-slate-500"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+              <p className="line-clamp-2 text-xs leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] text-slate-500">
+                {service.description}
+              </p>
             </div>
 
             <div className="hidden md:col-span-1 md:block md:text-center">

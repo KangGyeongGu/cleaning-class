@@ -10,7 +10,6 @@ export type ServiceWithImageUrls = {
   title: string;
   description: string;
   category: string;
-  tags: string[];
   imageUrl: string;
   afterImageUrl?: string;
   detailImageUrl?: string;
@@ -29,7 +28,6 @@ function mapServiceWithImageUrls(s: Service): ServiceWithImageUrls {
     title: s.title,
     description: s.description,
     category: s.category,
-    tags: s.tags ?? [],
     imageUrl: getServiceImageUrl(s.image_path),
     afterImageUrl: s.image_after_path
       ? getServiceImageUrl(s.image_after_path)

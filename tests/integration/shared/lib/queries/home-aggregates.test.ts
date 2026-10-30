@@ -252,14 +252,15 @@ describe("getPublishedServicesWithImageUrls", () => {
     expect(result[0].afterFocalY).toBe(50);
   });
 
-  it("defaults tags to [] when null", async () => {
+  it("returns the description without exposing legacy tags", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [{ ...baseService, tags: null }], error: null }),
     );
     const { getPublishedServicesWithImageUrls } =
       await import("@/shared/lib/queries/service");
     const result = await getPublishedServicesWithImageUrls();
-    expect(result[0].tags).toEqual([]);
+    expect(result[0].description).toBe(baseService.description);
+    expect(result[0]).not.toHaveProperty("tags");
   });
 
   it("returns [] on DB error", async () => {

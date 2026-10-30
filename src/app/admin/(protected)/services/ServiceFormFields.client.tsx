@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TagManager } from "@/app/admin/components/TagManager.client";
 import { ImageUploadField } from "@/app/admin/components/ImageUploadField.client";
 import { ServiceImageFocalField } from "@/app/admin/(protected)/services/ServiceImageFocalField.client";
 import { useSingleImagePreview } from "@/shared/lib/hooks/useSingleImagePreview";
@@ -55,7 +54,6 @@ export function ServiceFormFields({
   useEffect(() => {
     onBusyChange(converting);
   }, [converting, onBusyChange]);
-  const [tags, setTags] = useState<string[]>(service?.tags ?? []);
   const [focalX, setFocalX] = useState(service?.image_focal_x ?? 50);
   const [focalY, setFocalY] = useState(service?.image_focal_y ?? 50);
   const [afterFocalX, setAfterFocalX] = useState(
@@ -65,22 +63,8 @@ export function ServiceFormFields({
     service?.image_after_focal_y ?? 50,
   );
 
-  const handleAddTag = (tag: string) => {
-    if (tag.length <= 30 && !tags.includes(tag)) {
-      setTags([...tags, tag]);
-      onChanged();
-    }
-  };
-
-  const handleRemoveTag = (index: number) => {
-    setTags(tags.filter((_, i) => i !== index));
-    onChanged();
-  };
-
   return (
     <>
-      <input type="hidden" name="tags" value={JSON.stringify(tags)} />
-
       <EditorSection title="기본 정보">
         <div className="grid gap-5 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <OutlinedField
@@ -111,13 +95,6 @@ export function ServiceFormFields({
           rows={4}
           defaultValue={service?.description ?? ""}
           error={errors?.description?.[0]}
-        />
-        <TagManager
-          label="태그"
-          tags={tags}
-          onAdd={handleAddTag}
-          onRemove={handleRemoveTag}
-          error={errors?.tags?.[0]}
         />
       </EditorSection>
       <EditorSection title="대표 이미지">

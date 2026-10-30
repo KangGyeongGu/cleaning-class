@@ -53,6 +53,7 @@ export function ServiceImageFocalField({
         focalX={focalX}
         focalY={focalY}
         onChange={onFocalChange}
+        targetRatio={3 / 4}
         label={pickerLabel}
       />
       <input type="hidden" name={focalXName} value={focalX} />

@@ -38,8 +38,8 @@ vi.mock("@/shared/lib/domain/json-ld", () => ({
   generateBreadcrumbListJsonLd: () => ({}),
   generateServiceJsonLd: () => ({}),
 }));
-vi.mock("@/components/service/ServiceCategorySection", () => ({
-  ServiceCategorySection: () => null,
+vi.mock("@/components/service/ServiceGrid.client", () => ({
+  ServiceGrid: () => null,
 }));
 vi.mock("@/app/(public)/reviews/ReviewsPageClient.client", () => ({
   ReviewsPageClient: () => null,

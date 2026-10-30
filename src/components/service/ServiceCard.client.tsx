@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,7 +11,7 @@ export interface ServiceCardProps {
     id: string;
     title: string;
 
-    tags: string[];
+    description: string;
     imageUrl: string;
     afterImageUrl?: string;
     focalX?: number;
@@ -20,46 +19,13 @@ export interface ServiceCardProps {
     afterFocalX?: number;
     afterFocalY?: number;
   };
-  priority: boolean;
 
   showAfter?: boolean;
 }
 
-export function ServiceCard({
-  service,
-  priority,
-  showAfter = false,
-}: ServiceCardProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            observer.disconnect();
-          }
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
+export function ServiceCard({ service, showAfter = false }: ServiceCardProps) {
   return (
-    <div
-      ref={cardRef}
-      className={`group pb-4 transition-all duration-600 ease-out md:pb-0 ${
-        isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-      }`}
-    >
+    <div className="group pb-4 md:pb-0">
       {service.imageUrl && (
         <Link
           href={`/services#service-${service.id}`}
@@ -72,15 +38,14 @@ export function ServiceCard({
             })
           }
         >
-          <div className="relative mb-3 aspect-square overflow-hidden bg-slate-200 transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl md:mb-5 md:aspect-3/4">
+          <div className="relative mb-3 aspect-[4/3] overflow-hidden bg-slate-200 transition-all duration-500 ease-out md:mb-5 md:aspect-3/4 md:hover:-translate-y-3 md:hover:shadow-2xl">
             {service.afterImageUrl ? (
               <>
                 <Image
                   src={service.imageUrl}
                   alt={`${service.title} Before`}
                   fill
-                  sizes="(max-width: 768px) calc(50vw - 8px), (max-width: 1024px) 33vw, 211px"
-                  priority={priority}
+                  sizes="(max-width: 767px) 88vw, (max-width: 1024px) 33vw, 211px"
                   placeholder="blur"
                   blurDataURL={BLUR_PLACEHOLDER}
                   className={`object-cover transition-opacity duration-700 ease-in-out group-hover:opacity-0 ${
@@ -94,7 +59,7 @@ export function ServiceCard({
                   src={service.afterImageUrl}
                   alt={`${service.title} After`}
                   fill
-                  sizes="(max-width: 768px) calc(50vw - 8px), (max-width: 1024px) 33vw, 211px"
+                  sizes="(max-width: 767px) 88vw, (max-width: 1024px) 33vw, 211px"
                   placeholder="blur"
                   blurDataURL={BLUR_PLACEHOLDER}
                   className={`absolute inset-0 object-cover opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100 ${
@@ -110,8 +75,7 @@ export function ServiceCard({
                 src={service.imageUrl}
                 alt={service.title}
                 fill
-                sizes="(max-width: 768px) calc(50vw - 8px), (max-width: 1024px) 33vw, 211px"
-                priority={priority}
+                sizes="(max-width: 767px) 88vw, (max-width: 1024px) 33vw, 211px"
                 placeholder="blur"
                 blurDataURL={BLUR_PLACEHOLDER}
                 className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
@@ -124,12 +88,12 @@ export function ServiceCard({
           </div>
         </Link>
       )}
-      <div className="px-1 transition-transform duration-500 ease-out group-hover:-translate-y-2">
+      <div className="px-1 transition-transform duration-500 ease-out md:group-hover:-translate-y-2">
         <h3 className="text-heading-4 mb-2 transition-colors duration-300 group-hover:text-black">
           {service.title}
         </h3>
-        <p className="text-xs text-slate-400 transition-colors duration-300 group-hover:text-slate-600">
-          {service.tags.join(" · ")}
+        <p className="text-sm leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] whitespace-pre-line text-slate-600">
+          {service.description}
         </p>
       </div>
     </div>

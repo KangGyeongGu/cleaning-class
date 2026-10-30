@@ -56,7 +56,7 @@ interface LocalBusinessJsonLd {
 
 interface ServiceInput {
   title: string;
-  tags: string[];
+  description: string;
 }
 
 interface ServiceJsonLd {
@@ -201,7 +201,7 @@ export function generateServiceJsonLd(
     "@type": "Service",
     serviceType: service.title,
     name: service.title,
-    description: service.tags.join(", "),
+    description: service.description,
     provider: {
       "@id": `${siteUrl}/#organization`,
     },

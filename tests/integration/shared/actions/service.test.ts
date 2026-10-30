@@ -64,7 +64,6 @@ function buildForm(
   fd.set("title", "거주청소");
   fd.set("description", "설명");
   fd.set("category", "cleaning");
-  fd.set("tags", '["깔끔"]');
   fd.set("sort_order", "0");
   fd.set("is_published", "true");
   fd.set("image_focal_x", "50");
@@ -101,7 +100,6 @@ describe("createService", () => {
         title: "거주청소",
         description: "설명",
         category: "cleaning",
-        tags: ["깔끔"],
         sort_order: 0,
         is_published: true,
         image_focal_x: 50,
@@ -147,11 +145,11 @@ describe("createService", () => {
     );
   });
 
-  it("treats missing tags as empty (Zod fails on min(1))", async () => {
+  it("accepts a description without tags", async () => {
     const { createService } = await import("@/shared/actions/service");
     const fd = buildForm();
-    fd.delete("tags");
-    expect((await createService(null, fd)).success).toBe(false);
+    fd.set("description", "생활 공간을 청소합니다.");
+    expect((await createService(null, fd)).success).toBe(true);
   });
 
   it("returns success when all 4 images present", async () => {
@@ -164,13 +162,6 @@ describe("createService", () => {
     fd.set("detail_image", makeFile("d-before.jpg", 1000));
     fd.set("detail_image_after", makeFile("d-after.jpg", 1000));
     expect((await createService(null, fd)).success).toBe(true);
-  });
-
-  it("falls back to empty tags on invalid JSON", async () => {
-    const { createService } = await import("@/shared/actions/service");
-    expect(
-      (await createService(null, buildForm({ tags: "{bad" }))).success,
-    ).toBe(false);
   });
 
   it("rejects when Zod fails (empty title)", async () => {
@@ -360,7 +351,6 @@ describe("updateService", () => {
       expect.objectContaining({
         title: "거주청소",
         category: "cleaning",
-        tags: ["깔끔"],
         image_path: "uploaded-path",
         image_after_path: "uploaded-path",
         detail_image_path: "uploaded-path",
@@ -387,19 +377,17 @@ describe("updateService", () => {
     consoleSpy.mockRestore();
   });
 
-  it("falls back to empty tags on invalid JSON", async () => {
-    const { updateService } = await import("@/shared/actions/service");
-    expect(
-      (await updateService(VALID_ID, null, buildForm({ tags: "{bad" })))
-        .success,
-    ).toBe(false);
-  });
-
-  it("treats missing tags as empty (Zod fails on min(1))", async () => {
+  it("accepts a description without tags", async () => {
+    let call = 0;
+    mockFrom.mockImplementation(() =>
+      makePromiseChain(
+        call++ === 0 ? existingChain() : { data: null, error: null },
+      ),
+    );
     const { updateService } = await import("@/shared/actions/service");
     const fd = buildForm();
-    fd.delete("tags");
-    expect((await updateService(VALID_ID, null, fd)).success).toBe(false);
+    fd.set("description", "생활 공간을 청소합니다.");
+    expect((await updateService(VALID_ID, null, fd)).success).toBe(true);
   });
 
   it("rejects when Zod fails", async () => {

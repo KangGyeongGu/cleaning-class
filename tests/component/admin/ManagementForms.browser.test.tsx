@@ -289,7 +289,7 @@ describe("관리 메뉴와 공통 작성 폼", () => {
     expect(data.get("image_after_focal_y")).toBe("60");
     expect(data.getAll("image")).toHaveLength(1);
     expect(data.getAll("detail_image_after")).toHaveLength(1);
-    expect(data.get("tags")).toBe('["전주"]');
+    expect(data.has("tags")).toBe(false);
   });
   it("변경 후 취소는 확인하고 취소 선택 시 폼 유지", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
