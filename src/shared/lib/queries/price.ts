@@ -11,13 +11,7 @@ export async function getPublishedPriceItems(): Promise<PriceItemRow[]> {
     .eq("is_published", true)
     .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error(
-      "[getPublishedPriceItems] 공개 가격표 목록 조회 실패:",
-      error,
-    );
-    return [];
-  }
+  if (error) throw error;
 
   return (data as PriceItemRow[]) ?? [];
 }

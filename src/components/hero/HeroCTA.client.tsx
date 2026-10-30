@@ -24,10 +24,10 @@ export function HeroCTA({
       <Link
         href="/contact"
         className={[
-          "group relative inline-block overflow-hidden border px-7 py-2.5 text-sm font-bold transition-all md:px-10 md:py-4 md:text-lg",
+          "inline-block border bg-white px-7 py-2.5 text-sm font-bold text-slate-900 transition-colors duration-200 hover:bg-slate-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 md:px-10 md:py-4 md:text-lg",
           isDark
-            ? "border-white text-white hover:text-slate-900"
-            : "border-slate-900 text-slate-900 hover:text-white",
+            ? "border-white focus-visible:outline-white"
+            : "border-slate-900 focus-visible:outline-slate-900",
         ].join(" ")}
         onClick={() =>
           track({
@@ -37,14 +37,7 @@ export function HeroCTA({
           })
         }
       >
-        <span
-          className={[
-            "absolute inset-0 h-full w-full origin-left scale-x-0 transform transition-transform duration-300 ease-out group-hover:scale-x-100",
-            isDark ? "bg-white" : "bg-slate-900",
-          ].join(" ")}
-          aria-hidden="true"
-        />
-        <span className="relative z-10">무료 견적 받기</span>
+        무료 견적 문의
       </Link>
 
       {hasAnyPhone && (

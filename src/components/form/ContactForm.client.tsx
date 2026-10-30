@@ -47,6 +47,7 @@ export function ContactForm({
   const {
     state,
     formAction,
+    recordSubmit,
     isPending,
     name,
     setName,
@@ -60,7 +61,6 @@ export function ContactForm({
     formValid,
     showSuccess,
     clearReset,
-    trackClick,
   } = useContactForm({
     inquiryType,
     initialServiceType,
@@ -75,7 +75,7 @@ export function ContactForm({
   });
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} onSubmit={recordSubmit} className="space-y-6">
       <input type="hidden" name="inquiryType" value={inquiryType} />
       <input
         type="text"
@@ -186,7 +186,6 @@ export function ContactForm({
           className="px-10 py-3"
           loading={isPending}
           disabled={isPending || imageHandler.isConverting || !formValid}
-          onClick={trackClick}
         >
           {isPending ? (
             "문의 중..."

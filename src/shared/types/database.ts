@@ -12,6 +12,13 @@ export type Database = {
   };
   public: {
     Tables: {
+      analytics_daily_visitors: {
+        Row: { visit_date: string; visitor_key: string };
+        Insert: { visit_date: string; visitor_key: string };
+        Update: { visit_date?: string; visitor_key?: string };
+        Relationships: [];
+      };
+
       analytics_daily: {
         Row: {
           count: number;
@@ -249,6 +256,7 @@ export type Database = {
           address_locality: string;
           address_region: string;
           blog_url: string;
+          cafe_url: string;
           business_name: string;
           business_registration_number: string | null;
           customer_review_description: string | null;
@@ -260,6 +268,7 @@ export type Database = {
           hero_image_focal_x_2: number | null;
           hero_image_focal_y: number | null;
           hero_image_focal_y_2: number | null;
+          hero_images: Json;
           hero_image_path: string | null;
           hero_image_path_2: string | null;
           id: string;
@@ -281,6 +290,7 @@ export type Database = {
           address_locality?: string;
           address_region?: string;
           blog_url?: string;
+          cafe_url?: string;
           business_name?: string;
           business_registration_number?: string | null;
           customer_review_description?: string | null;
@@ -292,6 +302,7 @@ export type Database = {
           hero_image_focal_x_2?: number | null;
           hero_image_focal_y?: number | null;
           hero_image_focal_y_2?: number | null;
+          hero_images?: Json;
           hero_image_path?: string | null;
           hero_image_path_2?: string | null;
           id?: string;
@@ -313,6 +324,7 @@ export type Database = {
           address_locality?: string;
           address_region?: string;
           blog_url?: string;
+          cafe_url?: string;
           business_name?: string;
           business_registration_number?: string | null;
           customer_review_description?: string | null;
@@ -324,6 +336,7 @@ export type Database = {
           hero_image_focal_x_2?: number | null;
           hero_image_focal_y?: number | null;
           hero_image_focal_y_2?: number | null;
+          hero_images?: Json;
           hero_image_path?: string | null;
           hero_image_path_2?: string | null;
           id?: string;
@@ -347,6 +360,25 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      update_hero_image_variant: {
+        Args: {
+          p_id: string;
+          p_device: string;
+          p_side: string;
+          p_expected: Json;
+          p_asset: Json;
+        };
+        Returns: string[];
+      };
+      record_daily_visitor: {
+        Args: { p_key: string; p_date: string };
+        Returns: undefined;
+      };
+      dashboard_snapshot: {
+        Args: { p_start: string; p_end: string };
+        Returns: Json;
+      };
+
       aggregate_analytics_daily: { Args: never; Returns: undefined };
       cleanup_analytics_events: { Args: never; Returns: undefined };
       reorder_faqs: { Args: { items: Json }; Returns: undefined };

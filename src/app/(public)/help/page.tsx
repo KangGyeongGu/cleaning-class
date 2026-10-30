@@ -8,38 +8,38 @@ import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
 
+const PAGE_DESCRIPTION =
+  "청소·이사 예약, 서비스 지역, 결제 방법 등 청소클라쓰에 자주 묻는 질문과 답변을 확인하세요.";
+
 export const metadata: Metadata = {
-  title: "고객센터",
-  description:
-    "청소클라쓰 고객센터 — 청소·이사 예약, 서비스 지역, 결제 방법 등 자주 묻는 질문(FAQ) 안내",
+  title: "자주 묻는 질문",
+  description: PAGE_DESCRIPTION,
   alternates: {
     canonical: "https://www.cleaningclass.co.kr/help",
   },
   openGraph: {
-    title: "고객센터 | 청소클라쓰",
-    description:
-      "청소클라쓰 고객센터 — 청소·이사 예약, 서비스 지역, 결제 방법 등 자주 묻는 질문(FAQ) 안내",
+    title: "자주 묻는 질문 | 청소클라쓰",
+    description: PAGE_DESCRIPTION,
     url: "https://www.cleaningclass.co.kr/help",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "청소클라쓰 고객센터",
+        alt: "청소클라쓰 자주 묻는 질문",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "고객센터 | 청소클라쓰",
-    description:
-      "청소클라쓰 고객센터 — 청소·이사 예약, 서비스 지역, 결제 방법 등 자주 묻는 질문(FAQ) 안내",
+    title: "자주 묻는 질문 | 청소클라쓰",
+    description: PAGE_DESCRIPTION,
   },
 };
 
 const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
   { name: "홈", url: "https://www.cleaningclass.co.kr" },
-  { name: "고객센터", url: "https://www.cleaningclass.co.kr/help" },
+  { name: "자주 묻는 질문", url: "https://www.cleaningclass.co.kr/help" },
 ]);
 
 const DEFAULT_FAQ_DESCRIPTION =
@@ -69,12 +69,12 @@ export default async function HelpPage() {
                 </li>
                 <li aria-hidden="true">/</li>
                 <li className="text-slate-900" aria-current="page">
-                  고객센터
+                  자주 묻는 질문
                 </li>
               </ol>
             </nav>
 
-            <h1 className="text-heading-1 mb-4">고객센터</h1>
+            <h1 className="text-heading-1 mb-4">자주 묻는 질문</h1>
             <p className="text-body-sm max-w-lg whitespace-pre-line text-slate-500">
               {faqDescription}
             </p>

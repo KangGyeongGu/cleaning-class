@@ -54,14 +54,13 @@ describe("getActiveFaqs", () => {
     });
   });
 
-  it("returns [] on error + logs", async () => {
+  it("throws when the public query fails", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getActiveFaqs } = await import("@/shared/lib/queries/faq");
-    expect(await getActiveFaqs()).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
+    await expect(getActiveFaqs()).rejects.toMatchObject({ message: "x" });
     consoleSpy.mockRestore();
   });
 

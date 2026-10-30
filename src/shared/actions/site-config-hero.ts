@@ -1,148 +1,153 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/shared/lib/supabase/server";
 import { getUser } from "@/shared/lib/supabase/auth";
 import { uploadImage, deleteImage } from "@/shared/lib/supabase/storage-server";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+import { MAX_IMAGE_UPLOAD_SIZE } from "@/shared/lib/pure/image-validation";
+import {
+  getHeroImages,
+  heroAssetJson,
+  heroAssetSchema,
+  heroImagesSchema,
+  heroDeviceSchema,
+  heroSideSchema,
+} from "@/shared/lib/domain/hero-images";
 
 const REVALIDATE_PATHS = ["/", "/admin/config"] as const;
 
-function revalidateSiteConfigPaths(): void {
-  for (const path of REVALIDATE_PATHS) {
-    revalidatePath(path);
-  }
-}
+const requestSchema = z.object({
+  device: heroDeviceSchema,
+  side: heroSideSchema,
+  expected: heroAssetSchema.nullable(),
+});
 
 export async function updateHeroImage(
-  prevState: unknown,
+  _prevState: unknown,
   formData: FormData,
-): Promise<{ success: boolean; error?: string; message?: string }> {
+): Promise<{ success: boolean; error?: string }> {
+  let uploadedPath: string | undefined;
+  let canDeleteUpload = false;
   try {
     await getUser();
-
-    const supabase = await createClient();
-    const slot = formData.get("slot") === "2" ? "2" : "1";
-
-    const pathCol = slot === "1" ? "hero_image_path" : "hero_image_path_2";
-    const focalXCol =
-      slot === "1" ? "hero_image_focal_x" : "hero_image_focal_x_2";
-    const focalYCol =
-      slot === "1" ? "hero_image_focal_y" : "hero_image_focal_y_2";
-    const slotLabel = slot === "1" ? "좌측" : "우측";
-
-    const { data: current, error: fetchError } = await supabase
-      .from("site_config")
-      .select("id, hero_image_path, hero_image_path_2")
-      .limit(1)
-      .single<{
-        id: string;
-        hero_image_path: string | null;
-        hero_image_path_2: string | null;
-      }>();
-
-    if (fetchError || !current) {
-      console.error("updateHeroImage fetch error:", fetchError);
-      return { success: false, error: "설정 처리 중 오류가 발생했습니다." };
-    }
-
-    const currentPath =
-      slot === "1" ? current.hero_image_path : current.hero_image_path_2;
-    const deleteFlag = formData.get("delete_hero_image");
-    const heroImageFile = formData.get("hero_image");
-
-    const focalX = Number(formData.get("focal_x")) || 50;
-    const focalY = Number(formData.get("focal_y")) || 50;
-
-    if (deleteFlag === "true") {
-      const { error: updateError } = await supabase
-        .from("site_config")
-        .update({
-          [pathCol]: "",
-          [focalXCol]: 50,
-          [focalYCol]: 50,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", current.id);
-
-      if (updateError) {
-        console.error("updateHeroImage delete error:", updateError);
-        return { success: false, error: "설정 처리 중 오류가 발생했습니다." };
-      }
-
-      if (currentPath) {
-        await deleteImage("hero-images", currentPath);
-      }
-
-      revalidateSiteConfigPaths();
-      return {
-        success: true,
-        message: `${slotLabel} 히어로 이미지가 삭제되었습니다.`,
-      };
-    }
-
-    if (!(heroImageFile instanceof File) || heroImageFile.size === 0) {
-      if (currentPath) {
-        const { error: updateError } = await supabase
-          .from("site_config")
-          .update({
-            [focalXCol]: focalX,
-            [focalYCol]: focalY,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", current.id);
-
-        if (updateError) {
-          console.error("updateHeroImage focal update error:", updateError);
-          return { success: false, error: "설정 처리 중 오류가 발생했습니다." };
-        }
-
-        revalidateSiteConfigPaths();
-        return {
-          success: true,
-          message: `${slotLabel} 표시 영역이 업데이트되었습니다.`,
-        };
-      }
-      return { success: false, error: "업로드할 이미지를 선택해주세요." };
-    }
-
-    if (heroImageFile instanceof File && heroImageFile.size > MAX_FILE_SIZE) {
+    const parsed = requestSchema.safeParse({
+      device: formData.get("device"),
+      side: formData.get("side"),
+      expected: JSON.parse(String(formData.get("expected"))),
+    });
+    if (!parsed.success)
+      return { success: false, error: "이미지 설정을 다시 확인해주세요." };
+    const { device, side, expected } = parsed.data;
+    const resultFile = formData.get("hero_image");
+    if (!(resultFile instanceof File) || resultFile.size === 0)
+      return { success: false, error: "저장할 이미지를 선택해주세요." };
+    if (resultFile.size > MAX_IMAGE_UPLOAD_SIZE)
       return {
         success: false,
         error: "이미지 파일 크기는 10MB 이하여야 합니다.",
       };
-    }
-
-    const newImagePath = await uploadImage("hero-images", heroImageFile);
-
-    const { error: updateError } = await supabase
+    const supabase = await createClient();
+    const { data: current, error } = await supabase
       .from("site_config")
-      .update({
-        [pathCol]: newImagePath,
-        [focalXCol]: focalX,
-        [focalYCol]: focalY,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", current.id);
-
+      .select("*")
+      .limit(1)
+      .single();
+    if (error || !current) {
+      console.error("updateHeroImage fetch error:", error);
+      return { success: false, error: "설정을 불러오지 못했습니다." };
+    }
+    const currentAsset = getHeroImages(current)[device][side];
+    if (
+      JSON.stringify(heroAssetJson(currentAsset)) !==
+      JSON.stringify(heroAssetJson(expected))
+    )
+      return {
+        success: false,
+        error:
+          "다른 곳에서 이미지가 변경되었습니다. 페이지를 새로고침해주세요.",
+      };
+    const displayPath = await uploadImage("hero-images", resultFile);
+    uploadedPath = displayPath;
+    let unusedPaths: string[] = [];
+    let updateError: unknown;
+    try {
+      const response = await supabase.rpc("update_hero_image_variant", {
+        p_id: current.id,
+        p_device: device,
+        p_side: side,
+        p_expected: heroAssetJson(currentAsset),
+        p_asset: heroAssetJson({
+          displayPath,
+          focalX: 50,
+          focalY: 50,
+        }),
+      });
+      unusedPaths = response.data ?? [];
+      updateError = response.error;
+    } catch (error) {
+      updateError = error;
+    }
     if (updateError) {
-      console.error("updateHeroImage DB update error:", updateError);
-      await deleteImage("hero-images", newImagePath);
-      return { success: false, error: "설정 처리 중 오류가 발생했습니다." };
+      console.error("updateHeroImage update error:", updateError);
+      const check = await supabase
+        .from("site_config")
+        .select("hero_images")
+        .eq("id", current.id)
+        .single();
+      const images = heroImagesSchema.safeParse(check.data?.hero_images);
+      if (check.error || !images.success) {
+        console.error(
+          "updateHeroImage verification failed; retaining upload:",
+          check.error,
+        );
+        return {
+          success: false,
+          error: "저장 결과를 확인하지 못했습니다. 페이지를 새로고침해주세요.",
+        };
+      }
+      const referenced = Object.values(images.data).some((device) =>
+        Object.values(device).some(
+          (asset) => asset?.displayPath === displayPath,
+        ),
+      );
+      canDeleteUpload = !referenced;
+      if (!referenced)
+        return {
+          success: false,
+          error:
+            typeof updateError === "object" &&
+            updateError !== null &&
+            "code" in updateError &&
+            updateError.code === "40001"
+              ? "다른 곳에서 이미지가 변경되었습니다. 페이지를 새로고침해주세요."
+              : "이미지를 저장하지 못했습니다. 다시 시도해주세요.",
+        };
     }
-
-    if (currentPath) {
-      await deleteImage("hero-images", currentPath);
+    for (const path of unusedPaths) await removeUnusedImage(path);
+    for (const path of REVALIDATE_PATHS) {
+      try {
+        revalidatePath(path);
+      } catch (error) {
+        console.error("updateHeroImage revalidation error:", error);
+      }
     }
-
-    revalidateSiteConfigPaths();
-    return {
-      success: true,
-      message: `${slotLabel} 히어로 이미지가 업데이트되었습니다.`,
-    };
+    return { success: true };
   } catch (error) {
     console.error("updateHeroImage error:", error);
-    return { success: false, error: "설정 처리 중 오류가 발생했습니다." };
+    return {
+      success: false,
+      error: "이미지를 처리하거나 저장하지 못했습니다. 다시 시도해주세요.",
+    };
+  } finally {
+    if (uploadedPath && canDeleteUpload) await removeUnusedImage(uploadedPath);
+  }
+}
+
+async function removeUnusedImage(path: string) {
+  try {
+    await deleteImage("hero-images", path);
+  } catch (error) {
+    console.error("updateHeroImage cleanup error:", error);
   }
 }

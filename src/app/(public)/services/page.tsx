@@ -6,7 +6,11 @@ import { getPublishedServicesWithImageUrls } from "@/shared/lib/queries/service"
 import type { ServiceWithImageUrls } from "@/shared/lib/queries/service";
 import { ServiceBeforeAfter } from "@/components/service/ServiceBeforeAfter.client";
 import { HashHighlight } from "@/app/(public)/services/HashHighlight.client";
-import { BLUR_PLACEHOLDER } from "@/shared/lib/pure/constants";
+import { getSiteConfig } from "@/shared/lib/queries/site-config";
+import {
+  BLUR_PLACEHOLDER,
+  DEFAULT_SERVICE_DESCRIPTION,
+} from "@/shared/lib/pure/constants";
 import { ContactCta } from "@/components/common/ContactCta";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
@@ -16,11 +20,11 @@ const PAGE_DESCRIPTION =
   "청소클라쓰의 전문 청소·이사 서비스를 소개합니다. 거주청소, 정기청소, 특수청소, 원룸이사, 포장이사 등.";
 
 export const metadata: Metadata = {
-  title: "서비스 소개",
+  title: "서비스 안내",
   description: PAGE_DESCRIPTION,
   alternates: { canonical: "/services" },
   openGraph: {
-    title: "서비스 소개 | 청소클라쓰",
+    title: "서비스 안내 | 청소클라쓰",
     description: "청소클라쓰의 전문 청소·이사 서비스를 소개합니다.",
     url: "/services",
     images: [
@@ -28,20 +32,20 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "청소클라쓰 서비스 소개",
+        alt: "청소클라쓰 서비스 안내",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "서비스 소개 | 청소클라쓰",
+    title: "서비스 안내 | 청소클라쓰",
     description: "청소클라쓰의 전문 청소·이사 서비스를 소개합니다.",
   },
 };
 
 const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
   { name: "홈", url: "https://www.cleaningclass.co.kr" },
-  { name: "서비스 소개", url: "https://www.cleaningclass.co.kr/services" },
+  { name: "서비스 안내", url: "https://www.cleaningclass.co.kr/services" },
 ]);
 
 interface ServiceTextCardProps {
@@ -58,25 +62,9 @@ function ServiceTextCard({ service }: ServiceTextCardProps) {
         {service.title}
       </h3>
       {service.description && (
-        <p className="mb-5 text-sm leading-relaxed text-slate-600">
+        <p className="mb-5 text-sm leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] whitespace-pre-line text-slate-600">
           {service.description}
         </p>
-      )}
-      {service.tags.length > 0 && (
-        <ul className="space-y-1.5">
-          {service.tags.map((tag) => (
-            <li
-              key={tag}
-              className="flex items-start gap-2 text-sm text-slate-500"
-            >
-              <span
-                className="mt-2 h-px w-3 shrink-0 bg-slate-300"
-                aria-hidden="true"
-              />
-              {tag}
-            </li>
-          ))}
-        </ul>
       )}
     </article>
   );
@@ -87,6 +75,7 @@ interface ServiceCategorySectionProps {
   label: string;
   heading: string;
   services: ServiceWithImageUrls[];
+  priorityFirstImage?: boolean;
 }
 
 function ServiceCategorySection({
@@ -94,6 +83,7 @@ function ServiceCategorySection({
   label,
   heading,
   services,
+  priorityFirstImage = false,
 }: ServiceCategorySectionProps) {
   if (services.length === 0) return null;
 
@@ -130,7 +120,7 @@ function ServiceCategorySection({
                           beforeSrc={service.detailImageUrl!}
                           afterSrc={service.detailAfterImageUrl}
                           alt={service.title}
-                          priority={index === 0}
+                          priority={priorityFirstImage && index === 0}
                         />
                       ) : (
                         <div className="relative aspect-[4/3] overflow-hidden">
@@ -138,7 +128,7 @@ function ServiceCategorySection({
                             src={service.detailImageUrl!}
                             alt={service.title}
                             fill
-                            priority={index === 0}
+                            priority={priorityFirstImage && index === 0}
                             sizes="(max-width: 768px) calc(100vw - 48px), 320px"
                             placeholder="blur"
                             blurDataURL={BLUR_PLACEHOLDER}
@@ -152,25 +142,9 @@ function ServiceCategorySection({
                         {service.title}
                       </h3>
                       {service.description && (
-                        <p className="mb-6 text-sm leading-relaxed text-slate-600">
+                        <p className="mb-6 text-sm leading-relaxed [overflow-wrap:anywhere] [word-break:keep-all] whitespace-pre-line text-slate-600">
                           {service.description}
                         </p>
-                      )}
-                      {service.tags.length > 0 && (
-                        <ul className="space-y-2">
-                          {service.tags.map((tag) => (
-                            <li
-                              key={tag}
-                              className="flex items-start gap-2 text-sm text-slate-500"
-                            >
-                              <span
-                                className="mt-2 h-px w-4 shrink-0 bg-slate-300"
-                                aria-hidden="true"
-                              />
-                              {tag}
-                            </li>
-                          ))}
-                        </ul>
                       )}
                     </div>
                   </div>
@@ -194,9 +168,10 @@ function ServiceCategorySection({
 }
 
 export default async function ServicesPage() {
-  const [cleaningServices, movingServices] = await Promise.all([
+  const [cleaningServices, movingServices, siteConfig] = await Promise.all([
     getPublishedServicesWithImageUrls("cleaning"),
     getPublishedServicesWithImageUrls("moving"),
+    getSiteConfig(),
   ]);
 
   return (
@@ -219,16 +194,15 @@ export default async function ServicesPage() {
               </li>
               <li aria-hidden="true">/</li>
               <li className="text-slate-900" aria-current="page">
-                서비스 소개
+                서비스 안내
               </li>
             </ol>
           </nav>
 
-          <h1 className="text-heading-1 mb-4">서비스 소개</h1>
-          <p className="text-body-sm max-w-lg text-slate-500">
-            전문 청소 서비스부터 이사 서비스까지,
-            <br className="hidden sm:block" />
-            청소클라쓰가 깔끔하게 처리합니다.
+          <h1 className="text-heading-1 mb-4">서비스 안내</h1>
+          <p className="text-body-sm max-w-lg whitespace-pre-line text-slate-500">
+            {siteConfig?.service_description?.trim() ||
+              DEFAULT_SERVICE_DESCRIPTION}
           </p>
         </div>
       </section>
@@ -238,6 +212,7 @@ export default async function ServicesPage() {
         label="Cleaning"
         heading="청소 서비스"
         services={cleaningServices}
+        priorityFirstImage
       />
 
       {cleaningServices.length > 0 && movingServices.length > 0 && (

@@ -122,10 +122,10 @@ export const siteConfigFormSchema = z.object({
     ),
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
   blog_url: httpUrl().or(z.literal("")),
+  cafe_url: httpUrl().or(z.literal("")),
   instagram_url: httpUrl().or(z.literal("")),
   daangn_url: httpUrl().or(z.literal("")),
   site_url: httpUrl(),
-  description: z.string().max(500, "설명은 500자 이하여야 합니다").optional(),
   address_region: z.string().optional().default(""),
   address_locality: z.string().optional().default(""),
   address: z.string().max(200, "주소는 200자 이하여야 합니다").optional(),
@@ -172,7 +172,6 @@ export const serviceFormSchema = z.object({
   category: z.enum(["cleaning", "moving"], {
     errorMap: () => ({ message: "카테고리를 선택해주세요" }),
   }),
-  tags: z.array(z.string()).min(1, "최소 1개 이상의 태그를 입력해주세요"),
   sort_order: z
     .number()
     .int("정렬 순서는 정수여야 합니다")

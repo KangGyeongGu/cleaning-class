@@ -28,20 +28,20 @@ describe("getSiteConfig", () => {
     expect(mockFrom).toHaveBeenCalledWith("site_config");
   });
 
-  it("returns null when supabase returns error", async () => {
+  it("throws when supabase returns error", async () => {
     mockSingle.mockResolvedValueOnce({
       data: null,
       error: { message: "DB error" },
     });
     const { getSiteConfig } = await import("@/shared/lib/queries/site-config");
-    const result = await getSiteConfig();
-    expect(result).toBeNull();
+    await expect(getSiteConfig()).rejects.toMatchObject({
+      message: "DB error",
+    });
   });
 
-  it("returns null when supabase call throws", async () => {
+  it("throws when supabase call throws", async () => {
     mockSingle.mockRejectedValueOnce(new Error("network"));
     const { getSiteConfig } = await import("@/shared/lib/queries/site-config");
-    const result = await getSiteConfig();
-    expect(result).toBeNull();
+    await expect(getSiteConfig()).rejects.toThrow("network");
   });
 });

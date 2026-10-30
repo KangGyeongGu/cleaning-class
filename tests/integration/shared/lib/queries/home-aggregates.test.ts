@@ -4,12 +4,20 @@ import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 interface ChainResult {
   data: unknown;
   error: unknown;
+  count?: number | null;
 }
 
 function makePromiseChain(result: ChainResult) {
   const promise = Promise.resolve(result);
   const chain: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "contains", "order", "limit"]) {
+  for (const method of [
+    "select",
+    "eq",
+    "contains",
+    "overlaps",
+    "order",
+    "limit",
+  ]) {
     chain[method] = vi.fn(() => chain);
   }
   chain.then = (
@@ -43,17 +51,57 @@ beforeEach(() => {
   vi.resetModules();
 });
 
-describe("getPublishedReviewsByCleaningTypes", () => {
+describe("getHomeReviewData", () => {
+  it("returns exact totals beyond the preview limit without summing overlapping category counts", async () => {
+    let call = 0;
+    mockFrom.mockImplementation(() => {
+      const index = call++;
+      return makePromiseChain({
+        data:
+          index < CLEANING_SERVICE_TYPES.length
+            ? [{ id: "shared", created_at: "2026-01-01" }]
+            : null,
+        error: null,
+        count: index < CLEANING_SERVICE_TYPES.length ? 20 + index : 73,
+      });
+    });
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toHaveLength(1);
+    expect(result.counts.all).toBe(73);
+    expect(result.counts[CLEANING_SERVICE_TYPES[0]]).toBe(20);
+  });
+
+  it("throws when the overall count fails", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    let call = 0;
+    mockFrom.mockImplementation(() =>
+      makePromiseChain(
+        call++ < CLEANING_SERVICE_TYPES.length
+          ? {
+              data: [{ id: "r1", created_at: "2026-01-01" }],
+              error: null,
+              count: 12,
+            }
+          : { data: null, error: { message: "count failed" }, count: null },
+      ),
+    );
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    await expect(getHomeReviewData()).rejects.toMatchObject({
+      message: "count failed",
+    });
+    consoleSpy.mockRestore();
+  });
+
   it("dedupes reviews that appear in multiple category queries", async () => {
     const r1 = { id: "r1", created_at: "2026-01-01T00:00:00Z", tags: [] };
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [r1], error: null }),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("r1");
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toHaveLength(1);
+    expect(result.reviews[0].id).toBe("r1");
   });
 
   it("sorts by created_at desc across categories", async () => {
@@ -71,13 +119,12 @@ describe("getPublishedReviewsByCleaningTypes", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain(variants[Math.min(call++, variants.length - 1)]),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result[0].id).toBe("new");
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews[0].id).toBe("new");
   });
 
-  it("skips a category when its query returns error (and warns)", async () => {
+  it("throws when a category query fails", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     let call = 0;
     mockFrom.mockImplementation(() =>
@@ -87,44 +134,37 @@ describe("getPublishedReviewsByCleaningTypes", () => {
           : { data: [{ id: "r1", created_at: "2026-01-01" }], error: null },
       ),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result.length).toBeGreaterThanOrEqual(1);
-    expect(consoleSpy).toHaveBeenCalled();
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    await expect(getHomeReviewData()).rejects.toMatchObject({ message: "RLS" });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on outer exception", async () => {
+  it("throws on outer exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("boom");
     });
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result).toEqual([]);
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    await expect(getHomeReviewData()).rejects.toThrow("boom");
     consoleSpy.mockRestore();
   });
 
-  it("uses 5 category queries (one per CLEANING_SERVICE_TYPES entry)", async () => {
+  it("uses category previews and one separate overall count", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [], error: null }),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    await getPublishedReviewsByCleaningTypes();
-    expect(mockFrom).toHaveBeenCalledTimes(CLEANING_SERVICE_TYPES.length);
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    await getHomeReviewData();
+    expect(mockFrom).toHaveBeenCalledTimes(CLEANING_SERVICE_TYPES.length + 1);
   });
 
   it("handles null data array gracefully", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: null }),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result).toEqual([]);
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toEqual([]);
   });
 });
 
@@ -142,28 +182,27 @@ describe("getAllPublishedReviews", () => {
     expect(result).toHaveLength(1);
   });
 
-  it("returns [] on DB error and logs", async () => {
+  it("throws on DB error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getAllPublishedReviews } =
       await import("@/shared/lib/queries/review");
-    const result = await getAllPublishedReviews();
-    expect(result).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
+    await expect(getAllPublishedReviews()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on exception", async () => {
+  it("throws on exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("net");
     });
     const { getAllPublishedReviews } =
       await import("@/shared/lib/queries/review");
-    const result = await getAllPublishedReviews();
-    expect(result).toEqual([]);
+    await expect(getAllPublishedReviews()).rejects.toThrow("net");
     consoleSpy.mockRestore();
   });
 
@@ -252,35 +291,40 @@ describe("getPublishedServicesWithImageUrls", () => {
     expect(result[0].afterFocalY).toBe(50);
   });
 
-  it("defaults tags to [] when null", async () => {
+  it("returns the description without exposing legacy tags", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [{ ...baseService, tags: null }], error: null }),
     );
     const { getPublishedServicesWithImageUrls } =
       await import("@/shared/lib/queries/service");
     const result = await getPublishedServicesWithImageUrls();
-    expect(result[0].tags).toEqual([]);
+    expect(result[0].description).toBe(baseService.description);
+    expect(result[0]).not.toHaveProperty("tags");
   });
 
-  it("returns [] on DB error", async () => {
+  it("throws on DB error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getPublishedServicesWithImageUrls } =
       await import("@/shared/lib/queries/service");
-    expect(await getPublishedServicesWithImageUrls()).toEqual([]);
+    await expect(getPublishedServicesWithImageUrls()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on exception", async () => {
+  it("throws on exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("x");
     });
     const { getPublishedServicesWithImageUrls } =
       await import("@/shared/lib/queries/service");
-    expect(await getPublishedServicesWithImageUrls()).toEqual([]);
+    await expect(getPublishedServicesWithImageUrls()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
@@ -317,25 +361,29 @@ describe("getPublishedCustomerReviews", () => {
     expect(result).toHaveLength(1);
   });
 
-  it("returns [] on DB error", async () => {
+  it("throws on DB error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getPublishedCustomerReviews } =
       await import("@/shared/lib/queries/customer-review");
-    expect(await getPublishedCustomerReviews()).toEqual([]);
+    await expect(getPublishedCustomerReviews()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on exception", async () => {
+  it("throws on exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("x");
     });
     const { getPublishedCustomerReviews } =
       await import("@/shared/lib/queries/customer-review");
-    expect(await getPublishedCustomerReviews()).toEqual([]);
+    await expect(getPublishedCustomerReviews()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 

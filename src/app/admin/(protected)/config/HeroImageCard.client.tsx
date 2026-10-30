@@ -1,260 +1,121 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Image from "next/image";
-import { Pencil, Trash2, Upload, ImageOff } from "lucide-react";
-import { updateHeroImage } from "@/shared/actions/site-config-hero";
-import { getHeroImageUrl } from "@/shared/lib/supabase/storage";
-import { FocalPointPicker } from "@/app/admin/components/FocalPointPicker.client";
-import { Modal } from "@/app/admin/components/Modal.client";
-import { useSingleImagePreview } from "@/shared/lib/hooks/useSingleImagePreview";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { useId, useState } from "react";
+import { Pencil, ImageOff } from "lucide-react";
+import {
+  HeroCropDialog,
+  type HeroImageSlot,
+} from "@/app/admin/(protected)/config/HeroCropDialog.client";
+import { HeroPreview } from "@/app/admin/(protected)/config/HeroPreview.client";
 import type { SiteConfig } from "@/shared/types/database";
 
-type HeroActionState = Awaited<ReturnType<typeof updateHeroImage>>;
+import {
+  getHeroImages,
+  HERO_CLIPS,
+  type HeroConfig as HeroImageConfig,
+} from "@/shared/lib/domain/hero-images";
+type HeroConfig = HeroImageConfig &
+  Pick<SiteConfig, "business_name" | "description">;
 
-const HERO_BANNER_RATIO = 2.5;
-
-interface HeroImageCardProps {
-  config: SiteConfig;
-}
-
-interface SlotData {
-  slot: "1" | "2";
-  label: string;
-  imagePath: string | null;
-  focalX: number;
-  focalY: number;
-}
-
-function buildSlots(config: SiteConfig): SlotData[] {
-  return [
-    {
-      slot: "1",
-      label: "좌측 이미지",
-      imagePath: config.hero_image_path ?? null,
-      focalX: config.hero_image_focal_x ?? 50,
-      focalY: config.hero_image_focal_y ?? 50,
-    },
-    {
-      slot: "2",
-      label: "우측 이미지",
-      imagePath: config.hero_image_path_2 ?? null,
-      focalX: config.hero_image_focal_x_2 ?? 50,
-      focalY: config.hero_image_focal_y_2 ?? 50,
-    },
-  ];
-}
-
-export function HeroImageCard({
-  config,
-}: HeroImageCardProps): React.ReactElement {
-  const [editingSlot, setEditingSlot] = useState<SlotData | null>(null);
-  const slots = buildSlots(config);
-
+export function HeroImageCard({ config }: { config: HeroConfig }) {
+  const headingId = useId();
+  const [editing, setEditing] = useState<HeroImageSlot | null>(null);
+  const variants = getHeroImages(config);
   return (
-    <Card>
-      <header className="border-b border-slate-100 px-6 py-5">
-        <h2 className="text-heading-3">히어로 배경이미지</h2>
-        <p className="mt-1 text-xs font-light text-slate-500">
-          메인 페이지 히어로 배너의 배경이미지입니다. 최대 2장(좌/우),
-          JPG/PNG/WebP, 최대 10MB.
-        </p>
-      </header>
+    <section aria-labelledby={headingId}>
+      <h2 id={headingId} className="mb-4 text-sm font-bold text-slate-900">
+        배경이미지
+      </h2>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
+        {(["pc", "mobile"] as const).map((device) => {
+          const mobile = device === "mobile";
+          const label = mobile ? "모바일" : "PC";
+          const slots: HeroImageSlot[] = (["left", "right"] as const).map(
+            (side) => ({
+              device,
+              side,
+              label: `${label} ${side === "left" ? "좌측" : "우측"} 배경이미지`,
+              asset: variants[device][side],
+            }),
+          );
+          const hasImages = slots.some((slot) => slot.asset);
 
-      <div className="grid grid-cols-1 gap-6 px-6 py-6 md:grid-cols-2">
-        {slots.map((s) => (
-          <SlotPreview key={s.slot} slot={s} onEdit={setEditingSlot} />
-        ))}
+          const deviceId = `${headingId}-${device}`;
+          return (
+            <section
+              key={device}
+              aria-labelledby={deviceId}
+              className="min-w-0"
+            >
+              <h3
+                id={deviceId}
+                className="mb-3 text-xs font-medium text-slate-500"
+              >
+                {label}
+              </h3>
+              <div
+                className={`relative w-full overflow-hidden ${mobile ? "max-w-[17rem]" : ""} ${hasImages ? "bg-slate-900" : "aspect-[2/1] bg-slate-100"}`}
+                aria-label={`${label} 배너 미리보기`}
+              >
+                {hasImages ? (
+                  <HeroPreview
+                    key={JSON.stringify([
+                      variants[device],
+                      config.business_name,
+                      config.description,
+                    ])}
+                    device={device}
+                  />
+                ) : (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2 text-xs text-slate-400">
+                    <ImageOff size={16} aria-hidden="true" />
+                    등록된 이미지 없음
+                  </div>
+                )}
+                {slots.map((slot) => (
+                  <button
+                    key={slot.side}
+                    type="button"
+                    aria-label={`${slot.label} 수정`}
+                    onClick={() => setEditing(slot)}
+                    className={`group absolute inset-y-0 cursor-pointer transition-colors outline-none hover:bg-white/10 focus-visible:bg-white/10 ${slot.side === "left" ? "left-0" : "right-0"}`}
+                    style={{
+                      width: mobile ? "100%" : "60%",
+                      clipPath: HERO_CLIPS[device][slot.side],
+                    }}
+                  >
+                    <span
+                      className="absolute inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 border border-white/60 bg-slate-900/80 px-3 py-2 text-xs leading-4 font-medium whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                      style={{
+                        left: mobile
+                          ? slot.side === "left"
+                            ? "30%"
+                            : "70%"
+                          : "50%",
+                        top: mobile
+                          ? slot.side === "left"
+                            ? "30%"
+                            : "70%"
+                          : "50%",
+                      }}
+                    >
+                      <Pencil size={13} aria-hidden="true" />
+                      {slot.side === "left" ? "좌측 수정" : "우측 수정"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
-
-      {editingSlot && (
-        <HeroSlotEditModal
-          key={editingSlot.slot}
-          slot={editingSlot}
-          isOpen
-          onClose={() => setEditingSlot(null)}
+      {editing && (
+        <HeroCropDialog
+          key={`${editing.device}-${editing.side}`}
+          slot={editing}
+          onClose={() => setEditing(null)}
         />
       )}
-    </Card>
-  );
-}
-
-interface SlotPreviewProps {
-  slot: SlotData;
-  onEdit: (s: SlotData) => void;
-}
-
-function SlotPreview({ slot, onEdit }: SlotPreviewProps): React.ReactElement {
-  const imageUrl = slot.imagePath ? getHeroImageUrl(slot.imagePath) : null;
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold tracking-widest text-slate-900 uppercase">
-          {slot.label}
-        </p>
-        <button
-          type="button"
-          onClick={() => onEdit(slot)}
-          className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-1.5 text-xs font-bold tracking-widest text-slate-700 uppercase transition-colors hover:border-slate-900 hover:text-slate-900"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-          수정
-        </button>
-      </div>
-      <div
-        className="relative w-full overflow-hidden border border-slate-100 bg-slate-50"
-        style={{ aspectRatio: HERO_BANNER_RATIO }}
-      >
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={slot.label}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            style={{
-              objectFit: "cover",
-              objectPosition: `${slot.focalX}% ${slot.focalY}%`,
-            }}
-          />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-slate-400">
-            <ImageOff className="h-6 w-6" aria-hidden="true" />
-            <span className="text-xs font-light">등록된 이미지 없음</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface HeroSlotEditModalProps {
-  slot: SlotData;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-function HeroSlotEditModal({
-  slot,
-  isOpen,
-  onClose,
-}: HeroSlotEditModalProps): React.ReactElement {
-  const [state, setState] = useState<HeroActionState | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const image = useSingleImagePreview();
-  const [focalX, setFocalX] = useState(slot.focalX);
-  const [focalY, setFocalY] = useState(slot.focalY);
-
-  function formAction(formData: FormData) {
-    startTransition(async () => {
-      const result = await updateHeroImage(state, formData);
-      setState(result);
-      if (result && "message" in result && result.message) {
-        onClose();
-      }
-    });
-  }
-
-  const currentImageUrl = slot.imagePath
-    ? getHeroImageUrl(slot.imagePath)
-    : null;
-  const displayImageUrl = image.previewUrl ?? currentImageUrl;
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const hasFile = !!e.target.files?.[0];
-    await image.handleChange(e);
-    if (hasFile) {
-      setFocalX(50);
-      setFocalY(50);
-    }
-  }
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`${slot.label} 수정`}
-      description="이미지 선택 후 초점을 조정해 저장하세요."
-      size="lg"
-    >
-      <form action={formAction} className="space-y-6">
-        <input type="hidden" name="slot" value={slot.slot} />
-        <input type="hidden" name="focal_x" value={focalX} />
-        <input type="hidden" name="focal_y" value={focalY} />
-
-        <FocalPointPicker
-          key={displayImageUrl}
-          imageUrl={displayImageUrl}
-          focalX={focalX}
-          focalY={focalY}
-          onChange={(x, y) => {
-            setFocalX(x);
-            setFocalY(y);
-          }}
-          label={slot.label}
-          targetRatio={HERO_BANNER_RATIO}
-        />
-
-        <div>
-          <label
-            htmlFor={`hero_image_${slot.slot}`}
-            className="mb-3 block text-xs font-bold tracking-widest text-slate-900 uppercase"
-          >
-            이미지 선택
-          </label>
-          <input
-            id={`hero_image_${slot.slot}`}
-            name="hero_image"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleFileChange}
-            className="block w-full text-sm font-light text-slate-600 file:mr-4 file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-xs file:font-bold file:tracking-widest file:text-white file:uppercase hover:file:bg-slate-800"
-          />
-        </div>
-
-        {state && "error" in state && state.error && (
-          <p className="text-sm text-red-500">{state.error}</p>
-        )}
-
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-5">
-          {currentImageUrl ? (
-            <button
-              type="submit"
-              name="delete_hero_image"
-              value="true"
-              disabled={isPending}
-              className="inline-flex items-center gap-2 border border-slate-300 px-5 py-2.5 text-xs font-bold tracking-widest text-slate-600 uppercase transition-colors hover:border-red-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              삭제
-            </button>
-          ) : (
-            <span />
-          )}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="px-5 py-2.5 text-xs font-bold tracking-widest text-slate-600 uppercase transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              취소
-            </button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="none"
-              loading={isPending}
-              className="px-6 py-2.5 text-xs uppercase"
-            >
-              {!isPending && <Upload className="h-3.5 w-3.5" />}
-              저장
-            </Button>
-          </div>
-        </div>
-      </form>
-    </Modal>
+    </section>
   );
 }

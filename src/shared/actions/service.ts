@@ -24,21 +24,10 @@ function revalidateServicePaths(): void {
 }
 
 async function createServiceImpl(prevState: unknown, formData: FormData) {
-  const tagsRaw = formData.get("tags");
-  let parsedTags: string[] = [];
-  if (tagsRaw) {
-    try {
-      parsedTags = JSON.parse(tagsRaw as string) as string[];
-    } catch {
-      parsedTags = [];
-    }
-  }
-
   const rawData = {
     title: formData.get("title"),
     description: formData.get("description") ?? "",
     category: formData.get("category"),
-    tags: parsedTags,
     sort_order: Number(formData.get("sort_order") || 0),
     is_published: formData.get("is_published") === "true",
     image_focal_x: Number(formData.get("image_focal_x") || 50),
@@ -166,21 +155,10 @@ async function updateServiceImpl(
     return { success: false, error: "올바른 서비스 ID가 아닙니다." };
   }
 
-  const tagsRaw = formData.get("tags");
-  let parsedTags: string[] = [];
-  if (tagsRaw) {
-    try {
-      parsedTags = JSON.parse(tagsRaw as string) as string[];
-    } catch {
-      parsedTags = [];
-    }
-  }
-
   const rawData = {
     title: formData.get("title"),
     description: formData.get("description") ?? "",
     category: formData.get("category"),
-    tags: parsedTags,
     sort_order: Number(formData.get("sort_order") || 0),
     is_published: formData.get("is_published") === "true",
     image_focal_x: Number(formData.get("image_focal_x") || 50),

@@ -51,6 +51,10 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
     const { updateCustomerReviewDescription } =
       await import("@/shared/actions/site-config");
     expect((await updateCustomerReviewDescription("d")).success).toBe(true);
+    expect(
+      mockRevalidatePath.mock.calls.filter(([path]) => path === "/"),
+    ).toHaveLength(1);
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/customer-reviews");
   });
 
   it("revalidates field-specific extra paths (faq) and writes faq_description column", async () => {
@@ -69,6 +73,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updateFaqDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/help");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
     expect(chains[1].update).toHaveBeenCalledWith(
       expect.objectContaining({
         faq_description: "d",
@@ -91,6 +96,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updateReviewDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/reviews");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
 
   it("revalidates service_description extra paths", async () => {
@@ -106,6 +112,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updateServiceDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/services");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
 
   it("updatePriceDescription succeeds, writes price_description column and revalidates price path", async () => {
@@ -124,6 +131,7 @@ describe("updateCustomerReviewDescription / updateFaqDescription / updateReviewD
       await import("@/shared/actions/site-config");
     expect((await updatePriceDescription("d")).success).toBe(true);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/price");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
     expect(chains[1].update).toHaveBeenCalledWith(
       expect.objectContaining({
         price_description: "d",
@@ -201,6 +209,7 @@ describe("updateSiteConfig", () => {
     fd.set("phone", "010-1234-5678");
     fd.set("email", "a@b.com");
     fd.set("blog_url", "");
+    fd.set("cafe_url", "https://cafe.naver.com/example");
     fd.set("instagram_url", "");
     fd.set("daangn_url", "");
     fd.set("description", "");
@@ -224,7 +233,11 @@ describe("updateSiteConfig", () => {
     const { updateSiteConfig } = await import("@/shared/actions/site-config");
     expect((await updateSiteConfig(null, buildForm())).success).toBe(true);
     expect(chains[1].update).toHaveBeenCalledWith(
+      expect.not.objectContaining({ description: expect.anything() }),
+    );
+    expect(chains[1].update).toHaveBeenCalledWith(
       expect.objectContaining({
+        cafe_url: "https://cafe.naver.com/example",
         business_name: "청소클라쓰",
         representative: "홍길동",
         phone: "010-1234-5678",
@@ -247,6 +260,7 @@ describe("updateSiteConfig", () => {
     );
     const { updateSiteConfig } = await import("@/shared/actions/site-config");
     const fd = buildForm();
+    fd.delete("cafe_url");
     fd.delete("representative");
     fd.delete("business_registration_number");
     fd.delete("address");
@@ -411,5 +425,32 @@ describe("updateMovingSiteConfig", () => {
       false,
     );
     consoleSpy.mockRestore();
+  });
+});
+
+describe("getBusinessSettings", () => {
+  it("인증 후 최신 설정 조회", async () => {
+    const chain = makePromiseChain({ data: { id: "latest" }, error: null });
+    mockFrom.mockReturnValue(chain);
+    const { getBusinessSettings } =
+      await import("@/shared/actions/site-config");
+    expect(await getBusinessSettings()).toEqual({ id: "latest" });
+    expect(mockGetUser).toHaveBeenCalled();
+    expect(chain.select).toHaveBeenCalledWith("*");
+  });
+  it("조회 오류 시 null 반환", async () => {
+    mockFrom.mockReturnValue(
+      makePromiseChain({ data: null, error: new Error("db") }),
+    );
+    const { getBusinessSettings } =
+      await import("@/shared/actions/site-config");
+    expect(await getBusinessSettings()).toBeNull();
+  });
+  it("인증 실패 시 조회하지 않음", async () => {
+    mockGetUser.mockRejectedValueOnce(new Error("unauthorized"));
+    const { getBusinessSettings } =
+      await import("@/shared/actions/site-config");
+    expect(await getBusinessSettings()).toBeNull();
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });

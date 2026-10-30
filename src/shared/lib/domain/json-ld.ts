@@ -1,3 +1,4 @@
+import { getSocialLinks } from "@/shared/lib/pure/social-links";
 import type { SiteConfig } from "@/shared/types/database";
 
 const BUSINESS_STREET_ADDRESS = "전북 전주시 덕진구 우아8길 11";
@@ -56,7 +57,7 @@ interface LocalBusinessJsonLd {
 
 interface ServiceInput {
   title: string;
-  tags: string[];
+  description: string;
 }
 
 interface ServiceJsonLd {
@@ -120,13 +121,7 @@ export function generateLocalBusinessJsonLd(
 ): LocalBusinessJsonLd {
   const siteUrl = siteConfig?.site_url ?? "https://www.cleaningclass.co.kr";
 
-  const sameAs = [
-    siteConfig?.blog_url,
-    siteConfig?.instagram_url,
-    siteConfig?.daangn_url,
-  ].filter(
-    (url): url is string => typeof url === "string" && url.trim() !== "",
-  );
+  const sameAs = getSocialLinks(siteConfig).map(({ href }) => href);
 
   return {
     "@context": "https://schema.org",
@@ -201,7 +196,7 @@ export function generateServiceJsonLd(
     "@type": "Service",
     serviceType: service.title,
     name: service.title,
-    description: service.tags.join(", "),
+    description: service.description,
     provider: {
       "@id": `${siteUrl}/#organization`,
     },

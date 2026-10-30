@@ -5,8 +5,6 @@ import { track, currentPath } from "@/shared/lib/infra/track";
 
 export type CtaButtonId =
   | "hero_quote_button"
-  | "services_cleaning_contact"
-  | "services_moving_contact"
   | "services_page_quote"
   | "price_page_quote"
   | "help_page_quote"

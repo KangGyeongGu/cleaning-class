@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SNS_PLATFORMS } from "@/shared/lib/pure/social-links";
 
 export const EVENT_TYPES = [
   "quote_form_click",
@@ -19,7 +20,8 @@ const quoteFormClickSchema = z.object({
   event_type: z.literal("quote_form_click"),
   event_payload: z.object({
     inquiry_type: z.enum(["cleaning", "moving"]),
-    service_type: z.string().optional(),
+    service_type: z.string().max(100).optional(),
+    has_images: z.boolean().optional(),
   }),
 });
 
@@ -67,7 +69,7 @@ const reviewCardClickSchema = z.object({
 const snsClickSchema = z.object({
   event_type: z.literal("sns_click"),
   event_payload: z.object({
-    sns_platform: z.enum(["naver_blog", "instagram", "daangn"]),
+    sns_platform: z.enum(SNS_PLATFORMS),
     click_location: z.string(),
   }),
 });

@@ -104,6 +104,20 @@ export default async function RootLayout({
   return (
     <html lang="ko" className="relative">
       <head>
+        <link
+          rel="preload"
+          href="/fonts/pretendard/PretendardVariable.subset.90.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/pretendard/PretendardVariable.subset.91.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link rel="stylesheet" href="/fonts/pretendard/pretendard.css" />
       </head>
       <body className="relative font-sans antialiased">

@@ -10,7 +10,6 @@ export type ServiceWithImageUrls = {
   title: string;
   description: string;
   category: string;
-  tags: string[];
   imageUrl: string;
   afterImageUrl?: string;
   detailImageUrl?: string;
@@ -29,7 +28,6 @@ function mapServiceWithImageUrls(s: Service): ServiceWithImageUrls {
     title: s.title,
     description: s.description,
     category: s.category,
-    tags: s.tags ?? [],
     imageUrl: getServiceImageUrl(s.image_path),
     afterImageUrl: s.image_after_path
       ? getServiceImageUrl(s.image_after_path)
@@ -119,27 +117,16 @@ export async function getServiceById(
 export async function getPublishedServicesWithImageUrls(
   category?: "cleaning" | "moving",
 ): Promise<ServiceWithImageUrls[]> {
-  try {
-    const supabase = createStaticClient();
-    let query = supabase
-      .from("services")
-      .select("*")
-      .eq("is_published", true)
-      .order("sort_order", { ascending: true });
-    if (category) query = query.eq("category", category);
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("[getPublishedServicesWithImageUrls] DB error:", error);
-      return [];
-    }
-
-    return ((data as Service[] | null) ?? []).map(mapServiceWithImageUrls);
-  } catch (err) {
-    console.error("[getPublishedServicesWithImageUrls] Unexpected error:", err);
-    return [];
-  }
+  const supabase = createStaticClient();
+  let query = supabase
+    .from("services")
+    .select("*")
+    .eq("is_published", true)
+    .order("sort_order", { ascending: true });
+  if (category) query = query.eq("category", category);
+  const { data, error } = await query;
+  if (error) throw error;
+  return ((data as Service[] | null) ?? []).map(mapServiceWithImageUrls);
 }
 
 export async function getNextServiceSortOrder(): Promise<number> {

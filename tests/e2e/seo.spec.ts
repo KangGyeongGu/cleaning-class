@@ -196,3 +196,51 @@ test.describe("SEO 핵심 자산", () => {
     });
   }
 });
+
+test.describe("공개 페이지 레이블과 검색·공유 정보 동기화", () => {
+  for (const [path, label] of [
+    ["/services", "서비스 안내"],
+    ["/reviews", "작업 사례"],
+    ["/contact", "온라인 견적"],
+    ["/help", "자주 묻는 질문"],
+    ["/price", "가격표"],
+  ]) {
+    test(`${path}의 제목·경로 안내·검색 정보가 ${label}로 일치`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(label);
+      await expect(page).toHaveTitle(`${label} | 청소클라쓰`);
+      await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+        "content",
+        `${label} | 청소클라쓰`,
+      );
+      await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
+        "content",
+        `${label} | 청소클라쓰`,
+      );
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        "href",
+        `https://www.cleaningclass.co.kr${path}`,
+      );
+      const breadcrumbs = (
+        await page
+          .locator('script[type="application/ld+json"]')
+          .allTextContents()
+      )
+        .map((text) => JSON.parse(text))
+        .filter((item) => item["@type"] === "BreadcrumbList");
+      expect(
+        breadcrumbs.some((item) => item.itemListElement.at(-1)?.name === label),
+      ).toBe(true);
+      const robots = await page
+        .locator('meta[name="robots"]')
+        .evaluateAll((elements) =>
+          elements
+            .map((element) => element.getAttribute("content") ?? "")
+            .join(","),
+        );
+      expect(robots).not.toContain("noindex");
+    });
+  }
+});

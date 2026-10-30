@@ -3,12 +3,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 interface ChainResult {
   data: unknown;
   error: unknown;
+  count?: number | null;
 }
 
 function makePromiseChain(result: ChainResult) {
   const promise = Promise.resolve(result);
   const chain: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "order"]) {
+  for (const method of ["select", "eq", "order", "limit"]) {
     chain[method] = vi.fn(() => chain);
   }
   chain.then = (
@@ -97,5 +98,66 @@ describe("getPublishedCustomerReviews", () => {
       await import("@/shared/lib/queries/customer-review");
     await getPublishedCustomerReviews();
     expect(chain.eq).toHaveBeenCalledWith("is_published", true);
+    expect(chain.limit).toHaveBeenCalledWith(12);
+  });
+});
+
+describe("getCustomerReviewStats", () => {
+  it("counts all rating levels without downloading review rows", async () => {
+    const chains = Array.from({ length: 9 }, (_, index) =>
+      makePromiseChain({
+        data: null,
+        error: null,
+        count: index === 7 ? 3 : index === 8 ? 1 : 0,
+      }),
+    );
+    let index = 0;
+    mockFrom.mockImplementation(() => chains[index++]);
+    const { getCustomerReviewStats } =
+      await import("@/shared/lib/queries/customer-review");
+    expect(await getCustomerReviewStats()).toEqual({
+      totalCount: 4,
+      avgRating: 4.6,
+    });
+    expect(chains[7].select).toHaveBeenCalledWith("id", {
+      count: "exact",
+      head: true,
+    });
+    expect(chains[7].eq).toHaveBeenCalledWith("rating", 4.5);
+  });
+  it("returns zero statistics for an empty published dataset", async () => {
+    mockFrom.mockImplementation(() =>
+      makePromiseChain({ data: null, error: null, count: 0 }),
+    );
+    const { getCustomerReviewStats } =
+      await import("@/shared/lib/queries/customer-review");
+    expect(await getCustomerReviewStats()).toEqual({
+      totalCount: 0,
+      avgRating: 0,
+    });
+  });
+  it("throws when a count fails", async () => {
+    mockFrom.mockImplementation(() =>
+      makePromiseChain({
+        data: null,
+        error: { message: "failed" },
+        count: null,
+      }),
+    );
+    const { getCustomerReviewStats } =
+      await import("@/shared/lib/queries/customer-review");
+    await expect(getCustomerReviewStats()).rejects.toMatchObject({
+      message: "failed",
+    });
+  });
+  it("throws when an exact count is missing", async () => {
+    mockFrom.mockImplementation(() =>
+      makePromiseChain({ data: null, error: null, count: null }),
+    );
+    const { getCustomerReviewStats } =
+      await import("@/shared/lib/queries/customer-review");
+    await expect(getCustomerReviewStats()).rejects.toThrow(
+      "고객 리뷰 집계 결과가 없습니다.",
+    );
   });
 });

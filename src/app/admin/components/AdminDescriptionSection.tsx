@@ -8,6 +8,7 @@ type DescriptionField = {
 
 interface AdminDescriptionSectionProps {
   field: DescriptionField;
+  label?: string;
   placeholder: string;
   emptyText: string;
   onSave: (value: string) => Promise<{ success: boolean; error?: string }>;
@@ -15,6 +16,7 @@ interface AdminDescriptionSectionProps {
 
 export async function AdminDescriptionSection({
   field,
+  label,
   placeholder,
   emptyText,
   onSave,
@@ -23,6 +25,7 @@ export async function AdminDescriptionSection({
 
   return (
     <InlineDescriptionEditor
+      label={label}
       initialValue={siteConfig?.[field] ?? ""}
       placeholder={placeholder}
       emptyText={emptyText}

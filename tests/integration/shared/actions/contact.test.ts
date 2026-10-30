@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const mockSendContactEmail = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined),
 );
+const mockInsert = vi.hoisted(() => vi.fn().mockResolvedValue({ error: null }));
+vi.mock("@/shared/lib/server/analytics-client", () => ({
+  createAnalyticsClient: () => ({ from: () => ({ insert: mockInsert }) }),
+}));
 const mockHeaders = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/lib/infra/mail", () => ({
@@ -13,8 +17,17 @@ vi.mock("next/headers", () => ({ headers: mockHeaders }));
 beforeEach(() => {
   vi.clearAllMocks();
   vi.resetModules();
-  mockHeaders.mockResolvedValue(new Headers({ "x-forwarded-for": "1.2.3.4" }));
+  mockInsert.mockResolvedValue({ error: null });
+  vi.stubEnv("NODE_ENV", "production");
+  mockHeaders.mockResolvedValue(
+    new Headers({
+      host: "www.cleaningclass.co.kr",
+      "x-forwarded-for": "1.2.3.4",
+    }),
+  );
 });
+
+afterEach(() => vi.unstubAllEnvs());
 
 const SAMPLE_MESSAGE_50 =
   "8평 원룸 주거 청소 견적 문의드립니다. 주방 기름때와 유리창, 화장실 환풍구까지 전체 청소가 필요합니다. 일정은 다음 주 가능합니다.";
@@ -85,6 +98,7 @@ describe("submitContactForm — validation", () => {
     );
     expect(result.success).toBe(false);
     expect(mockSendContactEmail).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it("defaults inquiryType to 'cleaning' when missing", async () => {
@@ -133,6 +147,7 @@ describe("submitContactForm — cleaning path", () => {
     const result = await submitContactForm(null, fd);
     expect(result.success).toBe(false);
     expect(mockSendContactEmail).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });
 
@@ -162,6 +177,7 @@ describe("submitContactForm — moving path", () => {
     const result = await submitContactForm(null, fd);
     expect(result.success).toBe(false);
     expect(mockSendContactEmail).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });
 
@@ -263,6 +279,7 @@ describe("submitContactForm — magic bytes", () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain("유효하지 않은 이미지");
     expect(mockSendContactEmail).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });
 
@@ -273,6 +290,7 @@ describe("submitContactForm — anti-abuse", () => {
     const result = await submitContactForm(null, fd);
     expect(result.success).toBe(true);
     expect(mockSendContactEmail).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it("rate-limits once the per-IP submission limit is exceeded", async () => {
@@ -302,6 +320,43 @@ describe("submitContactForm — email failure", () => {
     const result = await submitContactForm(null, buildCleaningForm());
     expect(result.success).toBe(false);
     expect(result.error).toContain("전화");
+    expect(mockInsert).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+});
+
+describe("견적 성공 서버 기록", () => {
+  it("메일 처리 성공 후 기록", async () => {
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    await submitContactForm(null, buildCleaningForm());
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ event_type: "quote_form_success" }),
+    );
+  });
+  it("DB 오류가 실제 접수 성공을 바꾸지 않음", async () => {
+    mockInsert.mockResolvedValue({ error: { code: "DB_ERROR" } });
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    expect((await submitContactForm(null, buildCleaningForm())).success).toBe(
+      true,
+    );
+  });
+  it("통계 예외가 실제 접수 성공을 바꾸지 않음", async () => {
+    mockInsert.mockRejectedValue(new Error("offline"));
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    expect((await submitContactForm(null, buildCleaningForm())).success).toBe(
+      true,
+    );
+  });
+});
+
+describe("로컬 견적 통계 제외", () => {
+  it("개발 환경의 메일 성공은 통계에 저장하지 않음", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const { submitContactForm } = await import("@/shared/actions/contact");
+    expect(await submitContactForm(null, buildCleaningForm())).toMatchObject({
+      success: true,
+      analyticsEligible: false,
+    });
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });

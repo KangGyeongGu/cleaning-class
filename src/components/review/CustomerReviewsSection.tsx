@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { getPublishedCustomerReviews } from "@/shared/lib/queries/customer-review";
+import {
+  getPublishedCustomerReviews,
+  getCustomerReviewStats,
+} from "@/shared/lib/queries/customer-review";
 import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { CustomerReviewsCarousel } from "@/components/review/CustomerReviewsCarousel.client";
 import { ReviewRatingHero } from "@/components/hero/ReviewRatingHero.client";
@@ -38,8 +41,9 @@ function toCardData(review: CustomerReviewRow): ReviewCardData {
 }
 
 export async function CustomerReviewsSection(): Promise<React.ReactElement | null> {
-  const [reviews, siteConfig] = await Promise.all([
+  const [reviews, stats, siteConfig] = await Promise.all([
     getPublishedCustomerReviews(),
+    getCustomerReviewStats(),
     getSiteConfig(),
   ]);
 
@@ -50,11 +54,6 @@ export async function CustomerReviewsSection(): Promise<React.ReactElement | nul
   const description =
     siteConfig?.customer_review_description?.trim() ||
     "실제 의뢰인들의 솔직한 사용 후기입니다.";
-
-  const avgRating =
-    Math.round(
-      (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10,
-    ) / 10;
 
   const cards = reviews.map(toCardData);
 
@@ -73,7 +72,10 @@ export async function CustomerReviewsSection(): Promise<React.ReactElement | nul
             {description}
           </p>
 
-          <ReviewRatingHero avgRating={avgRating} totalCount={reviews.length} />
+          <ReviewRatingHero
+            avgRating={stats.avgRating}
+            totalCount={stats.totalCount}
+          />
 
           <Link
             href="/review/write"

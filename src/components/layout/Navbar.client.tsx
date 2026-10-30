@@ -5,60 +5,16 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
-import {
-  NaverBlogIcon,
-  InstagramIcon,
-  DaangnIcon,
-} from "@/components/icons/SocialIcons";
+import { SocialLinks } from "@/components/social/SocialLinks.client";
+import { getSocialLinks } from "@/shared/lib/pure/social-links";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface NavbarProps {
   businessName?: string;
   blogUrl?: string;
+  cafeUrl?: string;
   instagramUrl?: string;
   daangnUrl?: string;
-}
-
-type SnsPlatform = "naver_blog" | "instagram" | "daangn";
-
-interface SnsLinkProps {
-  href: string;
-  platform: SnsPlatform;
-  ariaLabel: string;
-  onAfterClick?: () => void;
-  tabIndex?: number;
-  children: React.ReactNode;
-}
-
-function NavbarSnsLink({
-  href,
-  platform,
-  ariaLabel,
-  onAfterClick,
-  tabIndex,
-  children,
-}: SnsLinkProps): React.ReactElement {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={ariaLabel}
-      title={ariaLabel}
-      tabIndex={tabIndex}
-      className="text-slate-400 transition-colors hover:text-slate-900"
-      onClick={() => {
-        track({
-          event_type: "sns_click",
-          event_payload: { sns_platform: platform, click_location: "navbar" },
-          path: currentPath(),
-        });
-        onAfterClick?.();
-      }}
-    >
-      {children}
-    </a>
-  );
 }
 
 interface MenuItem {
@@ -69,9 +25,9 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { label: "서비스", href: "/services" },
   { label: "가격표", href: "/price" },
-  { label: "작업후기", href: "/reviews" },
-  { label: "견적문의", href: "/contact" },
-  { label: "자주묻는질문", href: "/help" },
+  { label: "작업 사례", href: "/reviews" },
+  { label: "온라인 견적", href: "/contact" },
+  { label: "자주 묻는 질문", href: "/help" },
 ];
 
 function LogoIcon(): React.JSX.Element {
@@ -94,6 +50,7 @@ function scrollToTop() {
 export function Navbar({
   businessName,
   blogUrl,
+  cafeUrl,
   instagramUrl,
   daangnUrl,
 }: NavbarProps) {
@@ -103,9 +60,13 @@ export function Navbar({
   const displayName = businessName ?? "청소클라쓰";
   const isHome = pathname === "/";
 
-  const hasBlogUrl = blogUrl && blogUrl.trim() !== "";
-  const hasInstagramUrl = instagramUrl && instagramUrl.trim() !== "";
-  const hasDaangnUrl = daangnUrl && daangnUrl.trim() !== "";
+  const socialUrls = {
+    blog_url: blogUrl,
+    cafe_url: cafeUrl,
+    instagram_url: instagramUrl,
+    daangn_url: daangnUrl,
+  };
+  const hasSocialLinks = getSocialLinks(socialUrls).length > 0;
 
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -179,10 +140,10 @@ export function Navbar({
   return (
     <>
       <nav className="sticky top-0 right-0 left-0 z-[60] bg-white/80 py-2.5 backdrop-blur-md md:py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 md:px-6">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:px-6">
           <button
             type="button"
-            className="relative flex min-h-10 cursor-pointer items-center gap-1.5 border-0 bg-transparent text-lg font-black tracking-tighter text-slate-900 md:gap-2 md:text-xl"
+            className="relative flex min-h-10 cursor-pointer items-center gap-1.5 justify-self-start border-0 bg-transparent text-lg font-black tracking-tighter whitespace-nowrap text-slate-900 md:gap-2 md:text-xl"
             aria-label="청소클라쓰 홈으로 이동"
             onClick={handleLogoClick}
           >
@@ -190,13 +151,13 @@ export function Navbar({
             {displayName}
           </button>
 
-          <div className="hidden items-center gap-6 md:flex">
-            <div className="flex items-center gap-8">
+          <div className="hidden md:contents">
+            <div className="flex items-center gap-4 justify-self-center whitespace-nowrap lg:gap-8">
               {menuItems.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="text-xs font-black tracking-widest text-slate-500 transition-colors hover:text-slate-900"
+                  className="inline-block text-xs font-black tracking-widest text-slate-500 transition-[color,scale] duration-200 ease-out hover:scale-105 hover:text-slate-900 motion-reduce:transition-none motion-reduce:hover:scale-100"
                   onClick={
                     item.href === "/contact"
                       ? () =>
@@ -212,35 +173,9 @@ export function Navbar({
                 </Link>
               ))}
             </div>
-            {(hasBlogUrl || hasInstagramUrl || hasDaangnUrl) && (
-              <div className="ml-2 flex items-center gap-4 border-l border-slate-200 pl-6">
-                {hasBlogUrl && (
-                  <NavbarSnsLink
-                    href={blogUrl!}
-                    platform="naver_blog"
-                    ariaLabel="네이버 블로그"
-                  >
-                    <NaverBlogIcon size={20} />
-                  </NavbarSnsLink>
-                )}
-                {hasInstagramUrl && (
-                  <NavbarSnsLink
-                    href={instagramUrl!}
-                    platform="instagram"
-                    ariaLabel="인스타그램"
-                  >
-                    <InstagramIcon size={20} />
-                  </NavbarSnsLink>
-                )}
-                {hasDaangnUrl && (
-                  <NavbarSnsLink
-                    href={daangnUrl!}
-                    platform="daangn"
-                    ariaLabel="당근마켓"
-                  >
-                    <DaangnIcon size={20} />
-                  </NavbarSnsLink>
-                )}
+            {hasSocialLinks && (
+              <div className="flex items-center gap-4 justify-self-end border-l border-slate-200 pl-6">
+                <SocialLinks urls={socialUrls} location="navbar" />
               </div>
             )}
           </div>
@@ -275,6 +210,7 @@ export function Navbar({
             key={item.label}
             href={item.href}
             tabIndex={isOpen ? 0 : -1}
+            prefetch={isOpen ? null : false}
             onClick={() => {
               setIsOpen(false);
 
@@ -291,41 +227,15 @@ export function Navbar({
             {item.label}
           </Link>
         ))}
-        {(hasBlogUrl || hasInstagramUrl || hasDaangnUrl) && (
+        {hasSocialLinks && (
           <div className="mt-2 flex items-center gap-5 border-t border-slate-200 pt-6">
-            {hasBlogUrl && (
-              <NavbarSnsLink
-                href={blogUrl!}
-                platform="naver_blog"
-                ariaLabel="네이버 블로그"
-                tabIndex={isOpen ? 0 : -1}
-                onAfterClick={() => setIsOpen(false)}
-              >
-                <NaverBlogIcon size={24} />
-              </NavbarSnsLink>
-            )}
-            {hasInstagramUrl && (
-              <NavbarSnsLink
-                href={instagramUrl!}
-                platform="instagram"
-                ariaLabel="인스타그램"
-                tabIndex={isOpen ? 0 : -1}
-                onAfterClick={() => setIsOpen(false)}
-              >
-                <InstagramIcon size={24} />
-              </NavbarSnsLink>
-            )}
-            {hasDaangnUrl && (
-              <NavbarSnsLink
-                href={daangnUrl!}
-                platform="daangn"
-                ariaLabel="당근마켓"
-                tabIndex={isOpen ? 0 : -1}
-                onAfterClick={() => setIsOpen(false)}
-              >
-                <DaangnIcon size={24} />
-              </NavbarSnsLink>
-            )}
+            <SocialLinks
+              urls={socialUrls}
+              location="navbar"
+              size={24}
+              tabIndex={isOpen ? 0 : -1}
+              onClick={() => setIsOpen(false)}
+            />
           </div>
         )}
       </div>

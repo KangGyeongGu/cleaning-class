@@ -412,6 +412,7 @@ describe("siteConfigFormSchema", () => {
       phone: "010-1234-5678",
       email: "a@b.com",
       blog_url: "",
+      cafe_url: "",
       instagram_url: "",
       daangn_url: "",
       site_url: "https://example.com",
@@ -431,6 +432,7 @@ describe("siteConfigFormSchema", () => {
       siteConfigFormSchema.safeParse({
         ...base(),
         blog_url: "ftp://example.com/",
+        cafe_url: "",
       }).success,
     ).toBe(false);
   });
@@ -496,29 +498,27 @@ describe("serviceFormSchema", () => {
     const result = serviceFormSchema.safeParse({
       title: "거주청소",
       category: "cleaning",
-      tags: ["깔끔"],
       sort_order: 0,
       is_published: true,
     });
     expect(result.success).toBe(true);
   });
 
-  it("rejects empty tags", () => {
+  it("accepts a plain description without tags", () => {
     const result = serviceFormSchema.safeParse({
       title: "거주청소",
       category: "cleaning",
-      tags: [],
+      description: "주방과 욕실의 생활 오염을 청소합니다.",
       sort_order: 0,
       is_published: true,
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects invalid category", () => {
     const result = serviceFormSchema.safeParse({
       title: "거주청소",
       category: "wrong",
-      tags: ["t"],
       sort_order: 0,
       is_published: true,
     });

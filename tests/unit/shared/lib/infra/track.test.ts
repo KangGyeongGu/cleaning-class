@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { track, currentPath, mapToGaEvent } from "@/shared/lib/infra/track";
+import {
+  track,
+  trackGaEvent,
+  trackApiEvent,
+  currentPath,
+  mapToGaEvent,
+} from "@/shared/lib/infra/track";
 
 vi.mock("@next/third-parties/google", () => ({
   sendGAEvent: vi.fn(),
@@ -131,7 +137,7 @@ describe("track", () => {
 describe("mapToGaEvent", () => {
   it.each([
     ["quote_form_success", "generate_lead"],
-    ["quote_form_click", "generate_lead"],
+    ["quote_form_click", "quote_form_click"],
     ["phone_click", "generate_lead"],
     ["cta_click", "select_content"],
     ["quote_form_error", "quote_form_error"],
@@ -171,18 +177,7 @@ describe("track GA4 dual-write", () => {
     expect(mockSendGAEvent).toHaveBeenCalledWith("event", "generate_lead", {
       inquiry_type: "cleaning",
     });
-  });
-
-  it("calls sendGAEvent with generate_lead for quote_form_click when GA_ID set", () => {
-    vi.stubEnv("NEXT_PUBLIC_GA_ID", "G-TEST123");
-    track({
-      event_type: "quote_form_click",
-      event_payload: { inquiry_type: "moving" },
-      path: "/",
-    });
-    expect(mockSendGAEvent).toHaveBeenCalledWith("event", "generate_lead", {
-      inquiry_type: "moving",
-    });
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("calls sendGAEvent with generate_lead for phone_click when GA_ID set", () => {
@@ -355,5 +350,87 @@ describe("currentPath", () => {
         configurable: true,
       });
     }
+  });
+});
+
+describe("방문 기록 확인", () => {
+  it("API 성공 여부를 반환하고 오류는 false", async () => {
+    setLocation("cleaningclass.co.kr");
+    const spy = vi.spyOn(globalThis, "fetch");
+    const input = {
+      event_type: "page_landing" as const,
+      event_payload: { source: "direct", referrer_host: "", landing_path: "/" },
+      path: "/",
+    };
+    spy.mockResolvedValueOnce(new Response(null, { status: 204 }));
+    expect(await track(input)).toBe(true);
+    spy.mockResolvedValueOnce(new Response(null, { status: 503 }));
+    expect(await track(input)).toBe(false);
+    spy.mockRejectedValueOnce(new Error("offline"));
+    expect(await track(input)).toBe(false);
+    setLocation("localhost");
+    expect(await track(input)).toBe(false);
+    spy.mockRestore();
+  });
+});
+
+it("GA4 전용 전송도 로컬에서는 실행하지 않음", () => {
+  vi.stubEnv("NEXT_PUBLIC_GA_ID", "G-TEST");
+  setLocation("localhost");
+  mockSendGAEvent.mockClear();
+  trackGaEvent({
+    event_type: "quote_form_success",
+    event_payload: { inquiry_type: "cleaning" },
+    path: "/contact",
+  });
+  expect(mockSendGAEvent).not.toHaveBeenCalled();
+  vi.unstubAllEnvs();
+});
+
+describe("API 전용 전송", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+  it("GA4를 보내지 않고 방문 API만 요청", async () => {
+    vi.stubEnv("NEXT_PUBLIC_GA_ID", "G-TEST");
+    setLocation("www.cleaningclass.co.kr");
+    mockSendGAEvent.mockClear();
+    const fetcher = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    expect(
+      await trackApiEvent({
+        event_type: "page_landing",
+        event_payload: {
+          source: "direct",
+          referrer_host: "",
+          landing_path: "/",
+        },
+        path: "/",
+      }),
+    ).toBe(true);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(mockSendGAEvent).not.toHaveBeenCalled();
+  });
+  it("성공 견적 직접 기록과 로컬 전송을 막음", async () => {
+    const fetcher = vi.spyOn(globalThis, "fetch");
+    setLocation("www.cleaningclass.co.kr");
+    expect(
+      await trackApiEvent({
+        event_type: "quote_form_success",
+        event_payload: { inquiry_type: "cleaning" },
+        path: "/contact",
+      }),
+    ).toBe(false);
+    setLocation("localhost");
+    expect(
+      await trackApiEvent({
+        event_type: "phone_click",
+        event_payload: { phone_type: "cleaning", click_location: "hero" },
+        path: "/",
+      }),
+    ).toBe(false);
+    expect(fetcher).not.toHaveBeenCalled();
   });
 });

@@ -50,7 +50,7 @@ export default async function PricePage() {
   ]);
   const priceListJsonLd = generatePriceListJsonLd(items);
   const priceDescription =
-    siteConfig?.price_description ||
+    siteConfig?.price_description?.trim() ||
     "서비스별 기준 요금을 안내합니다. 실제 금액은 현장 상태 및 면적에 따라 달라질 수 있습니다.";
 
   return (
@@ -79,7 +79,7 @@ export default async function PricePage() {
           </nav>
 
           <h1 className="text-heading-1 mb-4">가격표</h1>
-          <p className="text-body-sm max-w-lg text-slate-500">
+          <p className="text-body-sm max-w-lg whitespace-pre-line text-slate-500">
             {priceDescription}
           </p>
         </div>

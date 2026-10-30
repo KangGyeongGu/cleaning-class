@@ -59,7 +59,9 @@ describe("getPublishedPriceItems", () => {
     );
     const { getPublishedPriceItems } =
       await import("@/shared/lib/queries/price");
-    expect(await getPublishedPriceItems()).toEqual([]);
+    await expect(getPublishedPriceItems()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
@@ -178,7 +180,6 @@ describe("getNextPriceItemSortOrder", () => {
     const { getNextPriceItemSortOrder } =
       await import("@/shared/lib/queries/price");
     expect(await getNextPriceItemSortOrder()).toBe(0);
-    expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 

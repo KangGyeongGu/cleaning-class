@@ -1,12 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag, revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/server";
 import { withAuthAction } from "@/shared/lib/server/with-auth-action";
 import { uploadImage, deleteImage } from "@/shared/lib/supabase/storage-server";
 import { reviewFormSchema } from "@/shared/lib/schema/index";
 import type { ReviewInsert, ReviewUpdate } from "@/shared/types/database";
+
+import { PUBLIC_REVIEWS_CACHE_TAG } from "@/shared/lib/pure/review-pagination";
 
 const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
@@ -16,6 +18,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const REVALIDATE_PATHS = ["/", "/reviews", "/admin/reviews"] as const;
 
 function revalidateReviewPaths(): void {
+  updateTag(PUBLIC_REVIEWS_CACHE_TAG);
   for (const path of REVALIDATE_PATHS) {
     revalidatePath(path);
   }
@@ -70,14 +73,14 @@ async function createReviewImpl(prevState: unknown, formData: FormData) {
   if (error) {
     await deleteImage(BUCKET, imagePath);
     console.error("createReview DB error:", error);
-    return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
+    return { success: false, error: "작업 사례 처리 중 오류가 발생했습니다." };
   }
 
   revalidateReviewPaths();
 
   return {
     success: true,
-    message: "리뷰가 등록되었습니다.",
+    message: "작업 사례가 등록되었습니다.",
   };
 }
 
@@ -89,7 +92,7 @@ async function updateReviewImpl(
   formData: FormData,
 ) {
   if (!uuidSchema.safeParse(reviewId).success) {
-    return { success: false, error: "올바른 리뷰 ID가 아닙니다." };
+    return { success: false, error: "올바른 작업 사례 ID가 아닙니다." };
   }
 
   let parsedTagsUpdate: unknown;
@@ -130,7 +133,7 @@ async function updateReviewImpl(
 
   if (fetchError || !existingReview) {
     console.error("updateReview fetch error:", fetchError);
-    return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
+    return { success: false, error: "작업 사례 처리 중 오류가 발생했습니다." };
   }
 
   const existingImagePath = (existingReview as { image_path: string })
@@ -163,7 +166,7 @@ async function updateReviewImpl(
       await deleteImage(BUCKET, newImagePath);
     }
     console.error("updateReview DB error:", updateError);
-    return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
+    return { success: false, error: "작업 사례 처리 중 오류가 발생했습니다." };
   }
 
   if (
@@ -179,7 +182,7 @@ async function updateReviewImpl(
 
   return {
     success: true,
-    message: "리뷰가 수정되었습니다.",
+    message: "작업 사례가 수정되었습니다.",
   };
 }
 
@@ -187,7 +190,7 @@ export const updateReview = withAuthAction(updateReviewImpl);
 
 async function deleteReviewImpl(reviewId: string) {
   if (!uuidSchema.safeParse(reviewId).success) {
-    return { success: false, error: "올바른 리뷰 ID가 아닙니다." };
+    return { success: false, error: "올바른 작업 사례 ID가 아닙니다." };
   }
 
   const supabase = await createClient();
@@ -200,7 +203,7 @@ async function deleteReviewImpl(reviewId: string) {
 
   if (fetchError || !existingReview) {
     console.error("deleteReview fetch error:", fetchError);
-    return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
+    return { success: false, error: "작업 사례 처리 중 오류가 발생했습니다." };
   }
 
   const existingImagePath = (existingReview as { image_path: string })
@@ -213,7 +216,7 @@ async function deleteReviewImpl(reviewId: string) {
 
   if (deleteError) {
     console.error("deleteReview DB error:", deleteError);
-    return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
+    return { success: false, error: "작업 사례 처리 중 오류가 발생했습니다." };
   }
 
   if (existingImagePath) {
@@ -224,7 +227,7 @@ async function deleteReviewImpl(reviewId: string) {
 
   return {
     success: true,
-    message: "리뷰가 삭제되었습니다.",
+    message: "작업 사례가 삭제되었습니다.",
   };
 }
 
@@ -232,7 +235,7 @@ export const deleteReview = withAuthAction(deleteReviewImpl);
 
 async function toggleReviewPublishImpl(reviewId: string, isPublished: boolean) {
   if (!uuidSchema.safeParse(reviewId).success) {
-    return { success: false, error: "올바른 리뷰 ID가 아닙니다." };
+    return { success: false, error: "올바른 작업 사례 ID가 아닙니다." };
   }
 
   const supabase = await createClient();
@@ -246,14 +249,14 @@ async function toggleReviewPublishImpl(reviewId: string, isPublished: boolean) {
 
   if (error) {
     console.error("toggleReviewPublish DB error:", error);
-    return { success: false, error: "리뷰 처리 중 오류가 발생했습니다." };
+    return { success: false, error: "작업 사례 처리 중 오류가 발생했습니다." };
   }
 
   revalidateReviewPaths();
 
   return {
     success: true,
-    message: `리뷰가 ${isPublished ? "게시" : "비공개"}되었습니다.`,
+    message: `작업 사례가 ${isPublished ? "게시" : "비공개"}되었습니다.`,
   };
 }
 

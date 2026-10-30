@@ -15,6 +15,7 @@ const FULL_CONFIG: SiteConfig = {
   phone: "010-1111-2222",
   email: "x@y.com",
   blog_url: "https://blog.example.com",
+  cafe_url: "https://cafe.naver.com/example",
   instagram_url: "https://instagram.com/x",
   site_url: "https://example.com",
   description: "",
@@ -28,6 +29,7 @@ const FULL_CONFIG: SiteConfig = {
   representative: "대표",
   faq_description: null,
   daangn_url: "https://daangn.example.com",
+  hero_images: null,
   hero_image_path: null,
   moving_representative: "",
   moving_phone: "",
@@ -62,9 +64,10 @@ describe("generateWebSiteJsonLd", () => {
 });
 
 describe("generateLocalBusinessJsonLd", () => {
-  it("includes sameAs when blog/instagram/daangn urls non-empty", () => {
+  it("includes sameAs when social urls non-empty", () => {
     const result = generateLocalBusinessJsonLd(FULL_CONFIG);
-    expect(result.sameAs).toHaveLength(3);
+    expect(result.sameAs).toHaveLength(4);
+    expect(result.sameAs).toContain("https://cafe.naver.com/example");
     expect(result.sameAs).toContain("https://blog.example.com");
   });
 
@@ -72,6 +75,7 @@ describe("generateLocalBusinessJsonLd", () => {
     const result = generateLocalBusinessJsonLd({
       ...FULL_CONFIG,
       blog_url: "",
+      cafe_url: "",
       instagram_url: "",
       daangn_url: "",
     });
@@ -82,6 +86,7 @@ describe("generateLocalBusinessJsonLd", () => {
     const result = generateLocalBusinessJsonLd({
       ...FULL_CONFIG,
       blog_url: "   ",
+      cafe_url: "",
       instagram_url: "https://ig.com",
       daangn_url: "",
     });
@@ -129,16 +134,16 @@ describe("generateLocalBusinessJsonLd", () => {
 describe("generateServiceJsonLd", () => {
   it("maps each service to a Service JSON-LD entry", () => {
     const result = generateServiceJsonLd([
-      { title: "거주청소", tags: ["원룸", "투룸"] },
-      { title: "이사청소", tags: ["입주전", "퇴실"] },
+      { title: "거주청소", description: "생활 중인 공간을 청소합니다." },
+      { title: "이사청소", description: "입주 전 공간을 청소합니다." },
     ]);
     expect(result).toHaveLength(2);
     expect(result[0].serviceType).toBe("거주청소");
-    expect(result[0].description).toBe("원룸, 투룸");
+    expect(result[0].description).toBe("생활 중인 공간을 청소합니다.");
   });
 
   it("uses provider id with default siteUrl", () => {
-    const result = generateServiceJsonLd([{ title: "x", tags: [] }]);
+    const result = generateServiceJsonLd([{ title: "x", description: "" }]);
     expect(result[0].provider["@id"]).toBe(
       "https://www.cleaningclass.co.kr/#organization",
     );
@@ -146,7 +151,7 @@ describe("generateServiceJsonLd", () => {
 
   it("uses provider id with custom siteUrl", () => {
     const result = generateServiceJsonLd(
-      [{ title: "x", tags: [] }],
+      [{ title: "x", description: "" }],
       "https://custom.example.com",
     );
     expect(result[0].provider["@id"]).toBe(
@@ -158,8 +163,8 @@ describe("generateServiceJsonLd", () => {
     expect(generateServiceJsonLd([])).toEqual([]);
   });
 
-  it("handles services with empty tags (empty description)", () => {
-    const result = generateServiceJsonLd([{ title: "x", tags: [] }]);
+  it("handles services with an empty description", () => {
+    const result = generateServiceJsonLd([{ title: "x", description: "" }]);
     expect(result[0].description).toBe("");
   });
 });

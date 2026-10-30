@@ -13,7 +13,7 @@ export async function ReviewListSection({
   const reviewsWithImageUrls = await getReviews(sort === "oldest");
 
   if (reviewsWithImageUrls.length === 0) {
-    return <EmptyState message="등록된 리뷰가 없습니다." />;
+    return <EmptyState message="등록된 작업 사례가 없습니다." />;
   }
 
   return <ReviewListClient reviews={reviewsWithImageUrls} />;

@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, X, Check } from "lucide-react";
-import { Spinner } from "@/components/ui/Spinner";
+import { useId, useState } from "react";
+import { Pencil } from "lucide-react";
+import { useUnsavedChanges } from "@/app/admin/lib/useUnsavedChanges";
+import { AdminButton } from "@/app/admin/components/AdminButton";
+import { OutlinedField } from "@/components/ui/OutlinedField";
 
 interface InlineDescriptionEditorProps {
   initialValue: string;
   placeholder: string;
   emptyText: string;
+  label?: string;
+  labelHidden?: boolean;
+  maxLength?: number;
   onSave: (value: string) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -15,81 +20,106 @@ export function InlineDescriptionEditor({
   initialValue,
   placeholder,
   emptyText,
+  label = "안내 문구",
+  labelHidden = false,
+  maxLength,
   onSave,
 }: InlineDescriptionEditorProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [value, setValue] = useState(initialValue);
+  const id = useId();
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState({
+    source: initialValue,
+    value: initialValue,
+  });
+  const value = saved.source === initialValue ? saved.value : initialValue;
   const [draft, setDraft] = useState(initialValue);
-  const [isSaving, setIsSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>();
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  useUnsavedChanges(editing && draft !== value, saving);
+
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setError(undefined);
     try {
       const result = await onSave(draft);
       if (result.success) {
-        setValue(draft);
-        setIsEditing(false);
-      } else {
-        alert(result.error || "저장 중 오류가 발생했습니다.");
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.";
-      alert(message);
+        setSaved({ source: initialValue, value: draft });
+        setEditing(false);
+      } else
+        setError(result.error || "저장하지 못했습니다. 다시 시도해주세요.");
+    } catch {
+      setError("저장하지 못했습니다. 다시 시도해주세요.");
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
-  };
-
-  const handleCancel = () => {
-    setDraft(value);
-    setIsEditing(false);
-  };
-
-  if (isEditing) {
-    return (
-      <div className="mb-8 flex items-center gap-2">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          className="flex-1 border border-slate-300 px-3 py-2 text-sm font-light text-slate-600 transition-colors focus:border-slate-900 focus:outline-none"
-          placeholder={placeholder}
-          autoFocus
-        />
-        <button
-          type="button"
-          onClick={handleCancel}
-          disabled={isSaving}
-          className="p-2 text-slate-400 transition-colors hover:text-slate-900 disabled:opacity-50"
-          title="취소"
-        >
-          <X size={16} />
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving}
-          className="p-2 text-slate-400 transition-colors hover:text-green-600 disabled:opacity-50"
-          title="저장"
-        >
-          {isSaving ? <Spinner size={16} /> : <Check size={16} />}
-        </button>
-      </div>
-    );
   }
 
   return (
-    <div className="mb-8 flex items-center gap-2">
-      <p className="text-sm font-light text-slate-500">{value || emptyText}</p>
-      <button
-        type="button"
-        onClick={() => setIsEditing(true)}
-        className="p-1 text-slate-400 transition-colors hover:text-slate-900"
-        title="안내 문구 수정"
-      >
-        <Pencil size={14} />
-      </button>
+    <div className="mb-6">
+      {editing ? (
+        <form onSubmit={save} className="flex items-start gap-2">
+          <OutlinedField
+            id={id}
+            label={label}
+            labelHidden={labelHidden}
+            value={draft}
+            maxLength={maxLength}
+            disabled={saving}
+            autoFocus
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder={placeholder}
+            className="flex-1"
+          />
+          <div className="flex shrink-0 gap-2 pt-2">
+            <AdminButton
+              size="field"
+              variant="outline"
+              disabled={saving}
+              onClick={() => {
+                setDraft(value);
+                setError(undefined);
+                setEditing(false);
+              }}
+            >
+              취소
+            </AdminButton>
+            <AdminButton
+              size="field"
+              variant="primary"
+              type="submit"
+              loading={saving}
+            >
+              저장
+            </AdminButton>
+          </div>
+        </form>
+      ) : (
+        <div className="flex items-start gap-2">
+          <p className="py-1 text-sm leading-relaxed text-slate-500">
+            {value || emptyText}
+          </p>
+          <button
+            type="button"
+            aria-label="안내 문구 수정"
+            onClick={() => {
+              setDraft(value);
+              setError(undefined);
+              setEditing(true);
+            }}
+            className="shrink-0 p-2 text-slate-400 transition-colors hover:text-slate-900"
+          >
+            <Pencil size={14} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

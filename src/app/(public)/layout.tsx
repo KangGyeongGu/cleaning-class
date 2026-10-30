@@ -22,6 +22,7 @@ export default async function PublicLayout({
       <Navbar
         businessName={siteConfig?.business_name}
         blogUrl={siteConfig?.blog_url}
+        cafeUrl={siteConfig?.cafe_url}
         instagramUrl={siteConfig?.instagram_url}
         daangnUrl={siteConfig?.daangn_url}
       />
