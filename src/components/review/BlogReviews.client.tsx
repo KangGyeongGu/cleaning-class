@@ -13,7 +13,7 @@ import {
 } from "@/shared/lib/pure/constants";
 import { isSafeUrl } from "@/shared/lib/pure/format";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { motion, useReducedMotion } from "motion/react";
 
 import { track, currentPath } from "@/shared/lib/infra/track";
 
@@ -76,22 +76,18 @@ function ReviewCard({ review }: { review: ReviewWithUrl }) {
 interface ReviewSnsLinksProps {
   blogUrl?: string;
   instagramUrl?: string;
-  variant: "desktop" | "mobile";
 }
 
 function ReviewSnsLinks({
   blogUrl,
   instagramUrl,
-  variant,
 }: ReviewSnsLinksProps): React.ReactElement | null {
   const hasBlog = !!blogUrl && blogUrl.trim() !== "";
   const hasInstagram = !!instagramUrl && instagramUrl.trim() !== "";
   if (!hasBlog && !hasInstagram) return null;
 
   const linkClass =
-    variant === "desktop"
-      ? "flex items-center gap-2 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900"
-      : "inline-flex items-center gap-2 text-sm font-bold text-slate-900 transition-colors hover:text-slate-600";
+    "inline-flex items-center gap-2 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900";
 
   return (
     <>
@@ -188,6 +184,7 @@ export function BlogReviews({
   reviewDescription,
 }: BlogReviewsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
@@ -273,45 +270,43 @@ export function BlogReviews({
       className="relative overflow-hidden bg-white py-16 md:py-32"
     >
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
-        <div className="mb-6 flex flex-col items-start justify-between md:mb-10 md:flex-row md:items-end md:px-2">
-          <div>
-            <h2 className="text-heading-1 mb-4">REVIEW</h2>
-            <p className="text-body-sm max-w-lg tracking-wide whitespace-pre-line text-slate-500 md:text-base">
-              {reviewDescription?.trim() || DEFAULT_REVIEW_DESCRIPTION}
-            </p>
-          </div>
-
-          <div className="hidden items-center gap-4 md:flex">
-            <ReviewSnsLinks
-              blogUrl={blogUrl}
-              instagramUrl={instagramUrl}
-              variant="desktop"
-            />
-          </div>
-        </div>
-
-        <div className="scrollbar-hide mb-5 flex gap-1.5 overflow-x-auto md:mb-8 md:gap-2 md:px-2">
-          <Button
-            variant="filter"
-            size="none"
-            active={activeFilter === null}
-            onClick={() => handleFilterChange(null)}
-            className="shrink-0"
+        <h2 className="text-heading-1 mb-4 text-center">
+          <Link
+            href="/reviews"
+            className="transition-colors hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-900"
           >
-            전체
-          </Button>
-          {CLEANING_SERVICE_TYPES.map((type) => (
-            <Button
-              key={type}
-              variant="filter"
-              size="none"
-              active={activeFilter === type}
-              onClick={() => handleFilterChange(type)}
-              className="shrink-0"
-            >
-              {type}
-            </Button>
-          ))}
+            작업 사례
+          </Link>
+        </h2>
+        <p className="text-body-sm text-center tracking-wide whitespace-pre-line text-slate-500 md:text-base">
+          {reviewDescription?.trim() || DEFAULT_REVIEW_DESCRIPTION}
+        </p>
+
+        <div className="mt-6 mb-6 flex justify-center md:mb-8">
+          <div
+            role="group"
+            aria-label="작업 후기 종류"
+            className="scrollbar-hide flex max-w-full overflow-x-auto rounded-full border border-slate-200 bg-slate-100 p-1"
+          >
+            {[null, ...CLEANING_SERVICE_TYPES].map((type) => (
+              <button
+                key={type ?? "all"}
+                type="button"
+                aria-pressed={activeFilter === type}
+                onClick={(event) => {
+                  handleFilterChange(type);
+                  event.currentTarget.scrollIntoView({
+                    behavior: reducedMotion ? "instant" : "smooth",
+                    block: "nearest",
+                    inline: "nearest",
+                  });
+                }}
+                className={`min-h-8 shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-slate-900 ${activeFilter === type ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
+              >
+                {type ?? "전체"}
+              </button>
+            ))}
+          </div>
         </div>
 
         {filteredReviews.length === 0 ? (
@@ -321,69 +316,52 @@ export function BlogReviews({
             </p>
           </div>
         ) : (
-          <>
-            <div className="relative px-12">
-              <button
-                type="button"
-                aria-label="이전 리뷰"
-                disabled={!scrollable.previous}
-                onClick={() => scrollReviews(-1)}
-                className="absolute top-1/2 left-0 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition-colors hover:border-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-default disabled:opacity-30"
-              >
-                <ArrowLeft size={20} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                aria-label="다음 리뷰"
-                disabled={!scrollable.next}
-                onClick={() => scrollReviews(1)}
-                className="absolute top-1/2 right-0 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition-colors hover:border-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-default disabled:opacity-30"
-              >
-                <ArrowRight size={20} aria-hidden="true" />
-              </button>
-              <div
-                ref={scrollRef}
-                className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 md:gap-6 md:py-4"
-              >
-                {filteredReviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="relative w-full shrink-0 snap-start md:w-[calc((100%-3rem)/3)] xl:w-[calc((100%-4.5rem)/4)]"
-                  >
-                    <ReviewCardWrapper review={review} blogUrl={blogUrl} />
-                  </div>
-                ))}
-              </div>
+          <motion.div
+            key={activeFilter ?? "all"}
+            initial={{ opacity: reducedMotion ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reducedMotion ? 0 : 0.2 }}
+            className="relative px-12"
+          >
+            <button
+              type="button"
+              aria-label="이전 리뷰"
+              disabled={!scrollable.previous}
+              onClick={() => scrollReviews(-1)}
+              className="absolute top-1/2 left-0 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition-colors hover:border-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-default disabled:opacity-30"
+            >
+              <ArrowLeft size={20} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="다음 리뷰"
+              disabled={!scrollable.next}
+              onClick={() => scrollReviews(1)}
+              className="absolute top-1/2 right-0 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition-colors hover:border-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-default disabled:opacity-30"
+            >
+              <ArrowRight size={20} aria-hidden="true" />
+            </button>
+            <div
+              ref={scrollRef}
+              className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 md:gap-6 md:py-4"
+            >
+              {filteredReviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="relative w-full shrink-0 snap-start md:w-[calc((100%-3rem)/3)] xl:w-[calc((100%-4.5rem)/4)]"
+                >
+                  <ReviewCardWrapper review={review} blogUrl={blogUrl} />
+                </div>
+              ))}
             </div>
-            <div className="mt-6 text-center md:hidden">
-              <Link
-                href="/reviews"
-                className="inline-block text-sm font-medium tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900"
-              >
-                전체 보기 →
-              </Link>
-            </div>
-
-            {(hasBlogUrl || hasInstagramUrl) && (
-              <div className="mt-4 flex flex-col items-center gap-3 text-center md:hidden">
-                <ReviewSnsLinks
-                  blogUrl={blogUrl}
-                  instagramUrl={instagramUrl}
-                  variant="mobile"
-                />
-              </div>
-            )}
-          </>
+          </motion.div>
         )}
 
-        <div className="mt-8 hidden text-center md:block">
-          <Link
-            href="/reviews"
-            className="inline-block text-sm font-medium tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900"
-          >
-            전체 보기 →
-          </Link>
-        </div>
+        {(hasBlogUrl || hasInstagramUrl) && (
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            <ReviewSnsLinks blogUrl={blogUrl} instagramUrl={instagramUrl} />
+          </div>
+        )}
       </div>
     </section>
   );

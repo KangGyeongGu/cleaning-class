@@ -41,7 +41,7 @@ export async function Services() {
             href="/services"
             className="transition-colors hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-900"
           >
-            SERVICE
+            서비스 안내
           </Link>
         </h2>
         <ServiceTabs
