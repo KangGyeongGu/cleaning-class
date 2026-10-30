@@ -31,7 +31,7 @@ export function ReviewForm({
   const otherTags = tags.filter((tag) => !serviceTags.includes(tag));
   return (
     <AdminEditor
-      title={review ? "작업후기 수정" : "작업후기 등록"}
+      title={review ? "작업 사례 수정" : "작업 사례 등록"}
       returnHref="/admin/reviews"
       busy={image.isConverting}
       action={

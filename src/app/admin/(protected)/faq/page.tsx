@@ -11,10 +11,10 @@ export default async function FaqPage(): Promise<React.ReactElement> {
       createHref="/admin/faq/new"
       description={
         <AdminDescriptionSection
-          label="고객센터 안내 문구"
+          label="자주 묻는 질문 안내 문구"
           field="faq_description"
-          placeholder="고객센터 페이지 안내 문구를 입력하세요"
-          emptyText="고객센터 페이지 안내 문구가 없습니다."
+          placeholder="자주 묻는 질문 페이지 안내 문구를 입력하세요"
+          emptyText="자주 묻는 질문 페이지 안내 문구가 없습니다."
           onSave={updateFaqDescription}
         />
       }

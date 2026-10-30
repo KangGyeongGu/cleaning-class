@@ -8,7 +8,7 @@ import { updateCustomerReviewDescription } from "@/shared/actions/site-config";
 import { reviewListSortSchema } from "@/shared/lib/schema/index";
 
 export const metadata: Metadata = {
-  title: "고객리뷰 | 후기 관리",
+  title: "고객 리뷰 | 작업 사례 관리",
   robots: { index: false, follow: false },
 };
 
@@ -33,7 +33,7 @@ export default async function CustomerReviewsPage({
       active="/admin/customer-reviews"
       description={
         <AdminDescriptionSection
-          label="고객리뷰 영역 안내 문구"
+          label="고객 리뷰 영역 안내 문구"
           field="customer_review_description"
           placeholder="고객 리뷰 섹션 안내 문구를 입력하세요"
           emptyText="고객 리뷰 섹션 안내 문구가 없습니다."

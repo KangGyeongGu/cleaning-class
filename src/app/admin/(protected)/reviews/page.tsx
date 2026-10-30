@@ -28,16 +28,16 @@ export default async function ReviewsPage({
       createHref="/admin/reviews/new"
       description={
         <AdminDescriptionSection
-          label="작업후기 영역 안내 문구"
+          label="작업 사례 영역 안내 문구"
           field="review_description"
-          placeholder="리뷰 섹션 안내 문구를 입력하세요"
-          emptyText="리뷰 섹션 안내 문구가 없습니다."
+          placeholder="작업 사례 섹션 안내 문구를 입력하세요"
+          emptyText="작업 사례 섹션 안내 문구가 없습니다."
           onSave={updateReviewDescription}
         />
       }
     >
       <nav
-        aria-label="리뷰 정렬"
+        aria-label="작업 사례 정렬"
         className="mb-3 flex items-center justify-end gap-4"
       >
         <Link

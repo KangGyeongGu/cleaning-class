@@ -20,11 +20,11 @@ const PAGE_DESCRIPTION =
   "청소클라쓰의 전문 청소·이사 서비스를 소개합니다. 거주청소, 정기청소, 특수청소, 원룸이사, 포장이사 등.";
 
 export const metadata: Metadata = {
-  title: "서비스 소개",
+  title: "서비스 안내",
   description: PAGE_DESCRIPTION,
   alternates: { canonical: "/services" },
   openGraph: {
-    title: "서비스 소개 | 청소클라쓰",
+    title: "서비스 안내 | 청소클라쓰",
     description: "청소클라쓰의 전문 청소·이사 서비스를 소개합니다.",
     url: "/services",
     images: [
@@ -32,20 +32,20 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "청소클라쓰 서비스 소개",
+        alt: "청소클라쓰 서비스 안내",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "서비스 소개 | 청소클라쓰",
+    title: "서비스 안내 | 청소클라쓰",
     description: "청소클라쓰의 전문 청소·이사 서비스를 소개합니다.",
   },
 };
 
 const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
   { name: "홈", url: "https://www.cleaningclass.co.kr" },
-  { name: "서비스 소개", url: "https://www.cleaningclass.co.kr/services" },
+  { name: "서비스 안내", url: "https://www.cleaningclass.co.kr/services" },
 ]);
 
 interface ServiceTextCardProps {
@@ -192,12 +192,12 @@ export default async function ServicesPage() {
               </li>
               <li aria-hidden="true">/</li>
               <li className="text-slate-900" aria-current="page">
-                서비스 소개
+                서비스 안내
               </li>
             </ol>
           </nav>
 
-          <h1 className="text-heading-1 mb-4">서비스 소개</h1>
+          <h1 className="text-heading-1 mb-4">서비스 안내</h1>
           <p className="text-body-sm max-w-lg whitespace-pre-line text-slate-500">
             {siteConfig?.service_description?.trim() ||
               DEFAULT_SERVICE_DESCRIPTION}

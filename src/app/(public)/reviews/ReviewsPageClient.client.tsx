@@ -59,7 +59,7 @@ function ReviewItem({ review }: { review: Review }) {
         {cardUrl && (
           <div className="mt-auto flex justify-end" aria-hidden="true">
             <span className="text-label flex w-fit items-center gap-1.5 border-b border-transparent pb-0.5 text-slate-900 transition-all group-hover:border-slate-900">
-              후기 보기 <ArrowUpRight size={12} />
+              사례 보기 <ArrowUpRight size={12} />
             </span>
           </div>
         )}
@@ -206,7 +206,7 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
       {filteredReviews.length === 0 ? (
         <div className="flex min-h-64 items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
           <p className="text-sm font-light text-slate-400">
-            해당 카테고리의 후기가 없습니다.
+            해당 카테고리의 작업 사례가 없습니다.
           </p>
         </div>
       ) : (

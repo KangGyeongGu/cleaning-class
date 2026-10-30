@@ -30,7 +30,7 @@ export function ReviewListClient({
     runDelete(reviewId, () => deleteReview(reviewId), {
       confirmMessage: "정말 삭제하시겠습니까?",
       errorMessage: "삭제 중 오류가 발생했습니다.",
-      logLabel: "리뷰 삭제 중 예외 발생:",
+      logLabel: "작업 사례 삭제 중 예외 발생:",
     });
 
   const handleTogglePublish = (
@@ -39,7 +39,7 @@ export function ReviewListClient({
   ): Promise<void> =>
     runToggle(reviewId, () => toggleReviewPublish(reviewId, !currentStatus), {
       errorMessage: "게시 상태 변경 중 오류가 발생했습니다.",
-      logLabel: "리뷰 게시 상태 변경 중 예외 발생:",
+      logLabel: "작업 사례 게시 상태 변경 중 예외 발생:",
     });
 
   return (
@@ -108,8 +108,8 @@ export function ReviewListClient({
                       <RowActions
                         variant="mobile"
                         editHref={`/admin/reviews/${review.id}/edit`}
-                        editLabel="리뷰 수정"
-                        deleteLabel="리뷰 삭제"
+                        editLabel="작업 사례 수정"
+                        deleteLabel="작업 사례 삭제"
                         onDelete={() => handleDelete(review.id)}
                         isDeleting={deletingId === review.id}
                       />
@@ -175,8 +175,8 @@ export function ReviewListClient({
                 <RowActions
                   variant="desktop"
                   editHref={`/admin/reviews/${review.id}/edit`}
-                  editLabel="리뷰 수정"
-                  deleteLabel="리뷰 삭제"
+                  editLabel="작업 사례 수정"
+                  deleteLabel="작업 사례 삭제"
                   onDelete={() => handleDelete(review.id)}
                   isDeleting={deletingId === review.id}
                 />

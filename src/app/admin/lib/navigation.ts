@@ -8,10 +8,10 @@ export const MANAGEMENT_SECTIONS = {
     ],
   },
   reviews: {
-    title: "후기 관리",
+    title: "작업 사례 관리",
     tabs: [
-      { href: "/admin/reviews", label: "작업후기" },
-      { href: "/admin/customer-reviews", label: "고객리뷰" },
+      { href: "/admin/reviews", label: "작업 사례" },
+      { href: "/admin/customer-reviews", label: "고객 리뷰" },
     ],
   },
 } as const;

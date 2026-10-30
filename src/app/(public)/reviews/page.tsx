@@ -10,31 +10,33 @@ import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
 
+const PAGE_DESCRIPTION =
+  "청소클라쓰의 실제 청소·이사 작업 사례를 확인하세요. 거주청소, 정기청소, 특수청소, 쓰레기집청소, 상가청소 등 현장별 작업 내용을 소개합니다.";
+
 export const metadata: Metadata = {
-  title: "작업후기",
-  description:
-    "청소클라쓰의 실제 작업후기를 확인하세요. 거주청소, 정기청소, 특수청소, 이사청소 등 다양한 작업 사례를 소개합니다.",
+  title: "작업 사례",
+  description: PAGE_DESCRIPTION,
   alternates: { canonical: "/reviews" },
   openGraph: {
-    title: "작업후기 | 청소클라쓰",
-    description:
-      "청소클라쓰의 실제 작업후기를 확인하세요. 거주청소, 정기청소, 특수청소, 이사청소 등 다양한 작업 사례를 소개합니다.",
+    title: "작업 사례 | 청소클라쓰",
+    description: PAGE_DESCRIPTION,
     url: "/reviews",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "청소클라쓰 청소·이사 작업후기",
+        alt: "청소클라쓰 청소·이사 작업 사례",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "작업후기 | 청소클라쓰",
-    description:
-      "청소클라쓰의 실제 작업후기를 확인하세요. 거주청소, 정기청소, 특수청소, 이사청소 등 다양한 작업 사례를 소개합니다.",
-    images: [{ url: "/opengraph-image", alt: "청소클라쓰 청소·이사 작업후기" }],
+    title: "작업 사례 | 청소클라쓰",
+    description: PAGE_DESCRIPTION,
+    images: [
+      { url: "/opengraph-image", alt: "청소클라쓰 청소·이사 작업 사례" },
+    ],
   },
 };
 
@@ -46,7 +48,7 @@ export default async function ReviewsPage() {
 
   const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
     { name: "홈", url: "https://www.cleaningclass.co.kr" },
-    { name: "작업후기", url: "https://www.cleaningclass.co.kr/reviews" },
+    { name: "작업 사례", url: "https://www.cleaningclass.co.kr/reviews" },
   ]);
 
   return (
@@ -68,12 +70,12 @@ export default async function ReviewsPage() {
                 </li>
                 <li aria-hidden="true">/</li>
                 <li className="text-slate-900" aria-current="page">
-                  작업후기
+                  작업 사례
                 </li>
               </ol>
             </nav>
 
-            <h1 className="text-heading-1 mb-4">작업후기</h1>
+            <h1 className="text-heading-1 mb-4">작업 사례</h1>
             <p className="text-body-sm max-w-lg whitespace-pre-line text-slate-500">
               {siteConfig?.review_description?.trim() ||
                 DEFAULT_REVIEW_DESCRIPTION}
