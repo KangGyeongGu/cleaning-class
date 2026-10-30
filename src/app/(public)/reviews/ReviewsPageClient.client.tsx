@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useRef } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { QueryStringSync } from "@/components/common/QueryStringSync.client";
+import {
+  reviewQuery,
+  REVIEWS_PER_PAGE,
+} from "@/shared/lib/pure/review-pagination";
+import type {
+  ReviewPage,
+  PublicReview,
+} from "@/shared/lib/queries/review-page";
 import Image from "next/image";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Review } from "@/shared/types/database";
 import { getReviewImageUrl } from "@/shared/lib/supabase/storage";
 import {
   CLEANING_SERVICE_TYPES,
@@ -18,10 +25,10 @@ import { Button } from "@/components/ui/Button";
 import { track, currentPath } from "@/shared/lib/infra/track";
 
 interface ReviewsPageClientProps {
-  reviews: Review[];
+  initialData: ReviewPage;
 }
 
-function ReviewItem({ review }: { review: Review }) {
+function ReviewItem({ review }: { review: PublicReview }) {
   const rawUrl = review.link_url || null;
   const cardUrl = rawUrl && isSafeUrl(rawUrl) ? rawUrl : null;
 
@@ -96,38 +103,51 @@ function ReviewItem({ review }: { review: Review }) {
   return <div className="h-full">{inner}</div>;
 }
 
-const PER_PAGE = 12;
-
-export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+export function ReviewsPageClient({ initialData }: ReviewsPageClientProps) {
   const listRef = useRef<HTMLUListElement>(null);
-
-  const filterParam = searchParams.get("filter");
-  const activeFilter =
-    filterParam &&
-    (CLEANING_SERVICE_TYPES as readonly string[]).includes(filterParam)
-      ? filterParam
-      : null;
-  const pageParam = Number.parseInt(searchParams.get("page") ?? "1", 10);
-  const requestedPage =
-    Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
-
-  const filteredReviews = activeFilter
-    ? reviews.filter((r) => r.tags.includes(activeFilter))
-    : reviews;
-
-  const totalPages = Math.max(1, Math.ceil(filteredReviews.length / PER_PAGE));
-  const currentPage = Math.min(requestedPage, totalPages);
-  const pagedReviews = filteredReviews.slice(
-    (currentPage - 1) * PER_PAGE,
-    currentPage * PER_PAGE,
+  const [search, setSearch] = useState("");
+  const [data, setData] = useState(initialData);
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const { filter: activeFilter, page: requestedPage } = reviewQuery(search);
+  const [loadedKey, setLoadedKey] = useState(
+    `${initialData.filter ?? ""}:${initialData.page}`,
   );
+  const key = `${activeFilter ?? ""}:${requestedPage}`;
+  const loading = key !== loadedKey;
+
+  useEffect(() => {
+    if (loadedKey === key) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({ page: String(requestedPage) });
+    if (activeFilter) params.set("filter", activeFilter);
+    void fetch(`/api/reviews?${params}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("목록 조회 실패");
+        const result: ReviewPage = await response.json();
+        if (controller.signal.aborted) return;
+        setLoadedKey(key);
+        setData(result);
+        setError(false);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true);
+      });
+    return () => controller.abort();
+  }, [key, activeFilter, requestedPage, retry, loadedKey]);
+
+  const totalPages = Math.max(1, Math.ceil(data.total / REVIEWS_PER_PAGE));
+  const currentPage = data.page;
+  const pagedReviews = data.reviews;
+
+  const syncSearch = useCallback((value: string) => {
+    setSearch(value);
+    setError(false);
+  }, []);
 
   const updateParams = useCallback(
     (next: { filter?: string | null; page?: number }) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       if (next.filter !== undefined) {
         if (next.filter) params.set("filter", next.filter);
         else params.delete("filter");
@@ -137,18 +157,21 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
         else params.delete("page");
       }
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      window.history.pushState(
+        null,
+        "",
+        qs ? `${window.location.pathname}?${qs}` : window.location.pathname,
+      );
+      setSearch(qs);
+      setError(false);
     },
-    [searchParams, router, pathname],
+    [],
   );
 
-  const goToPage = useCallback(
-    (page: number) => {
-      updateParams({ page });
-      listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    [updateParams],
-  );
+  const goToPage = (page: number) => {
+    updateParams({ page });
+    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const handleFilterChange = (filter: string | null) => {
     updateParams({ filter, page: 1 });
@@ -176,7 +199,25 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
   };
 
   return (
-    <div>
+    <div aria-busy={loading && !error}>
+      <Suspense>
+        <QueryStringSync onChange={syncSearch} />
+      </Suspense>
+      {error && (
+        <div
+          role="alert"
+          className="mb-6 flex items-center gap-3 text-sm text-slate-600"
+        >
+          목록을 불러오지 못했습니다.
+          <button
+            type="button"
+            onClick={() => setRetry((value) => value + 1)}
+            className="underline"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
       <div className="scrollbar-hide mb-10 flex gap-2 overflow-x-auto">
         <Button
           variant="filter"
@@ -203,7 +244,7 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
         ))}
       </div>
 
-      {filteredReviews.length === 0 ? (
+      {data.total === 0 ? (
         <div className="flex min-h-64 items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
           <p className="text-sm font-light text-slate-400">
             해당 카테고리의 작업 사례가 없습니다.
@@ -212,7 +253,7 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
       ) : (
         <>
           <p className="mb-6 text-sm font-light text-slate-400">
-            총 {filteredReviews.length}건
+            총 {data.total}건
           </p>
 
           <ul
@@ -235,7 +276,7 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
               <button
                 type="button"
                 onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
+                disabled={loading || currentPage === 1}
                 aria-label="이전 페이지"
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
               >
@@ -295,7 +336,7 @@ export function ReviewsPageClient({ reviews }: ReviewsPageClientProps) {
               <button
                 type="button"
                 onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={loading || currentPage === totalPages}
                 aria-label="다음 페이지"
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
               >

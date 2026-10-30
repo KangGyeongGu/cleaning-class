@@ -34,6 +34,14 @@ vi.mock("@/shared/lib/queries/review", () => ({
     ],
   }),
 }));
+vi.mock("@/shared/lib/queries/review-page", () => ({
+  getPublishedReviewPage: async () => ({
+    reviews: [],
+    total: 0,
+    page: 1,
+    filter: null,
+  }),
+}));
 vi.mock("@/shared/lib/supabase/storage", () => ({
   getReviewImageUrl: () => "data:image/png;base64,iVBORw0KGgo=",
 }));

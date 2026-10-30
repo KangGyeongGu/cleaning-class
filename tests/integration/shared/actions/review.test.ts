@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockGetUser = vi.hoisted(() => vi.fn());
 const mockRevalidatePath = vi.hoisted(() => vi.fn());
+const mockUpdateTag = vi.hoisted(() => vi.fn());
 const mockUploadImage = vi.hoisted(() => vi.fn());
 const mockDeleteImage = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 
@@ -35,7 +36,10 @@ const mockCreateClient = vi.hoisted(() =>
   vi.fn(async () => ({ from: mockFrom })),
 );
 
-vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
+vi.mock("next/cache", () => ({
+  revalidatePath: mockRevalidatePath,
+  updateTag: mockUpdateTag,
+}));
 vi.mock("@/shared/lib/supabase/auth", () => ({ getUser: mockGetUser }));
 vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: mockCreateClient,
@@ -86,6 +90,7 @@ describe("createReview", () => {
     const { createReview } = await import("@/shared/actions/review");
     const result = await createReview(null, buildForm());
     expect(result.success).toBe(true);
+    expect(mockUpdateTag).toHaveBeenCalledWith("public-reviews");
     expect(mockUploadImage).toHaveBeenCalledWith(
       "review-images",
       expect.any(File),

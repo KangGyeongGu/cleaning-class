@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { DEFAULT_REVIEW_DESCRIPTION } from "@/shared/lib/pure/constants";
-import { getAllPublishedReviews } from "@/shared/lib/queries/review";
+import { getPublishedReviewPage } from "@/shared/lib/queries/review-page";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
 import { ReviewsPageClient } from "@/app/(public)/reviews/ReviewsPageClient.client";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
@@ -41,8 +40,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ReviewsPage() {
-  const [reviews, siteConfig] = await Promise.all([
-    getAllPublishedReviews(),
+  const [initialData, siteConfig] = await Promise.all([
+    getPublishedReviewPage(),
     getSiteConfig(),
   ]);
 
@@ -86,9 +85,7 @@ export default async function ReviewsPage() {
         <section className="py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <h2 className="sr-only">작업 목록</h2>
-            <Suspense fallback={null}>
-              <ReviewsPageClient reviews={reviews} />
-            </Suspense>
+            <ReviewsPageClient initialData={initialData} />
           </div>
         </section>
       </div>

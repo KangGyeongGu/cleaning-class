@@ -75,6 +75,7 @@ interface ServiceCategorySectionProps {
   label: string;
   heading: string;
   services: ServiceWithImageUrls[];
+  priorityFirstImage?: boolean;
 }
 
 function ServiceCategorySection({
@@ -82,6 +83,7 @@ function ServiceCategorySection({
   label,
   heading,
   services,
+  priorityFirstImage = false,
 }: ServiceCategorySectionProps) {
   if (services.length === 0) return null;
 
@@ -118,7 +120,7 @@ function ServiceCategorySection({
                           beforeSrc={service.detailImageUrl!}
                           afterSrc={service.detailAfterImageUrl}
                           alt={service.title}
-                          priority={index === 0}
+                          priority={priorityFirstImage && index === 0}
                         />
                       ) : (
                         <div className="relative aspect-[4/3] overflow-hidden">
@@ -126,7 +128,7 @@ function ServiceCategorySection({
                             src={service.detailImageUrl!}
                             alt={service.title}
                             fill
-                            priority={index === 0}
+                            priority={priorityFirstImage && index === 0}
                             sizes="(max-width: 768px) calc(100vw - 48px), 320px"
                             placeholder="blur"
                             blurDataURL={BLUR_PLACEHOLDER}
@@ -210,6 +212,7 @@ export default async function ServicesPage() {
         label="Cleaning"
         heading="청소 서비스"
         services={cleaningServices}
+        priorityFirstImage
       />
 
       {cleaningServices.length > 0 && movingServices.length > 0 && (

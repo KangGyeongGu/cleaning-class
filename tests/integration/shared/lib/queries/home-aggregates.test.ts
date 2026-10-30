@@ -72,7 +72,7 @@ describe("getHomeReviewData", () => {
     expect(result.counts[CLEANING_SERVICE_TYPES[0]]).toBe(20);
   });
 
-  it("keeps available previews when the overall count fails", async () => {
+  it("throws when the overall count fails", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     let call = 0;
     mockFrom.mockImplementation(() =>
@@ -87,10 +87,9 @@ describe("getHomeReviewData", () => {
       ),
     );
     const { getHomeReviewData } = await import("@/shared/lib/queries/review");
-    const result = await getHomeReviewData();
-    expect(result.reviews).toHaveLength(1);
-    expect(result.counts.all).toBeNull();
-    expect(consoleSpy).toHaveBeenCalled();
+    await expect(getHomeReviewData()).rejects.toMatchObject({
+      message: "count failed",
+    });
     consoleSpy.mockRestore();
   });
 
@@ -125,7 +124,7 @@ describe("getHomeReviewData", () => {
     expect(result.reviews[0].id).toBe("new");
   });
 
-  it("skips a category when its query returns error (and warns)", async () => {
+  it("throws when a category query fails", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     let call = 0;
     mockFrom.mockImplementation(() =>
@@ -136,20 +135,17 @@ describe("getHomeReviewData", () => {
       ),
     );
     const { getHomeReviewData } = await import("@/shared/lib/queries/review");
-    const result = await getHomeReviewData();
-    expect(result.reviews.length).toBeGreaterThanOrEqual(1);
-    expect(consoleSpy).toHaveBeenCalled();
+    await expect(getHomeReviewData()).rejects.toMatchObject({ message: "RLS" });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on outer exception", async () => {
+  it("throws on outer exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("boom");
     });
     const { getHomeReviewData } = await import("@/shared/lib/queries/review");
-    const result = await getHomeReviewData();
-    expect(result.reviews).toEqual([]);
+    await expect(getHomeReviewData()).rejects.toThrow("boom");
     consoleSpy.mockRestore();
   });
 
@@ -186,28 +182,27 @@ describe("getAllPublishedReviews", () => {
     expect(result).toHaveLength(1);
   });
 
-  it("returns [] on DB error and logs", async () => {
+  it("throws on DB error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getAllPublishedReviews } =
       await import("@/shared/lib/queries/review");
-    const result = await getAllPublishedReviews();
-    expect(result).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
+    await expect(getAllPublishedReviews()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on exception", async () => {
+  it("throws on exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("net");
     });
     const { getAllPublishedReviews } =
       await import("@/shared/lib/queries/review");
-    const result = await getAllPublishedReviews();
-    expect(result).toEqual([]);
+    await expect(getAllPublishedReviews()).rejects.toThrow("net");
     consoleSpy.mockRestore();
   });
 
@@ -307,25 +302,29 @@ describe("getPublishedServicesWithImageUrls", () => {
     expect(result[0]).not.toHaveProperty("tags");
   });
 
-  it("returns [] on DB error", async () => {
+  it("throws on DB error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getPublishedServicesWithImageUrls } =
       await import("@/shared/lib/queries/service");
-    expect(await getPublishedServicesWithImageUrls()).toEqual([]);
+    await expect(getPublishedServicesWithImageUrls()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on exception", async () => {
+  it("throws on exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("x");
     });
     const { getPublishedServicesWithImageUrls } =
       await import("@/shared/lib/queries/service");
-    expect(await getPublishedServicesWithImageUrls()).toEqual([]);
+    await expect(getPublishedServicesWithImageUrls()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
@@ -362,25 +361,29 @@ describe("getPublishedCustomerReviews", () => {
     expect(result).toHaveLength(1);
   });
 
-  it("returns [] on DB error", async () => {
+  it("throws on DB error", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: { message: "x" } }),
     );
     const { getPublishedCustomerReviews } =
       await import("@/shared/lib/queries/customer-review");
-    expect(await getPublishedCustomerReviews()).toEqual([]);
+    await expect(getPublishedCustomerReviews()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 
-  it("returns [] on exception", async () => {
+  it("throws on exception", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("x");
     });
     const { getPublishedCustomerReviews } =
       await import("@/shared/lib/queries/customer-review");
-    expect(await getPublishedCustomerReviews()).toEqual([]);
+    await expect(getPublishedCustomerReviews()).rejects.toMatchObject({
+      message: "x",
+    });
     consoleSpy.mockRestore();
   });
 

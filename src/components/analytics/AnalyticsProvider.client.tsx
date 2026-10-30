@@ -12,6 +12,8 @@ import { kstDate } from "@/shared/lib/pure/dashboard";
 export default function AnalyticsProvider(): null {
   const pathname = usePathname();
   const hasRecordedGaLanding = useRef(false);
+  const lastRecordedDay = useRef("");
+  const sending = useRef(false);
   useEffect(() => {
     if (pathname.startsWith("/admin")) return;
     const landing = {
@@ -27,23 +29,19 @@ export default function AnalyticsProvider(): null {
       hasRecordedGaLanding.current = true;
       if (landing.event_payload.source !== "direct") trackGaEvent(landing);
     }
-    let lastDay = "";
-    let sending = false;
-    let active = true;
     const record = async () => {
       if (document.visibilityState === "hidden") return;
       const day = kstDate();
-      if (lastDay === day || sending) return;
-      sending = true;
+      if (lastRecordedDay.current === day || sending.current) return;
+      sending.current = true;
       const recorded = await trackApiEvent(landing);
-      sending = false;
-      if (recorded && active) lastDay = day;
+      sending.current = false;
+      if (recorded) lastRecordedDay.current = day;
     };
     record();
     const timer = window.setInterval(record, 60_000);
     document.addEventListener("visibilitychange", record);
     return () => {
-      active = false;
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", record);
     };

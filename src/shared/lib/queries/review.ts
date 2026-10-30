@@ -37,78 +37,61 @@ export interface HomeReviewData {
 }
 
 export async function getHomeReviewData(): Promise<HomeReviewData> {
-  try {
-    const supabase = createStaticClient();
-    const [results, total] = await Promise.all([
-      Promise.all(
-        CLEANING_SERVICE_TYPES.map(async (type) => {
-          const result = await supabase
-            .from("reviews")
-            .select("*", { count: "exact" })
-            .eq("is_published", true)
-            .contains("tags", [type])
-            .order("created_at", { ascending: false })
-            .limit(HOME_REVIEW_LIMIT);
-          return { type, ...result };
-        }),
-      ),
-      supabase
-        .from("reviews")
-        .select("id", { count: "exact", head: true })
-        .eq("is_published", true)
-        .overlaps("tags", [...CLEANING_SERVICE_TYPES]),
-    ]);
+  const supabase = createStaticClient();
+  const [results, total] = await Promise.all([
+    Promise.all(
+      CLEANING_SERVICE_TYPES.map(async (type) => {
+        const result = await supabase
+          .from("reviews")
+          .select("*", { count: "exact" })
+          .eq("is_published", true)
+          .contains("tags", [type])
+          .order("created_at", { ascending: false })
+          .limit(HOME_REVIEW_LIMIT);
+        return { type, ...result };
+      }),
+    ),
+    supabase
+      .from("reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("is_published", true)
+      .overlaps("tags", [...CLEANING_SERVICE_TYPES]),
+  ]);
 
-    const counts: HomeReviewData["counts"] = {
-      all: total.error ? null : (total.count ?? null),
-    };
-    if (total.error)
-      console.error("[getHomeReviewData] Count error:", total.error);
-    const seen = new Set<string>();
-    const reviews: Review[] = [];
-    for (const { type, data, count, error } of results) {
-      counts[type] = error ? null : (count ?? null);
-      if (error) {
-        console.error("[getHomeReviewData] DB error:", error);
-        continue;
-      }
-      for (const review of (data as Review[] | null) ?? []) {
-        if (!seen.has(review.id)) {
-          seen.add(review.id);
-          reviews.push(review);
-        }
+  const counts: HomeReviewData["counts"] = {
+    all: total.count ?? null,
+  };
+  if (total.error) throw total.error;
+  const seen = new Set<string>();
+  const reviews: Review[] = [];
+  for (const { type, data, count, error } of results) {
+    if (error) throw error;
+    counts[type] = count ?? null;
+    for (const review of (data as Review[] | null) ?? []) {
+      if (!seen.has(review.id)) {
+        seen.add(review.id);
+        reviews.push(review);
       }
     }
-    reviews.sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
-    return { reviews, counts };
-  } catch (err) {
-    console.error("[getHomeReviewData] Unexpected error:", err);
-    return { reviews: [], counts: { all: null } };
   }
+  reviews.sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+  return { reviews, counts };
 }
 
 export async function getAllPublishedReviews(): Promise<Review[]> {
-  try {
-    const supabase = createStaticClient();
-    const { data, error } = await supabase
-      .from("reviews")
-      .select("*")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false });
+  const supabase = createStaticClient();
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("[getAllPublishedReviews] DB error:", error);
-      return [];
-    }
+  if (error) throw error;
 
-    return (data as Review[] | null) ?? [];
-  } catch (err) {
-    console.error("[getAllPublishedReviews] Unexpected error:", err);
-    return [];
-  }
+  return (data as Review[] | null) ?? [];
 }
 
 export async function getReviewById(

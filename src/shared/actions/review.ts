@@ -1,12 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag, revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/server";
 import { withAuthAction } from "@/shared/lib/server/with-auth-action";
 import { uploadImage, deleteImage } from "@/shared/lib/supabase/storage-server";
 import { reviewFormSchema } from "@/shared/lib/schema/index";
 import type { ReviewInsert, ReviewUpdate } from "@/shared/types/database";
+
+import { PUBLIC_REVIEWS_CACHE_TAG } from "@/shared/lib/pure/review-pagination";
 
 const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
@@ -16,6 +18,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const REVALIDATE_PATHS = ["/", "/reviews", "/admin/reviews"] as const;
 
 function revalidateReviewPaths(): void {
+  updateTag(PUBLIC_REVIEWS_CACHE_TAG);
   for (const path of REVALIDATE_PATHS) {
     revalidatePath(path);
   }

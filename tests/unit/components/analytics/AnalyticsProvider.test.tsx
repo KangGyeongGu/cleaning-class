@@ -82,6 +82,62 @@ describe("방문 수집과 GA4 유입 분리", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(sendGa).toHaveBeenCalledTimes(1);
   });
+  it("성공한 방문 기록은 공개 페이지를 이동해도 당일 다시 전송하지 않음", async () => {
+    const view = render(<AnalyticsProvider />);
+    await act(async () => {});
+    navigation.pathname = "/services";
+    view.rerender(<AnalyticsProvider />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    vi.setSystemTime(new Date("2026-10-29T15:00:00Z"));
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(
+      JSON.parse(vi.mocked(fetch).mock.calls[1][1]!.body as string).path,
+    ).toBe("/services");
+  });
+  it("전송 중 페이지를 이동해도 중복 요청 없이 성공 결과를 유지", async () => {
+    let finish!: (response: Response) => void;
+    vi.mocked(fetch).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const view = render(<AnalyticsProvider />);
+    navigation.pathname = "/services";
+    view.rerender(<AnalyticsProvider />);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      finish(new Response(null, { status: 204 }));
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it("이동 전 진행 중이던 요청이 실패하면 새 페이지에서 재시도", async () => {
+    let finish!: (response: Response) => void;
+    vi.mocked(fetch).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const view = render(<AnalyticsProvider />);
+    navigation.pathname = "/services";
+    view.rerender(<AnalyticsProvider />);
+    await act(async () => {
+      finish(new Response(null, { status: 503 }));
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(
+      JSON.parse(vi.mocked(fetch).mock.calls[1][1]!.body as string).path,
+    ).toBe("/services");
+  });
   it("숨긴 탭은 방문 수집을 기다렸다가 표시되면 기록", async () => {
     Object.defineProperty(document, "visibilityState", {
       configurable: true,
@@ -120,5 +176,6 @@ describe("방문 수집과 GA4 유입 분리", () => {
     );
     await act(async () => {});
     expect(sendGa).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

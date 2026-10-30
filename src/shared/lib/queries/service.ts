@@ -117,27 +117,16 @@ export async function getServiceById(
 export async function getPublishedServicesWithImageUrls(
   category?: "cleaning" | "moving",
 ): Promise<ServiceWithImageUrls[]> {
-  try {
-    const supabase = createStaticClient();
-    let query = supabase
-      .from("services")
-      .select("*")
-      .eq("is_published", true)
-      .order("sort_order", { ascending: true });
-    if (category) query = query.eq("category", category);
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("[getPublishedServicesWithImageUrls] DB error:", error);
-      return [];
-    }
-
-    return ((data as Service[] | null) ?? []).map(mapServiceWithImageUrls);
-  } catch (err) {
-    console.error("[getPublishedServicesWithImageUrls] Unexpected error:", err);
-    return [];
-  }
+  const supabase = createStaticClient();
+  let query = supabase
+    .from("services")
+    .select("*")
+    .eq("is_published", true)
+    .order("sort_order", { ascending: true });
+  if (category) query = query.eq("category", category);
+  const { data, error } = await query;
+  if (error) throw error;
+  return ((data as Service[] | null) ?? []).map(mapServiceWithImageUrls);
 }
 
 export async function getNextServiceSortOrder(): Promise<number> {

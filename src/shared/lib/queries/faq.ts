@@ -11,10 +11,7 @@ export async function getActiveFaqs(): Promise<FaqRow[]> {
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
-  if (error) {
-    console.error("[getActiveFaqs] 활성 FAQ 목록 조회 실패:", error);
-    return [];
-  }
+  if (error) throw error;
 
   return (data as FaqRow[]) ?? [];
 }

@@ -210,6 +210,7 @@ export function Navbar({
             key={item.label}
             href={item.href}
             tabIndex={isOpen ? 0 : -1}
+            prefetch={isOpen ? null : false}
             onClick={() => {
               setIsOpen(false);
 

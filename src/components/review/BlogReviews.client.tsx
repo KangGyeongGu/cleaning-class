@@ -386,7 +386,7 @@ export function BlogReviews({
                                 src={review.imageUrl}
                                 alt=""
                                 fill
-                                sizes="(max-width: 767px) 25vw, (max-width: 1279px) 9vw, 6vw"
+                                sizes="(max-width: 767px) 21vw, (max-width: 1279px) 8vw, 71px"
                                 className="object-cover"
                               />
                             </div>

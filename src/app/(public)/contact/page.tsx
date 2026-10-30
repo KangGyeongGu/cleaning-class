@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
 import { getPublishedPriceItems } from "@/shared/lib/queries/price";
@@ -130,11 +129,9 @@ export default async function ContactPage() {
               </aside>
 
               <div>
-                <Suspense>
-                  <ContactSection
-                    cleaningServiceOptions={cleaningServiceOptions}
-                  />
-                </Suspense>
+                <ContactSection
+                  cleaningServiceOptions={cleaningServiceOptions}
+                />
               </div>
             </div>
           </div>
