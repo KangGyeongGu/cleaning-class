@@ -56,6 +56,8 @@ export const dashboardRowSchema = z.object({
   phoneMoving: countSchema,
   quoteCleaning: countSchema,
   quoteMoving: countSchema,
+  quoteSubmitCleaning: countSchema.default(0),
+  quoteSubmitMoving: countSchema.default(0),
 });
 export const dashboardSnapshotSchema = z.object({
   rows: dashboardRowSchema.array(),
@@ -71,8 +73,17 @@ export function dashboardTotals(rows: DashboardRow[]) {
       phoneMoving: total.phoneMoving + row.phoneMoving,
       quoteCleaning: total.quoteCleaning + row.quoteCleaning,
       quoteMoving: total.quoteMoving + row.quoteMoving,
+      quoteSubmitCleaning: total.quoteSubmitCleaning + row.quoteSubmitCleaning,
+      quoteSubmitMoving: total.quoteSubmitMoving + row.quoteSubmitMoving,
     }),
-    { phoneCleaning: 0, phoneMoving: 0, quoteCleaning: 0, quoteMoving: 0 },
+    {
+      phoneCleaning: 0,
+      phoneMoving: 0,
+      quoteCleaning: 0,
+      quoteMoving: 0,
+      quoteSubmitCleaning: 0,
+      quoteSubmitMoving: 0,
+    },
   );
 }
 
@@ -103,6 +114,8 @@ export function legacyDashboardRows(
       phoneMoving: 0,
       quoteCleaning: 0,
       quoteMoving: 0,
+      quoteSubmitCleaning: 0,
+      quoteSubmitMoving: 0,
     });
   }
   const rawCounts = new Map<string, number>();
@@ -128,6 +141,10 @@ export function legacyDashboardRows(
     if (!row || (segment !== "cleaning" && segment !== "moving")) continue;
     if (event === "phone_click")
       row[segment === "cleaning" ? "phoneCleaning" : "phoneMoving"] = count;
+    if (event === "quote_form_click")
+      row[
+        segment === "cleaning" ? "quoteSubmitCleaning" : "quoteSubmitMoving"
+      ] = count;
     if (event === "quote_form_success")
       row[segment === "cleaning" ? "quoteCleaning" : "quoteMoving"] = count;
   }

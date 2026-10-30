@@ -12,7 +12,11 @@ import type {
   RawActivity,
 } from "@/shared/lib/pure/dashboard";
 
-const ACTIVITY_TYPES = ["phone_click", "quote_form_success"];
+const ACTIVITY_TYPES = [
+  "phone_click",
+  "quote_form_success",
+  "quote_form_click",
+];
 
 async function getExistingActivities(
   start: string,

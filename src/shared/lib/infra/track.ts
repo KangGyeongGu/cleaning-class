@@ -11,6 +11,7 @@ function shouldTrack(): boolean {
 }
 
 const GA_EVENT_MAP: Record<EventType, string> = {
+  quote_form_click: "quote_form_click",
   quote_form_success: "generate_lead",
   phone_click: "generate_lead",
   cta_click: "select_content",

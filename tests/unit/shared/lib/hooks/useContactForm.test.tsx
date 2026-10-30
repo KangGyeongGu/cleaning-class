@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 
 const mockSubmit = vi.hoisted(() => vi.fn());
 const mockGa = vi.hoisted(() => vi.fn());
+const mockTrackApi = vi.hoisted(() => vi.fn());
 const mockTrack = vi.hoisted(() => vi.fn());
 const mockCurrentPath = vi.hoisted(() => vi.fn(() => "/contact"));
 
@@ -12,6 +13,7 @@ vi.mock("@/shared/actions/contact", () => ({
 
 vi.mock("@/shared/lib/infra/track", () => ({
   track: mockTrack,
+  trackApiEvent: mockTrackApi,
   trackGaEvent: mockGa,
   currentPath: mockCurrentPath,
 }));
@@ -49,6 +51,29 @@ async function submitWith(result: unknown, params: Partial<Params> = {}) {
 }
 
 describe("useContactForm", () => {
+  it("제출 시도는 파일이나 본문 없이 별도 API로 기록", () => {
+    const { result } = renderHook(() =>
+      useContactForm(
+        baseParams({
+          inquiryType: "moving",
+          initialServiceType: "원룸이사",
+          hasImages: true,
+        }),
+      ),
+    );
+    act(() => result.current.recordSubmit());
+    expect(mockTrackApi).toHaveBeenCalledExactlyOnceWith({
+      event_type: "quote_form_click",
+      event_payload: {
+        inquiry_type: "moving",
+        service_type: "원룸이사",
+        has_images: true,
+      },
+      path: "/contact",
+    });
+    expect(mockSubmit).not.toHaveBeenCalled();
+    expect(mockGa).not.toHaveBeenCalled();
+  });
   it("초기 상태: state null, formValid false, showSuccess false", () => {
     const { result } = renderHook(() => useContactForm(baseParams()));
     expect(result.current.state).toBeNull();

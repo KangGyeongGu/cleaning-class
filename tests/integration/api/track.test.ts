@@ -11,7 +11,10 @@ vi.mock("@/shared/lib/supabase/server", () => ({
   createClient: async () => ({ from: () => ({ insert: mocks.insert }) }),
 }));
 vi.mock("@/shared/lib/server/analytics-client", () => ({
-  createAnalyticsClient: () => ({ rpc: mocks.rpc }),
+  createAnalyticsClient: () => ({
+    rpc: mocks.rpc,
+    from: () => ({ insert: mocks.insert }),
+  }),
 }));
 vi.mock("@/shared/lib/server/analytics-visitor", () => ({
   dailyVisitor: mocks.visitor,
@@ -64,30 +67,19 @@ describe("통계 수집 API", () => {
     });
     expect(mocks.insert).not.toHaveBeenCalled();
   });
-  it("브라우저가 주장한 견적 성공과 제거된 제출 클릭을 저장하지 않음", async () => {
+  it("브라우저의 성공 주장은 무시하고 제출 시도는 서버 자격증명으로 저장", async () => {
+    const attempt = {
+      event_type: "quote_form_click",
+      event_payload: { inquiry_type: "cleaning" },
+      path: "/contact",
+    };
     expect(
-      (
-        await POST(
-          request({
-            event_type: "quote_form_success",
-            event_payload: { inquiry_type: "cleaning" },
-            path: "/contact",
-          }),
-        )
-      ).status,
+      (await POST(request({ ...attempt, event_type: "quote_form_success" })))
+        .status,
     ).toBe(204);
-    expect(
-      (
-        await POST(
-          request({
-            event_type: "quote_form_click",
-            event_payload: { inquiry_type: "cleaning" },
-            path: "/contact",
-          }),
-        )
-      ).status,
-    ).toBe(400);
     expect(mocks.insert).not.toHaveBeenCalled();
+    expect((await POST(request(attempt))).status).toBe(204);
+    expect(mocks.insert).toHaveBeenCalledExactlyOnceWith(attempt);
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
   it("전화 클릭은 기존 이벤트로 기록", async () => {

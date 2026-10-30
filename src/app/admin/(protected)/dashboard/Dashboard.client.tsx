@@ -235,9 +235,10 @@ export function Dashboard({
               <Table aria-label="선택 기간 고객 활동 합계">
                 <Thead>
                   <Tr>
-                    <Th className="w-1/3">서비스</Th>
-                    <Th className="w-1/3 text-right">견적</Th>
-                    <Th className="w-1/3 text-right">전화</Th>
+                    <Th className="w-1/4">서비스</Th>
+                    <Th className="w-1/4 text-right">견적 제출</Th>
+                    <Th className="w-1/4 text-right">견적 접수</Th>
+                    <Th className="w-1/4 text-right">전화</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -246,16 +247,20 @@ export function Dashboard({
                       label: "청소",
                       phone: totals.phoneCleaning,
                       quote: totals.quoteCleaning,
+                      submit: totals.quoteSubmitCleaning,
                     },
                     {
                       label: "이사",
                       phone: totals.phoneMoving,
                       quote: totals.quoteMoving,
+                      submit: totals.quoteSubmitMoving,
                     },
                     {
                       label: "합계",
                       phone: totals.phoneCleaning + totals.phoneMoving,
                       quote: totals.quoteCleaning + totals.quoteMoving,
+                      submit:
+                        totals.quoteSubmitCleaning + totals.quoteSubmitMoving,
                     },
                   ].map((row) => (
                     <Tr
@@ -267,6 +272,9 @@ export function Dashboard({
                       }
                     >
                       <Td>{row.label}</Td>
+                      <Td className="text-right tabular-nums">
+                        {number(row.submit)}건
+                      </Td>
                       <Td className="text-right tabular-nums">
                         {number(row.quote)}건
                       </Td>

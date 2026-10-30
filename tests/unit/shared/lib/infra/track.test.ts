@@ -137,6 +137,7 @@ describe("track", () => {
 describe("mapToGaEvent", () => {
   it.each([
     ["quote_form_success", "generate_lead"],
+    ["quote_form_click", "quote_form_click"],
     ["phone_click", "generate_lead"],
     ["cta_click", "select_content"],
     ["quote_form_error", "quote_form_error"],

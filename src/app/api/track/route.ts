@@ -57,7 +57,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       return new NextResponse(null, { status: 503 });
     }
   }
-  const supabase = await createClient();
+  const supabase =
+    parsed.data.event_type === "quote_form_click"
+      ? createAnalyticsClient()
+      : await createClient();
   const { error } = await supabase.from("analytics_events").insert({
     event_type: parsed.data.event_type,
     event_payload: parsed.data.event_payload,

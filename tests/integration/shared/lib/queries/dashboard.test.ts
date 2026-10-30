@@ -29,6 +29,8 @@ const row = {
   phoneMoving: 1,
   quoteCleaning: 4,
   quoteMoving: 0,
+  quoteSubmitCleaning: 0,
+  quoteSubmitMoving: 0,
 };
 
 describe("getDashboardSnapshot", () => {

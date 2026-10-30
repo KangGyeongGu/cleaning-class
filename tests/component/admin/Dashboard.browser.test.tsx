@@ -33,6 +33,8 @@ const row = {
   phoneMoving: 1,
   quoteCleaning: 1,
   quoteMoving: 4,
+  quoteSubmitCleaning: 7,
+  quoteSubmitMoving: 2,
 };
 const snapshot = { rows: [row], updatedAt: new Date().toISOString() };
 const renderDashboard = () =>
@@ -63,13 +65,22 @@ describe("관리자 대시보드", () => {
     );
     const table = screen.getByRole("table");
     expect(
-      within(table).getByRole("row", { name: "청소 1건 2건" }),
+      within(table).getByRole("columnheader", { name: "견적 제출" }),
     ).toBeTruthy();
     expect(
-      within(table).getByRole("row", { name: "이사 4건 1건" }),
+      within(table).getByRole("columnheader", { name: "견적 접수" }),
     ).toBeTruthy();
     expect(
-      within(table).getByRole("row", { name: "합계 5건 3건" }),
+      screen.getByLabelText("날짜별 방문자·전화·견적 추이").textContent,
+    ).not.toContain("제출");
+    expect(
+      within(table).getByRole("row", { name: "청소 7건 1건 2건" }),
+    ).toBeTruthy();
+    expect(
+      within(table).getByRole("row", { name: "이사 2건 4건 1건" }),
+    ).toBeTruthy();
+    expect(
+      within(table).getByRole("row", { name: "합계 9건 5건 3건" }),
     ).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "트래픽 분석" }).getAttribute("href"),
@@ -134,7 +145,9 @@ describe("관리자 대시보드", () => {
     renderDashboard();
     fireEvent.click(screen.getByRole("button", { name: "새로고침" }));
     await waitFor(() =>
-      expect(screen.getByRole("row", { name: "청소 8건 2건" })).toBeTruthy(),
+      expect(
+        screen.getByRole("row", { name: "청소 7건 8건 2건" }),
+      ).toBeTruthy(),
     );
     expect(fetcher).toHaveBeenCalledWith(
       `/api/admin/dashboard?start=${range.start}&end=${today}`,
@@ -146,7 +159,7 @@ describe("관리자 대시보드", () => {
         "이전에 조회한 값",
       ),
     );
-    expect(screen.getByRole("row", { name: "청소 8건 2건" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: "청소 7건 8건 2건" })).toBeTruthy();
   });
   it("하나의 차트와 중앙 하단 범례를 렌더링하고 표시 항목 전환", async () => {
     const warning = vi.spyOn(console, "warn");
@@ -179,12 +192,12 @@ describe("관리자 대시보드", () => {
         range={range}
       />,
     );
-    expect(screen.getByRole("row", { name: "청소 8건 2건" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: "청소 7건 8건 2건" })).toBeTruthy();
     view.rerender(
       <Dashboard initial={null} initialError="서버 조회 실패" range={range} />,
     );
     expect(screen.getByRole("alert").textContent).toContain("서버 조회 실패");
-    expect(screen.getByRole("row", { name: "청소 8건 2건" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: "청소 7건 8건 2건" })).toBeTruthy();
     view.rerender(
       <Dashboard
         initial={{ ...snapshot, rows: [{ ...row, quoteCleaning: 9 }] }}
@@ -193,7 +206,7 @@ describe("관리자 대시보드", () => {
       />,
     );
     expect(screen.queryByRole("alert")).toBeNull();
-    expect(screen.getByRole("row", { name: "청소 9건 2건" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: "청소 7건 9건 2건" })).toBeTruthy();
   });
   it("모바일에서도 차트와 고객 활동 표가 화면 밖으로 밀리지 않음", async () => {
     await act(async () => {

@@ -2,7 +2,12 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { submitContactForm } from "@/shared/actions/contact";
-import { track, trackGaEvent, currentPath } from "@/shared/lib/infra/track";
+import {
+  track,
+  trackApiEvent,
+  trackGaEvent,
+  currentPath,
+} from "@/shared/lib/infra/track";
 
 type InquiryType = "cleaning" | "moving";
 
@@ -106,6 +111,18 @@ export function useContactForm({
     return () => clearTimeout(timer);
   }, [isSuccess, isReset, onReset]);
 
+  function recordSubmit(): void {
+    void trackApiEvent({
+      event_type: "quote_form_click",
+      event_payload: {
+        inquiry_type: inquiryType,
+        service_type: serviceType,
+        has_images: hasImages,
+      },
+      path: currentPath(),
+    });
+  }
+
   function clearReset(): void {
     if (isReset) setIsReset(false);
   }
@@ -113,6 +130,7 @@ export function useContactForm({
   return {
     state,
     formAction,
+    recordSubmit,
     isPending,
     name,
     setName,

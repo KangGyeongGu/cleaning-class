@@ -3,6 +3,7 @@ import {
   dashboardRange,
   dashboardRowSchema,
   dashboardTotals,
+  legacyDashboardRows,
   kstDate,
   retentionDate,
 } from "@/shared/lib/pure/dashboard";
@@ -50,6 +51,8 @@ describe("대시보드 날짜와 합계", () => {
       phoneMoving: 2,
       quoteCleaning: 5,
       quoteMoving: 6,
+      quoteSubmitCleaning: 0,
+      quoteSubmitMoving: 0,
     };
     expect(dashboardRowSchema.parse(row)).toEqual(row);
     expect(dashboardTotals([row, { ...row, visitors: null }])).toEqual({
@@ -57,6 +60,8 @@ describe("대시보드 날짜와 합계", () => {
       phoneMoving: 4,
       quoteCleaning: 10,
       quoteMoving: 12,
+      quoteSubmitCleaning: 0,
+      quoteSubmitMoving: 0,
     });
     expect(dashboardTotals([]).quoteCleaning).toBe(0);
   });
@@ -196,5 +201,46 @@ describe("기존 DB 읽기 전용 호환", () => {
         [],
       )[0].quoteCleaning,
     ).toBe(0);
+  });
+});
+
+describe("견적 제출과 접수 분리", () => {
+  it("원본과 일별 시도는 중복 없이 합치고 접수 성공과 따로 합산", () => {
+    const rows = legacyDashboardRows(
+      "2026-10-29",
+      "2026-10-29",
+      [
+        {
+          date: "2026-10-29",
+          event_type: "quote_form_click",
+          dimension: "cleaning",
+          count: 5,
+        },
+        {
+          date: "2026-10-29",
+          event_type: "quote_form_click",
+          dimension: "moving",
+          count: 3,
+        },
+      ],
+      [
+        {
+          created_at: "2026-10-29T01:00:00Z",
+          event_type: "quote_form_click",
+          event_payload: { inquiry_type: "cleaning" },
+        },
+        {
+          created_at: "2026-10-29T01:00:00Z",
+          event_type: "quote_form_success",
+          event_payload: { inquiry_type: "moving" },
+        },
+      ],
+    );
+    expect(dashboardTotals(rows)).toMatchObject({
+      quoteSubmitCleaning: 5,
+      quoteSubmitMoving: 3,
+      quoteCleaning: 0,
+      quoteMoving: 1,
+    });
   });
 });
