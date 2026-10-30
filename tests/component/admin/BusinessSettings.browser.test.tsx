@@ -57,6 +57,7 @@ const config: SiteConfig = {
   address: "전주시",
   description: "소개",
   blog_url: "https://blog.naver.com/test",
+  cafe_url: "",
   instagram_url: "",
   daangn_url: "",
   moving_representative: "이대표",
@@ -177,10 +178,12 @@ describe("업체 정보 설정 팝업", () => {
       />,
     );
     change("업체명", "새 업체");
+    change("네이버 카페", "https://cafe.naver.com/example");
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
     await waitFor(() => expect(mocks.cleaning).toHaveBeenCalledTimes(1));
     const data = mocks.cleaning.mock.calls[0][1] as FormData;
     expect(data.get("business_name")).toBe("새 업체");
+    expect(data.get("cafe_url")).toBe("https://cafe.naver.com/example");
     expect(data.get("moving_phone")).toBeNull();
     await waitFor(() =>
       expect(within(panel()).getByRole("status").textContent).toBe(

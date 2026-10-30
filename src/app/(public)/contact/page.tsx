@@ -5,24 +5,19 @@ import { getSiteConfig } from "@/shared/lib/queries/site-config";
 import { generateBreadcrumbListJsonLd } from "@/shared/lib/domain/json-ld";
 import { getPublishedPriceItems } from "@/shared/lib/queries/price";
 import { ContactSection } from "@/components/form/ContactSection.client";
-import {
-  NaverBlogIcon,
-  InstagramIcon,
-  DaangnIcon,
-} from "@/components/icons/SocialIcons";
+import { SocialLinks } from "@/components/social/SocialLinks.client";
 import TrackedPhoneLink from "@/components/analytics/TrackedPhoneLink.client";
-import TrackedSnsLink from "@/components/analytics/TrackedSnsLink.client";
 import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "견적문의",
+  title: "온라인 견적",
   description:
     "청소클라쓰에 청소·이사 견적을 문의하세요. 전화로도 편하게 연락하실 수 있습니다.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "견적문의 | 청소클라쓰",
+    title: "온라인 견적 | 청소클라쓰",
     description:
       "청소클라쓰에 청소·이사 견적을 문의하세요. 전화로도 편하게 연락하실 수 있습니다.",
     url: "/contact",
@@ -31,13 +26,13 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "청소클라쓰 견적문의",
+        alt: "청소클라쓰 온라인 견적",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "견적문의 | 청소클라쓰",
+    title: "온라인 견적 | 청소클라쓰",
     description:
       "청소클라쓰에 청소·이사 견적을 문의하세요. 전화로도 편하게 연락하실 수 있습니다.",
   },
@@ -52,14 +47,11 @@ export default async function ContactPage() {
 
   const breadcrumbJsonLd = generateBreadcrumbListJsonLd([
     { name: "홈", url: "https://www.cleaningclass.co.kr" },
-    { name: "견적문의", url: "https://www.cleaningclass.co.kr/contact" },
+    { name: "온라인 견적", url: "https://www.cleaningclass.co.kr/contact" },
   ]);
 
   const phone = (siteConfig?.phone ?? "").trim();
   const movingPhone = (siteConfig?.moving_phone ?? "").trim();
-  const blogUrl = (siteConfig?.blog_url ?? "").trim();
-  const instagramUrl = (siteConfig?.instagram_url ?? "").trim();
-  const daangnUrl = (siteConfig?.daangn_url ?? "").trim();
 
   return (
     <>
@@ -83,12 +75,12 @@ export default async function ContactPage() {
                       </li>
                       <li aria-hidden="true">/</li>
                       <li className="text-slate-900" aria-current="page">
-                        견적문의
+                        온라인 견적
                       </li>
                     </ol>
                   </nav>
 
-                  <h1 className="text-heading-1 mb-4">견적문의</h1>
+                  <h1 className="text-heading-1 mb-4">온라인 견적</h1>
                   <p className="text-body-sm mb-10 text-slate-500">
                     문의 후 24시간 이내에 연락드립니다.
                     <br />
@@ -131,39 +123,7 @@ export default async function ContactPage() {
 
                   <div className="border-t border-slate-100 pt-6">
                     <div className="flex justify-center gap-4">
-                      {blogUrl && (
-                        <TrackedSnsLink
-                          href={blogUrl}
-                          platform="naver_blog"
-                          location="contact_aside"
-                          ariaLabel="네이버 블로그"
-                          className="text-slate-400 transition-colors hover:text-slate-900"
-                        >
-                          <NaverBlogIcon size={20} />
-                        </TrackedSnsLink>
-                      )}
-                      {instagramUrl && (
-                        <TrackedSnsLink
-                          href={instagramUrl}
-                          platform="instagram"
-                          location="contact_aside"
-                          ariaLabel="인스타그램"
-                          className="text-slate-400 transition-colors hover:text-slate-900"
-                        >
-                          <InstagramIcon size={20} />
-                        </TrackedSnsLink>
-                      )}
-                      {daangnUrl && (
-                        <TrackedSnsLink
-                          href={daangnUrl}
-                          platform="daangn"
-                          location="contact_aside"
-                          ariaLabel="당근마켓"
-                          className="text-slate-400 transition-colors hover:text-slate-900"
-                        >
-                          <DaangnIcon size={20} />
-                        </TrackedSnsLink>
-                      )}
+                      <SocialLinks urls={siteConfig} location="contact_aside" />
                     </div>
                   </div>
                 </div>

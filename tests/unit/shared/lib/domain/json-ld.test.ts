@@ -15,6 +15,7 @@ const FULL_CONFIG: SiteConfig = {
   phone: "010-1111-2222",
   email: "x@y.com",
   blog_url: "https://blog.example.com",
+  cafe_url: "https://cafe.naver.com/example",
   instagram_url: "https://instagram.com/x",
   site_url: "https://example.com",
   description: "",
@@ -63,9 +64,10 @@ describe("generateWebSiteJsonLd", () => {
 });
 
 describe("generateLocalBusinessJsonLd", () => {
-  it("includes sameAs when blog/instagram/daangn urls non-empty", () => {
+  it("includes sameAs when social urls non-empty", () => {
     const result = generateLocalBusinessJsonLd(FULL_CONFIG);
-    expect(result.sameAs).toHaveLength(3);
+    expect(result.sameAs).toHaveLength(4);
+    expect(result.sameAs).toContain("https://cafe.naver.com/example");
     expect(result.sameAs).toContain("https://blog.example.com");
   });
 
@@ -73,6 +75,7 @@ describe("generateLocalBusinessJsonLd", () => {
     const result = generateLocalBusinessJsonLd({
       ...FULL_CONFIG,
       blog_url: "",
+      cafe_url: "",
       instagram_url: "",
       daangn_url: "",
     });
@@ -83,6 +86,7 @@ describe("generateLocalBusinessJsonLd", () => {
     const result = generateLocalBusinessJsonLd({
       ...FULL_CONFIG,
       blog_url: "   ",
+      cafe_url: "",
       instagram_url: "https://ig.com",
       daangn_url: "",
     });

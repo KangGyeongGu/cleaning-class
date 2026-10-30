@@ -4,12 +4,20 @@ import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 interface ChainResult {
   data: unknown;
   error: unknown;
+  count?: number | null;
 }
 
 function makePromiseChain(result: ChainResult) {
   const promise = Promise.resolve(result);
   const chain: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "contains", "order", "limit"]) {
+  for (const method of [
+    "select",
+    "eq",
+    "contains",
+    "overlaps",
+    "order",
+    "limit",
+  ]) {
     chain[method] = vi.fn(() => chain);
   }
   chain.then = (
@@ -43,17 +51,58 @@ beforeEach(() => {
   vi.resetModules();
 });
 
-describe("getPublishedReviewsByCleaningTypes", () => {
+describe("getHomeReviewData", () => {
+  it("returns exact totals beyond the preview limit without summing overlapping category counts", async () => {
+    let call = 0;
+    mockFrom.mockImplementation(() => {
+      const index = call++;
+      return makePromiseChain({
+        data:
+          index < CLEANING_SERVICE_TYPES.length
+            ? [{ id: "shared", created_at: "2026-01-01" }]
+            : null,
+        error: null,
+        count: index < CLEANING_SERVICE_TYPES.length ? 20 + index : 73,
+      });
+    });
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toHaveLength(1);
+    expect(result.counts.all).toBe(73);
+    expect(result.counts[CLEANING_SERVICE_TYPES[0]]).toBe(20);
+  });
+
+  it("keeps available previews when the overall count fails", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    let call = 0;
+    mockFrom.mockImplementation(() =>
+      makePromiseChain(
+        call++ < CLEANING_SERVICE_TYPES.length
+          ? {
+              data: [{ id: "r1", created_at: "2026-01-01" }],
+              error: null,
+              count: 12,
+            }
+          : { data: null, error: { message: "count failed" }, count: null },
+      ),
+    );
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toHaveLength(1);
+    expect(result.counts.all).toBeNull();
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
   it("dedupes reviews that appear in multiple category queries", async () => {
     const r1 = { id: "r1", created_at: "2026-01-01T00:00:00Z", tags: [] };
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [r1], error: null }),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("r1");
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toHaveLength(1);
+    expect(result.reviews[0].id).toBe("r1");
   });
 
   it("sorts by created_at desc across categories", async () => {
@@ -71,10 +120,9 @@ describe("getPublishedReviewsByCleaningTypes", () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain(variants[Math.min(call++, variants.length - 1)]),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result[0].id).toBe("new");
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews[0].id).toBe("new");
   });
 
   it("skips a category when its query returns error (and warns)", async () => {
@@ -87,10 +135,9 @@ describe("getPublishedReviewsByCleaningTypes", () => {
           : { data: [{ id: "r1", created_at: "2026-01-01" }], error: null },
       ),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result.length).toBeGreaterThanOrEqual(1);
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews.length).toBeGreaterThanOrEqual(1);
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
@@ -100,31 +147,28 @@ describe("getPublishedReviewsByCleaningTypes", () => {
     mockCreateStaticClient.mockImplementationOnce(() => {
       throw new Error("boom");
     });
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result).toEqual([]);
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toEqual([]);
     consoleSpy.mockRestore();
   });
 
-  it("uses 5 category queries (one per CLEANING_SERVICE_TYPES entry)", async () => {
+  it("uses category previews and one separate overall count", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: [], error: null }),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    await getPublishedReviewsByCleaningTypes();
-    expect(mockFrom).toHaveBeenCalledTimes(CLEANING_SERVICE_TYPES.length);
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    await getHomeReviewData();
+    expect(mockFrom).toHaveBeenCalledTimes(CLEANING_SERVICE_TYPES.length + 1);
   });
 
   it("handles null data array gracefully", async () => {
     mockFrom.mockImplementation(() =>
       makePromiseChain({ data: null, error: null }),
     );
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    const result = await getPublishedReviewsByCleaningTypes();
-    expect(result).toEqual([]);
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    const result = await getHomeReviewData();
+    expect(result.reviews).toEqual([]);
   });
 });
 

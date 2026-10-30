@@ -1,13 +1,8 @@
 import Link from "next/link";
 
 import type { SiteConfig } from "@/shared/types/database";
-import {
-  NaverBlogIcon,
-  InstagramIcon,
-  DaangnIcon,
-} from "@/components/icons/SocialIcons";
+import { SocialLinks } from "@/components/social/SocialLinks.client";
 import TrackedPhoneLink from "@/components/analytics/TrackedPhoneLink.client";
-import TrackedSnsLink from "@/components/analytics/TrackedSnsLink.client";
 
 interface FooterProps {
   siteConfig: SiteConfig | null;
@@ -17,10 +12,7 @@ export function Footer({ siteConfig }: FooterProps) {
   const businessName = siteConfig?.business_name ?? "청소클라쓰";
   const phone = siteConfig?.phone ?? "";
   const email = siteConfig?.email ?? "";
-  const blogUrl = siteConfig?.blog_url;
   const nomadLabsUrl = process.env.NEXT_PUBLIC_NOMADLABS_URL;
-  const instagramUrl = siteConfig?.instagram_url;
-  const daangnUrl = siteConfig?.daangn_url;
   const businessRegistrationNumber =
     siteConfig?.business_registration_number ?? "";
   const representative = siteConfig?.representative ?? "";
@@ -32,10 +24,6 @@ export function Footer({ siteConfig }: FooterProps) {
     siteConfig?.moving_business_registration_number ?? "";
   const movingAddress = siteConfig?.moving_address ?? "";
   const hasMovingInfo = movingRepresentative.trim() !== "";
-
-  const hasBlogUrl = blogUrl && blogUrl.trim() !== "";
-  const hasInstagramUrl = instagramUrl && instagramUrl.trim() !== "";
-  const hasDaangnUrl = daangnUrl && daangnUrl.trim() !== "";
 
   return (
     <footer className="bg-white text-slate-900">
@@ -119,54 +107,7 @@ export function Footer({ siteConfig }: FooterProps) {
           <div className="grid grid-cols-[auto_1fr] gap-x-8">
             <p className="text-label text-slate-900">Social</p>
             <ul className="space-y-3 text-sm font-light text-slate-600">
-              {hasBlogUrl && (
-                <li>
-                  <TrackedSnsLink
-                    href={blogUrl!}
-                    platform="naver_blog"
-                    location="footer"
-                    className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-slate-900 md:min-h-0"
-                    ariaLabel="네이버 블로그"
-                  >
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                      <NaverBlogIcon size={16} />
-                    </span>
-                    블로그
-                  </TrackedSnsLink>
-                </li>
-              )}
-              {hasInstagramUrl && (
-                <li>
-                  <TrackedSnsLink
-                    href={instagramUrl!}
-                    platform="instagram"
-                    location="footer"
-                    className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-slate-900 md:min-h-0"
-                    ariaLabel="인스타그램"
-                  >
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                      <InstagramIcon size={16} />
-                    </span>
-                    인스타그램
-                  </TrackedSnsLink>
-                </li>
-              )}
-              {hasDaangnUrl && (
-                <li>
-                  <TrackedSnsLink
-                    href={daangnUrl!}
-                    platform="daangn"
-                    location="footer"
-                    className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-slate-900 md:min-h-0"
-                    ariaLabel="당근마켓"
-                  >
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                      <DaangnIcon size={16} />
-                    </span>
-                    당근
-                  </TrackedSnsLink>
-                </li>
-              )}
+              <SocialLinks urls={siteConfig} location="footer" />
             </ul>
           </div>
         </div>
@@ -189,7 +130,7 @@ export function Footer({ siteConfig }: FooterProps) {
           </Link>
           <span className="mx-3 select-none">|</span>
           <Link href="/help" className="transition-colors hover:text-slate-700">
-            고객센터
+            자주 묻는 질문
           </Link>
         </div>
       </div>

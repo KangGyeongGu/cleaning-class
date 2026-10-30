@@ -1,5 +1,6 @@
 "use client";
 
+import { SOCIAL_LINKS } from "@/shared/lib/pure/social-links";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -19,6 +20,7 @@ type EditableField =
   | "email"
   | "address"
   | "blog_url"
+  | "cafe_url"
   | "instagram_url"
   | "daangn_url"
   | "moving_representative"
@@ -79,9 +81,12 @@ const CLEANING_GROUPS: Group[] = [
   {
     title: "외부 링크",
     fields: [
-      { name: "blog_url", label: "블로그", type: "url", wide: true },
-      { name: "instagram_url", label: "인스타그램", type: "url", wide: true },
-      { name: "daangn_url", label: "당근", type: "url", wide: true },
+      ...SOCIAL_LINKS.map(({ field, accessibleLabel }) => ({
+        name: field,
+        label: accessibleLabel,
+        type: "url" as const,
+        wide: true,
+      })),
     ],
   },
 ];

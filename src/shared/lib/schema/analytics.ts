@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SNS_PLATFORMS } from "@/shared/lib/pure/social-links";
 
 export const EVENT_TYPES = [
   "quote_form_success",
@@ -58,7 +59,7 @@ const reviewCardClickSchema = z.object({
 const snsClickSchema = z.object({
   event_type: z.literal("sns_click"),
   event_payload: z.object({
-    sns_platform: z.enum(["naver_blog", "instagram", "daangn"]),
+    sns_platform: z.enum(SNS_PLATFORMS),
     click_location: z.string(),
   }),
 });

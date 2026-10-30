@@ -79,14 +79,17 @@ describe("trackRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("should accept sns_click", () => {
-    const result = trackRequestSchema.safeParse({
-      event_type: "sns_click",
-      event_payload: { sns_platform: "naver_blog", click_location: "footer" },
-      path: "/",
-    });
-    expect(result.success).toBe(true);
-  });
+  it.each(["naver_blog", "naver_cafe"])(
+    "should accept sns_click for %s",
+    (platform) => {
+      const result = trackRequestSchema.safeParse({
+        event_type: "sns_click",
+        event_payload: { sns_platform: platform, click_location: "footer" },
+        path: "/",
+      });
+      expect(result.success).toBe(true);
+    },
+  );
 
   it("should accept faq_open", () => {
     const result = trackRequestSchema.safeParse({

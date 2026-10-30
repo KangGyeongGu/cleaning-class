@@ -412,6 +412,7 @@ describe("siteConfigFormSchema", () => {
       phone: "010-1234-5678",
       email: "a@b.com",
       blog_url: "",
+      cafe_url: "",
       instagram_url: "",
       daangn_url: "",
       site_url: "https://example.com",
@@ -431,6 +432,7 @@ describe("siteConfigFormSchema", () => {
       siteConfigFormSchema.safeParse({
         ...base(),
         blog_url: "ftp://example.com/",
+        cafe_url: "",
       }).success,
     ).toBe(false);
   });

@@ -209,6 +209,7 @@ describe("updateSiteConfig", () => {
     fd.set("phone", "010-1234-5678");
     fd.set("email", "a@b.com");
     fd.set("blog_url", "");
+    fd.set("cafe_url", "https://cafe.naver.com/example");
     fd.set("instagram_url", "");
     fd.set("daangn_url", "");
     fd.set("description", "");
@@ -236,6 +237,7 @@ describe("updateSiteConfig", () => {
     );
     expect(chains[1].update).toHaveBeenCalledWith(
       expect.objectContaining({
+        cafe_url: "https://cafe.naver.com/example",
         business_name: "청소클라쓰",
         representative: "홍길동",
         phone: "010-1234-5678",
@@ -258,6 +260,7 @@ describe("updateSiteConfig", () => {
     );
     const { updateSiteConfig } = await import("@/shared/actions/site-config");
     const fd = buildForm();
+    fd.delete("cafe_url");
     fd.delete("representative");
     fd.delete("business_registration_number");
     fd.delete("address");

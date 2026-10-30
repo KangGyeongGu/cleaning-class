@@ -122,6 +122,7 @@ export const siteConfigFormSchema = z.object({
     ),
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
   blog_url: httpUrl().or(z.literal("")),
+  cafe_url: httpUrl().or(z.literal("")),
   instagram_url: httpUrl().or(z.literal("")),
   daangn_url: httpUrl().or(z.literal("")),
   site_url: httpUrl(),

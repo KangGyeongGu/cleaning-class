@@ -150,6 +150,7 @@ export async function updateSiteConfig(prevState: unknown, formData: FormData) {
       phone: formData.get("phone"),
       email: formData.get("email"),
       blog_url: formData.get("blog_url") || "",
+      cafe_url: formData.get("cafe_url") || "",
       instagram_url: formData.get("instagram_url") || "",
       daangn_url: formData.get("daangn_url") || "",
       site_url: current.site_url,
@@ -169,6 +170,7 @@ export async function updateSiteConfig(prevState: unknown, formData: FormData) {
     const configData: SiteConfigUpdate = {
       ...validationResult.data,
       blog_url: validationResult.data.blog_url || "",
+      cafe_url: validationResult.data.cafe_url || "",
       instagram_url: validationResult.data.instagram_url || "",
       daangn_url: validationResult.data.daangn_url || "",
       address: validationResult.data.address || "",

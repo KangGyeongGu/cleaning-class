@@ -4,6 +4,7 @@ import { CLEANING_SERVICE_TYPES } from "@/shared/lib/pure/constants";
 interface ChainResult {
   data: unknown;
   error: unknown;
+  count?: number | null;
 }
 
 function makePromiseChain(result: ChainResult) {
@@ -13,6 +14,7 @@ function makePromiseChain(result: ChainResult) {
     "select",
     "eq",
     "contains",
+    "overlaps",
     "order",
     "limit",
     "single",
@@ -106,18 +108,17 @@ describe("getAllPublishedReviews", () => {
   });
 });
 
-describe("getPublishedReviewsByCleaningTypes", () => {
-  it("filters each category by is_published, tags, and PER_CATEGORY limit", async () => {
+describe("getHomeReviewData", () => {
+  it("filters each category by is_published, tags, and seven-review limit", async () => {
     const chain = makePromiseChain({ data: [], error: null });
     mockFrom.mockImplementation(() => chain);
-    const { getPublishedReviewsByCleaningTypes } =
-      await import("@/shared/lib/queries/review");
-    await getPublishedReviewsByCleaningTypes();
+    const { getHomeReviewData } = await import("@/shared/lib/queries/review");
+    await getHomeReviewData();
     expect(chain.eq).toHaveBeenCalledWith("is_published", true);
     expect(chain.contains).toHaveBeenCalledWith("tags", [
       CLEANING_SERVICE_TYPES[0],
     ]);
-    expect(chain.limit).toHaveBeenCalledWith(4);
+    expect(chain.limit).toHaveBeenCalledWith(7);
   });
 });
 

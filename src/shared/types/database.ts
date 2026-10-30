@@ -256,6 +256,7 @@ export type Database = {
           address_locality: string;
           address_region: string;
           blog_url: string;
+          cafe_url: string;
           business_name: string;
           business_registration_number: string | null;
           customer_review_description: string | null;
@@ -289,6 +290,7 @@ export type Database = {
           address_locality?: string;
           address_region?: string;
           blog_url?: string;
+          cafe_url?: string;
           business_name?: string;
           business_registration_number?: string | null;
           customer_review_description?: string | null;
@@ -322,6 +324,7 @@ export type Database = {
           address_locality?: string;
           address_region?: string;
           blog_url?: string;
+          cafe_url?: string;
           business_name?: string;
           business_registration_number?: string | null;
           customer_review_description?: string | null;

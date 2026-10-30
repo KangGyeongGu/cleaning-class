@@ -1,3 +1,5 @@
+export const HOME_REVIEW_LIMIT = 7;
+
 export const CLEANING_SERVICE_TYPES = [
   "거주청소",
   "정기청소",
@@ -40,4 +42,4 @@ export const DEFAULT_SERVICE_DESCRIPTION =
   "공간의 성격에 맞는 최적의 서비스를 제공합니다.";
 
 export const DEFAULT_REVIEW_DESCRIPTION =
-  "의뢰 전 업체의 작업 방식을 확인할 수 있는 후기들을 확인해보세요.";
+  "의뢰 전 실제 현장의 작업 내용과 결과를 확인해 보세요.";

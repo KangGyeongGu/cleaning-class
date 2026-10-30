@@ -2,7 +2,7 @@
 
 import { track, currentPath } from "@/shared/lib/infra/track";
 
-export type SnsPlatform = "naver_blog" | "instagram" | "daangn";
+import type { SnsPlatform } from "@/shared/lib/pure/social-links";
 export type SnsClickLocation =
   | "navbar"
   | "footer"
@@ -16,6 +16,8 @@ interface TrackedSnsLinkProps {
   children: React.ReactNode;
   className?: string;
   ariaLabel?: string;
+  tabIndex?: number;
+  onClick?: () => void;
 }
 
 export default function TrackedSnsLink({
@@ -25,6 +27,8 @@ export default function TrackedSnsLink({
   children,
   className,
   ariaLabel,
+  tabIndex,
+  onClick,
 }: TrackedSnsLinkProps): React.ReactElement {
   function handleClick(): void {
     track({
@@ -32,6 +36,7 @@ export default function TrackedSnsLink({
       event_payload: { sns_platform: platform, click_location: location },
       path: currentPath(),
     });
+    onClick?.();
   }
 
   return (
@@ -42,6 +47,7 @@ export default function TrackedSnsLink({
       onClick={handleClick}
       className={className}
       aria-label={ariaLabel}
+      tabIndex={tabIndex}
     >
       {children}
     </a>
