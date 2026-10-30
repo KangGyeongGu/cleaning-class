@@ -32,7 +32,7 @@ describe("서비스 전환 동작", () => {
     const original = window.matchMedia.bind(window);
     vi.spyOn(window, "matchMedia").mockImplementation((query) => {
       const result = original(query);
-      if (query === "(hover: none)")
+      if (query === "(hover: none) and (prefers-reduced-motion: no-preference)")
         Object.defineProperty(result, "matches", { value: true });
       return result;
     });
@@ -68,6 +68,25 @@ describe("서비스 전환 동작", () => {
     expect(intervalCalls()).toHaveLength(3);
   });
 
+  it("자동 전환은 터치 환경과 동작 줄이기 설정을 함께 확인", () => {
+    const original = window.matchMedia.bind(window);
+    const queries = vi
+      .spyOn(window, "matchMedia")
+      .mockImplementation((query) => {
+        const result = original(query);
+        Object.defineProperty(result, "matches", { value: false });
+        return result;
+      });
+    const intervals = vi.spyOn(window, "setInterval");
+    render(<ServiceGrid services={[service]} />);
+    expect(queries).toHaveBeenCalledWith(
+      "(hover: none) and (prefers-reduced-motion: no-preference)",
+    );
+    expect(
+      intervals.mock.calls.filter((call) => call[1] === 3000),
+    ).toHaveLength(0);
+  });
+
   it("모바일 폭에서는 호버해도 사진과 설명이 위로 이동하지 않음", async () => {
     await page.viewport(390, 844);
     render(
@@ -79,11 +98,13 @@ describe("서비스 전환 동작", () => {
     const list = screen.getByRole("region", { name: "서비스 목록" });
     const image = list.querySelector("a > div");
     if (!(image instanceof HTMLElement)) throw new Error("이미지 영역 없음");
-    await waitFor(() => expect(getComputedStyle(image).transform).toBe("none"));
+    await waitFor(() =>
+      expect(getComputedStyle(image.closest("a")!).translate).toBe("none"),
+    );
     expect(image.getBoundingClientRect().top).toBeGreaterThanOrEqual(
       list.getBoundingClientRect().top,
     );
     const heading = screen.getByRole("heading", { name: "청소 카드" });
-    expect(getComputedStyle(heading.parentElement!).transform).toBe("none");
+    expect(getComputedStyle(heading.parentElement!).translate).toBe("none");
   });
 });

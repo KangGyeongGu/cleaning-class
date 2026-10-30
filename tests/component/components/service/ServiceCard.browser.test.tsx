@@ -1,5 +1,14 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import "@/app/globals.css";
+import { page } from "vitest/browser";
+import {
+  act,
+  cleanup,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("@/shared/lib/infra/track", () => ({
   track: vi.fn(),
@@ -25,10 +34,55 @@ const baseService = {
   afterFocalY: 50,
 };
 
+afterEach(async () => {
+  cleanup();
+  await page.viewport(1280, 900);
+});
+
 describe("ServiceCard (browser)", () => {
   beforeEach(() => {
     vi.mocked(track).mockClear();
   });
+
+  it.each(["사진", "설명"])(
+    "%s에 호버해도 같은 카드 전체가 움직이고 사진은 확대되지 않음",
+    async (target) => {
+      await page.viewport(1280, 900);
+      render(
+        <div style={{ padding: 32, width: 280 }}>
+          <ServiceCard service={baseService} />
+        </div>,
+      );
+      const link = screen.getByRole("link");
+      const outer = link.parentElement!;
+      const photo = link.querySelector("img")!;
+      const copy = screen.getByText(baseService.description).parentElement!;
+      const before = {
+        outer: outer.getBoundingClientRect().top,
+        photo: photo.getBoundingClientRect().top,
+        copy: copy.getBoundingClientRect().top,
+      };
+      const locator =
+        target === "사진"
+          ? page.getByRole("img", { name: baseService.title })
+          : page.getByText(baseService.description);
+      await act(async () => {
+        await locator.hover();
+      });
+      await waitFor(() =>
+        expect(getComputedStyle(link).translate).toBe("0px -6px"),
+      );
+      expect(outer.getBoundingClientRect().top).toBe(before.outer);
+      expect(photo.getBoundingClientRect().top).toBeCloseTo(
+        before.photo - 6,
+        1,
+      );
+      expect(copy.getBoundingClientRect().top).toBeCloseTo(before.copy - 6, 1);
+      expect(getComputedStyle(photo).scale).toBe("none");
+      expect(getComputedStyle(copy).translate).toBe("none");
+      expect(copy.closest("a")).toBe(link);
+    },
+  );
 
   it("should render service title and description", () => {
     render(<ServiceCard service={baseService} />);

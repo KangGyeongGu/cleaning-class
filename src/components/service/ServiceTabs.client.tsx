@@ -7,6 +7,7 @@ import {
   useInView,
   useReducedMotion,
 } from "motion/react";
+import { SlidingToggleIndicator } from "@/components/ui/SlidingToggleIndicator.client";
 import { ServiceGrid } from "@/components/service/ServiceGrid.client";
 import type { ServiceCardProps } from "@/components/service/ServiceCard.client";
 
@@ -49,7 +50,7 @@ export function ServiceTabs({
         <div
           role="group"
           aria-label="서비스 종류"
-          className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-1"
+          className="isolate inline-flex rounded-full border border-slate-200 bg-slate-100 p-1"
         >
           {(
             [
@@ -64,9 +65,12 @@ export function ServiceTabs({
               aria-controls={`${id}-${option.value}`}
               disabled={!option.enabled}
               onClick={() => setCategory(option.value)}
-              className={`min-h-8 min-w-20 rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-40 ${category === option.value ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
+              className={`relative min-h-8 min-w-20 rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-40 ${category === option.value ? "font-semibold text-slate-900" : "font-medium text-slate-500 hover:text-slate-900"}`}
             >
-              {option.label}
+              {category === option.value && (
+                <SlidingToggleIndicator layoutId={`${id}-selection`} />
+              )}
+              <span className="relative z-10">{option.label}</span>
             </button>
           ))}
         </div>

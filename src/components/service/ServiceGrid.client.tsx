@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { CarouselEdgeBlur } from "@/components/ui/CarouselEdgeBlur";
 import {
   ServiceCard,
   type ServiceCardProps,
@@ -21,7 +22,9 @@ export function ServiceGrid({ services, active = true }: ServiceGridProps) {
   useEffect(() => {
     if (!active || !hasAfterImages) return;
 
-    const mq = window.matchMedia("(hover: none)");
+    const mq = window.matchMedia(
+      "(hover: none) and (prefers-reduced-motion: no-preference)",
+    );
 
     let interval: ReturnType<typeof setInterval> | null = null;
 
@@ -89,24 +92,27 @@ export function ServiceGrid({ services, active = true }: ServiceGridProps) {
 
   return (
     <div>
-      <div
-        ref={scrollRef}
-        role="region"
-        aria-label="서비스 목록"
-        tabIndex={0}
-        className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[6%] pb-2 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:px-0 lg:grid-cols-5"
-      >
-        {services.map((service) => (
-          <div
-            key={service.id}
-            className="w-full shrink-0 snap-center md:w-auto"
-          >
-            <ServiceCard
-              service={service}
-              showAfter={showAfter && !!service.afterImageUrl}
-            />
-          </div>
-        ))}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          role="region"
+          aria-label="서비스 목록"
+          tabIndex={0}
+          className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[6%] pb-2 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:px-0 lg:grid-cols-5"
+        >
+          {services.map((service) => (
+            <div
+              key={service.id}
+              className="w-full shrink-0 snap-center md:w-auto"
+            >
+              <ServiceCard
+                service={service}
+                showAfter={showAfter && !!service.afterImageUrl}
+              />
+            </div>
+          ))}
+        </div>
+        <CarouselEdgeBlur width="6%" />
       </div>
       {services.length > 1 && (
         <div
