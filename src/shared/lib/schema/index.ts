@@ -4,6 +4,13 @@ import {
   MOVING_SERVICE_TYPES,
 } from "@/shared/lib/pure/constants";
 
+export const uuidSchema = z
+  .string()
+  .regex(
+    /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
+    "올바른 ID 형식이 아닙니다.",
+  );
+
 const httpUrl = () =>
   z
     .string()
@@ -170,7 +177,7 @@ export const serviceFormSchema = z.object({
     .optional()
     .default(""),
   category: z.enum(["cleaning", "moving"], {
-    errorMap: () => ({ message: "카테고리를 선택해주세요" }),
+    error: "카테고리를 선택해주세요",
   }),
   sort_order: z
     .number()

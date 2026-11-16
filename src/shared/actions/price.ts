@@ -4,10 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/server";
 import { withAuthAction } from "@/shared/lib/server/with-auth-action";
-import { priceItemFormSchema } from "@/shared/lib/schema/index";
+import { priceItemFormSchema, uuidSchema } from "@/shared/lib/schema/index";
 import type { PriceItemInsert, PriceItemUpdate } from "@/shared/types/database";
-
-const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
 const MAX_REORDER_ITEMS = 100;
 

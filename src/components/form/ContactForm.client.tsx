@@ -14,6 +14,7 @@ import { useContactImageHandler } from "@/shared/lib/hooks/useContactImageHandle
 import { useContactForm } from "@/shared/lib/hooks/useContactForm";
 
 type InquiryType = "cleaning" | "moving";
+type FieldErrors = Partial<Record<string, string[] | undefined>>;
 
 const PLACEHOLDER: Record<InquiryType, string> = {
   cleaning:
@@ -73,6 +74,7 @@ export function ContactForm({
       setDestination("");
     },
   });
+  const fieldErrors = state?.errors as FieldErrors | undefined;
 
   return (
     <form action={formAction} onSubmit={recordSubmit} className="space-y-6">
@@ -94,7 +96,7 @@ export function ContactForm({
               setName(v);
               clearReset();
             }}
-            error={state?.errors?.name?.[0]}
+            error={fieldErrors?.name?.[0]}
           />
           <ContactPhoneField
             value={phone}
@@ -102,7 +104,7 @@ export function ContactForm({
               setPhone(v);
               clearReset();
             }}
-            error={state?.errors?.phone?.[0]}
+            error={fieldErrors?.phone?.[0]}
           />
         </div>
 
@@ -112,7 +114,7 @@ export function ContactForm({
           options={serviceOptions}
           placeholder="서비스를 선택해주세요"
           required
-          error={state?.errors?.serviceType?.[0]}
+          error={fieldErrors?.serviceType?.[0]}
           value={serviceType}
           onChange={(value) => {
             setServiceType(value);
@@ -127,7 +129,7 @@ export function ContactForm({
             required
             addressName="address"
             detailName="addressDetail"
-            error={state?.errors?.address?.[0]}
+            error={fieldErrors?.address?.[0]}
             onChange={(addr) => {
               setAddress(addr);
               clearReset();
@@ -140,7 +142,7 @@ export function ContactForm({
               label="출발지"
               addressName="departureAddress"
               detailName="departureDetail"
-              error={state?.errors?.departureAddress?.[0]}
+              error={fieldErrors?.departureAddress?.[0]}
               onChange={(addr) => {
                 setDeparture(addr);
                 clearReset();
@@ -166,7 +168,7 @@ export function ContactForm({
             clearReset();
           }}
           placeholder={PLACEHOLDER[inquiryType]}
-          error={state?.errors?.message?.[0]}
+          error={fieldErrors?.message?.[0]}
         />
 
         <ContactImageGallery
