@@ -1,3 +1,8 @@
+# @file config/semgrep/rules.yaml
+# @description Server Action 오류 처리·DB 접근 계층·서버/클라이언트 경계·DB 타입 공통 정적 검사 규칙
+# @activation 직접 실행: npm run security:semgrep
+# @activation Git Hook: pre-push의 verify
+# @activation Agent Skill: verify:full, /cut-release
 rules:
   # ─── server action에서 throw 금지 ──────────────────────────────────
   # server action은 에러를 throw 대신 { success: false, error: ... } 형태로 반환해야 한다.

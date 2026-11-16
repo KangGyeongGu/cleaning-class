@@ -22,7 +22,7 @@ export function ContactImageGallery({
     <div className="group">
       <div className="form-label-sm">
         이미지 첨부
-        <span className="ml-2 text-xs font-normal text-slate-400">
+        <span className="ml-2 text-xs font-normal text-slate-600">
           (개별 25MB, 최대 4장)
         </span>
       </div>
@@ -52,10 +52,10 @@ export function ContactImageGallery({
         ))}
 
         <label className="group/add flex shrink-0 cursor-pointer items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center border border-slate-200 text-slate-400 transition-colors group-hover/add:border-slate-900 group-hover/add:text-slate-900">
+          <div className="flex h-12 w-12 items-center justify-center border border-slate-200 text-slate-600 transition-colors group-hover/add:border-slate-900 group-hover/add:text-slate-900">
             <Plus size={20} />
           </div>
-          <span className="text-xs text-slate-400 transition-colors group-hover/add:text-slate-600">
+          <span className="text-xs text-slate-600 transition-colors group-hover/add:text-slate-600">
             {images.length}/4
           </span>
           <input
@@ -69,7 +69,7 @@ export function ContactImageGallery({
           />
         </label>
       </div>
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      <p className="mt-2 text-xs leading-relaxed text-slate-600">
         문의 내용과 연관된 사진을 함께 첨부해주시면 더 빠른 답변 및 상담이
         가능합니다.
       </p>

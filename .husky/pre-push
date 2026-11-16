@@ -1,1 +1,6 @@
+# @file .husky/pre-push
+# @description push 전 타입·코드 스타일·커버리지·보안 검사 실행
+# @activation Git Hook: Husky 활성화 환경의 git push 직전 자동 실행
+# @activation 실패 결과: npm run verify 실패 시 push 차단
+# @activation 제외 검사: build·E2E·Lighthouse
 npm run verify

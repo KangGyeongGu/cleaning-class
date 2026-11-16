@@ -298,7 +298,7 @@ export function BlogReviews({
                       inline: "nearest",
                     });
                   }}
-                  className={`relative min-h-8 shrink-0 rounded-full px-4 py-1.5 text-sm whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-slate-900 ${activeFilter === type ? "font-semibold text-slate-900" : "font-medium text-slate-500 hover:text-slate-900"}`}
+                  className={`relative min-h-8 shrink-0 rounded-full px-4 py-1.5 text-sm whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-slate-900 ${activeFilter === type ? "font-semibold text-slate-900" : "font-medium text-slate-600 hover:text-slate-900"}`}
                 >
                   {activeFilter === type && (
                     <SlidingToggleIndicator layoutId={`${id}-selection`} />

@@ -62,7 +62,7 @@ export default async function PricePage() {
       <section className="bg-slate-50 pt-12 pb-10 md:pt-16 md:pb-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <nav aria-label="현재 위치" className="mb-8">
-            <ol className="flex items-center gap-2 text-xs text-slate-400">
+            <ol className="flex items-center gap-2 text-xs text-slate-600">
               <li>
                 <Link
                   href="/"

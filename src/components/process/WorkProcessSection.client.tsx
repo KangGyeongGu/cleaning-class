@@ -140,7 +140,7 @@ function MobileStep({
       </div>
 
       <motion.div className="pt-1" style={{ opacity: anim.opacity, y: anim.y }}>
-        <p className="mb-0.5 text-[10px] font-bold tracking-widest text-slate-400">
+        <p className="mb-0.5 text-[10px] font-bold tracking-widest text-slate-600">
           STEP {step.number}
         </p>
         <h3 className="mb-1 flex items-baseline gap-1.5 text-sm font-bold text-slate-900">
@@ -183,7 +183,7 @@ function DesktopStep({
       </motion.div>
 
       <motion.div style={{ opacity: anim.opacity, y: anim.y }}>
-        <p className="mb-1 text-xs font-bold tracking-widest text-slate-400">
+        <p className="mb-1 text-xs font-bold tracking-widest text-slate-600">
           STEP {step.number}
         </p>
         <h3 className="text-heading-3 mb-2 flex items-baseline justify-center gap-1.5">

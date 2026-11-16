@@ -1,3 +1,8 @@
+# @file Dockerfile
+# @description 의존성 설치·Next.js 빌드·비루트 standalone 배포 이미지 생성
+# @activation 직접 실행: 프로젝트 컨텍스트의 docker build
+# @activation CI: main push 후 deploy.yml의 이미지 빌드
+# @activation Git Hook·로컬 verify: 적용하지 않음
 FROM node:22-alpine AS builder
 WORKDIR /app
 

@@ -112,7 +112,7 @@ export function Footer({ siteConfig }: FooterProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-0 pt-8 text-xs font-light text-slate-400">
+        <div className="flex items-center justify-center gap-0 pt-8 text-xs font-light text-slate-600">
           <span>&copy; 청소클라쓰</span>
           <span className="mx-3 select-none">|</span>
           <Link
@@ -136,7 +136,7 @@ export function Footer({ siteConfig }: FooterProps) {
       </div>
 
       <div className="border-t border-slate-100 bg-slate-50 py-3">
-        <p className="text-center text-[10px] tracking-wider text-slate-400">
+        <p className="text-center text-[10px] tracking-wider text-slate-600">
           {nomadLabsUrl ? (
             <a
               href={nomadLabsUrl}

@@ -1,3 +1,8 @@
+# @file .github/workflows/deploy.yml
+# @description main push 후 Docker 이미지 빌드·업로드 및 Lightsail 컨테이너 교체
+# @activation CI: 원격 main 브랜치 push 시 GitHub Actions 자동 실행
+# @activation 로컬 커밋·검사 명령·Agent Skill: 직접 실행 없음
+# @activation 검증 단계: verify 실행 없음
 name: Deploy
 
 on:

@@ -1,3 +1,10 @@
+/**
+ * @file next.config.ts
+ * @description Next.js 배포 출력·요청 크기·HTTP 헤더·이미지 최적화 정책 정의
+ * @activation 앱 실행: npm run dev, npm run build, npm run start, standalone 배포
+ * @activation 검사·배포: E2E·Lighthouse 서버 준비, /cut-release 빌드, Docker 빌드
+ * @activation Git Hook: Next.js 빌드 실행 없음
+ */
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {

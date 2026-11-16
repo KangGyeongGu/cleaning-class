@@ -63,7 +63,7 @@ export default async function ContactPage() {
               <aside>
                 <div className="lg:sticky lg:top-24">
                   <nav aria-label="현재 위치" className="mb-8">
-                    <ol className="flex items-center gap-2 text-xs text-slate-400">
+                    <ol className="flex items-center gap-2 text-xs text-slate-600">
                       <li>
                         <Link
                           href="/"

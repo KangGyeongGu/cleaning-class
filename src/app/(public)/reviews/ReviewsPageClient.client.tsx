@@ -246,13 +246,13 @@ export function ReviewsPageClient({ initialData }: ReviewsPageClientProps) {
 
       {data.total === 0 ? (
         <div className="flex min-h-64 items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
-          <p className="text-sm font-light text-slate-400">
+          <p className="text-sm font-light text-slate-600">
             해당 카테고리의 작업 사례가 없습니다.
           </p>
         </div>
       ) : (
         <>
-          <p className="mb-6 text-sm font-light text-slate-400">
+          <p className="mb-6 text-sm font-light text-slate-600">
             총 {data.total}건
           </p>
 
@@ -278,7 +278,7 @@ export function ReviewsPageClient({ initialData }: ReviewsPageClientProps) {
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={loading || currentPage === 1}
                 aria-label="이전 페이지"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -288,12 +288,12 @@ export function ReviewsPageClient({ initialData }: ReviewsPageClientProps) {
                   <button
                     type="button"
                     onClick={() => goToPage(1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
                   >
                     1
                   </button>
                   {getPageNumbers()[0] > 2 && (
-                    <span className="flex h-9 w-9 items-center justify-center text-sm text-slate-300">
+                    <span className="flex h-9 w-9 items-center justify-center text-sm text-slate-500">
                       …
                     </span>
                   )}
@@ -309,7 +309,7 @@ export function ReviewsPageClient({ initialData }: ReviewsPageClientProps) {
                   className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors ${
                     page === currentPage
                       ? "bg-slate-900 font-semibold text-white"
-                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   {page}
@@ -319,14 +319,14 @@ export function ReviewsPageClient({ initialData }: ReviewsPageClientProps) {
               {getPageNumbers().at(-1)! < totalPages && (
                 <>
                   {getPageNumbers().at(-1)! < totalPages - 1 && (
-                    <span className="flex h-9 w-9 items-center justify-center text-sm text-slate-300">
+                    <span className="flex h-9 w-9 items-center justify-center text-sm text-slate-500">
                       …
                     </span>
                   )}
                   <button
                     type="button"
                     onClick={() => goToPage(totalPages)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
                   >
                     {totalPages}
                   </button>
@@ -338,7 +338,7 @@ export function ReviewsPageClient({ initialData }: ReviewsPageClientProps) {
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={loading || currentPage === totalPages}
                 aria-label="다음 페이지"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30"
               >
                 <ChevronRight size={18} />
               </button>

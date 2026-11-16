@@ -1,3 +1,12 @@
+/**
+ * @file tsconfig.json
+ * @description TypeScript 엄격 타입 검사·모듈 해석·경로 별칭·검사 대상 파일 설정
+ * @activation 직접 실행: npm run typecheck
+ * @activation 통합 검사: check:fast, verify, verify:full
+ * @activation 앱·IDE: Next.js 개발·빌드, TypeScript 언어 서비스
+ * @activation Git Hook: pre-push의 verify
+ * @activation Agent Skill: /cut-release
+ */
 {
   "compilerOptions": {
     "target": "ES2017",

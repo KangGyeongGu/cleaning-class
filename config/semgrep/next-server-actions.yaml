@@ -1,3 +1,8 @@
+# @file config/semgrep/next-server-actions.yaml
+# @description Server Action 인증·DB 오류 노출·조회 오류 처리 누락 검사
+# @activation 직접 실행: npm run security:semgrep
+# @activation Git Hook: pre-push의 verify
+# @activation Agent Skill: verify:full, /cut-release
 rules:
   # ─── Server Action Auth ────────────────────────────────────────
   - id: server-action-missing-auth

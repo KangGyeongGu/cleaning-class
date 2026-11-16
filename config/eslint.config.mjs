@@ -1,3 +1,12 @@
+/**
+ * @file config/eslint.config.mjs
+ * @description TypeScript·React 코드 품질·접근성·import 경로·계층 의존성 검사 규칙
+ * @activation 직접 실행: npm run lint, npm run lint:fix
+ * @activation 통합 검사: check:fast, verify, verify:full
+ * @activation Git Hook: pre-commit의 lint-staged, pre-push의 verify
+ * @activation Agent Skill: /cut-release의 npm 검사 호출
+ * @activation IDE: ESLint 설정 경로 지정 시 적용
+ */
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";

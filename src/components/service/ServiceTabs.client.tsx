@@ -65,7 +65,7 @@ export function ServiceTabs({
               aria-controls={`${id}-${option.value}`}
               disabled={!option.enabled}
               onClick={() => setCategory(option.value)}
-              className={`relative min-h-8 min-w-20 rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-40 ${category === option.value ? "font-semibold text-slate-900" : "font-medium text-slate-500 hover:text-slate-900"}`}
+              className={`relative min-h-8 min-w-20 rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-40 ${category === option.value ? "font-semibold text-slate-900" : "font-medium text-slate-600 hover:text-slate-900"}`}
             >
               {category === option.value && (
                 <SlidingToggleIndicator layoutId={`${id}-selection`} />

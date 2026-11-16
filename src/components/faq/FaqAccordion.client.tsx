@@ -58,7 +58,7 @@ export function FaqAccordion({ faqs }: FaqAccordionProps) {
                 <ChevronDown
                   size={16}
                   aria-hidden="true"
-                  className={`mt-0.5 shrink-0 text-slate-400 transition-transform duration-200 ${
+                  className={`mt-0.5 shrink-0 text-slate-600 transition-transform duration-200 ${
                     isOpen ? "rotate-180" : "rotate-0"
                   }`}
                 />

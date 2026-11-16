@@ -32,7 +32,7 @@ function PriceRow({ item, index }: PriceRowProps) {
           {item.name}
         </span>
         {won == null ? (
-          <span className="shrink-0 text-sm font-medium text-slate-400 italic">
+          <span className="shrink-0 text-sm font-medium text-slate-600 italic">
             현장 견적
           </span>
         ) : (
@@ -40,7 +40,7 @@ function PriceRow({ item, index }: PriceRowProps) {
             <span className="font-semibold">
               {won.toLocaleString("ko-KR")}원
             </span>
-            <span className="ml-0.5 font-medium text-slate-400">~</span>
+            <span className="ml-0.5 font-medium text-slate-600">~</span>
           </span>
         )}
       </Link>
@@ -58,7 +58,7 @@ export async function PriceSection() {
         className="px-6 py-12 md:py-16"
       >
         <div className="mx-auto max-w-5xl">
-          <p className="text-label mb-3 text-slate-400">Price List</p>
+          <p className="text-label mb-3 text-slate-600">Price List</p>
           <h2 id="price-list-heading" className="text-heading-1 mb-10">
             서비스별 기준 요금
           </h2>
@@ -76,7 +76,7 @@ export async function PriceSection() {
             </ul>
           )}
 
-          <p className="mt-8 text-xs leading-relaxed text-slate-400">
+          <p className="mt-8 text-xs leading-relaxed text-slate-600">
             * 표기된 가격은 최소 기준 요금이며, 현장 상태 및 면적에 따라 달라질
             수 있습니다.
           </p>

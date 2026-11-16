@@ -1,1 +1,6 @@
+# @file .husky/pre-commit
+# @description staged TypeScript 파일의 Prettier·ESLint 적용
+# @activation Git Hook: Husky 활성화 환경의 git commit 직전 자동 실행
+# @activation 대상 범위: staged TS/TSX 파일
+# @activation 일반 편집·Agent Skill: 자동 실행 없음
 npx lint-staged
