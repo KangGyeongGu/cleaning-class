@@ -94,7 +94,7 @@ function ServiceCategorySection({
       className="px-6 py-12 md:py-16"
     >
       <div className="mx-auto max-w-5xl">
-        <p className="text-label mb-3 text-slate-400">{label}</p>
+        <p className="text-label mb-3 text-slate-600">{label}</p>
         <h2 id={`${id}-heading`} className="text-heading-1 mb-6">
           {heading}
         </h2>
@@ -183,7 +183,7 @@ export default async function ServicesPage() {
       <section className="bg-slate-50 pt-12 pb-10 md:pt-16 md:pb-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <nav aria-label="현재 위치" className="mb-8">
-            <ol className="flex items-center gap-2 text-xs text-slate-400">
+            <ol className="flex items-center gap-2 text-xs text-slate-600">
               <li>
                 <Link
                   href="/"

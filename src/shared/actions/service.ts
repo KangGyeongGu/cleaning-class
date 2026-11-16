@@ -1,14 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/server";
 import { withAuthAction } from "@/shared/lib/server/with-auth-action";
 import { uploadImage, deleteImage } from "@/shared/lib/supabase/storage-server";
-import { serviceFormSchema } from "@/shared/lib/schema/index";
+import { serviceFormSchema, uuidSchema } from "@/shared/lib/schema/index";
 import type { ServiceInsert, ServiceUpdate } from "@/shared/types/database";
-
-const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
 const MAX_REORDER_ITEMS = 100;
 

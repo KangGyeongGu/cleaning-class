@@ -60,10 +60,10 @@ export function CustomDropdown({
           onClick={() => setIsOpen(!isOpen)}
           className="flex min-h-9 w-full items-center justify-between border-b border-slate-200 bg-transparent py-2 text-left text-sm font-light transition-colors outline-none focus:border-slate-900"
         >
-          <span className={value ? "text-slate-900" : "text-slate-400"}>
+          <span className={value ? "text-slate-900" : "text-slate-600"}>
             {value || placeholder || "선택해주세요"}
           </span>
-          <ChevronDown size={16} className="text-slate-400" />
+          <ChevronDown size={16} className="text-slate-600" />
         </button>
         {isOpen && (
           <div className="scrollbar-thin absolute z-10 mt-1 max-h-60 w-full overflow-y-auto border border-slate-200 bg-white shadow-lg">

@@ -1,3 +1,8 @@
+# @file config/semgrep/next-security.yaml
+# @description HTML 삽입·리다이렉트·비밀정보·환경변수·URL·메일 헤더 보안 위험 패턴 검사
+# @activation 직접 실행: npm run security:semgrep
+# @activation Git Hook: pre-push의 verify
+# @activation Agent Skill: verify:full, /cut-release
 rules:
   # ─── XSS: dangerouslySetInnerHTML ──────────────────────────────
   - id: dangerous-innerhtml-user-data

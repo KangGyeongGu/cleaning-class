@@ -69,7 +69,7 @@ export async function Hero(): Promise<React.JSX.Element> {
         <p
           className={[
             "text-label mb-4 tracking-widest md:mb-6",
-            hasAnyImage ? "text-white/70" : "text-slate-400",
+            hasAnyImage ? "text-white/70" : "text-slate-600",
           ].join(" ")}
           style={
             !hasAnyImage

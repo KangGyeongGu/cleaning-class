@@ -1,10 +1,17 @@
+/**
+ * @file config/vitest.config.mts
+ * @description 단위·통합·구조·SEO·브라우저 컴포넌트 테스트 환경 및 커버리지 기준
+ * @activation 직접 실행: npm test, npm run test:coverage, npm run test:browser
+ * @activation Git Hook: pre-push의 verify에서 node 테스트·커버리지 실행
+ * @activation Agent Skill: verify:full, /cut-release에서 node·browser 테스트 실행
+ */
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  root: new URL("../", import.meta.url).pathname,
+  plugins: [react()],
   test: {
     globals: true,
     testTimeout: 10000,
@@ -59,8 +66,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": "/src",
-      "server-only": new URL("./tests/__mocks__/server-only.ts", import.meta.url)
+      "@": new URL("../src", import.meta.url).pathname,
+      "server-only": new URL("../tests/__mocks__/server-only.ts", import.meta.url)
         .pathname,
     },
   },

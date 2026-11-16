@@ -63,7 +63,7 @@ export function ContactSection({
               className={`flex-1 pb-3 text-sm font-medium transition-colors ${
                 inquiryType === "cleaning"
                   ? "border-b-2 border-slate-900 text-slate-900"
-                  : "text-slate-400 hover:text-slate-600"
+                  : "text-slate-600 hover:text-slate-600"
               }`}
             >
               청소의뢰
@@ -74,7 +74,7 @@ export function ContactSection({
               className={`flex-1 pb-3 text-sm font-medium transition-colors ${
                 inquiryType === "moving"
                   ? "border-b-2 border-slate-900 text-slate-900"
-                  : "text-slate-400 hover:text-slate-600"
+                  : "text-slate-600 hover:text-slate-600"
               }`}
             >
               이사의뢰

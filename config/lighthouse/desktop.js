@@ -1,4 +1,11 @@
-{
+/**
+ * @file config/lighthouse/desktop.js
+ * @description 데스크톱 Lighthouse CI 측정 대상·화면·네트워크·성능 통과 기준
+ * @activation 직접 실행: npm run lighthouse:desktop, npm run lighthouse
+ * @activation Agent Skill: verify:full, /cut-release
+ * @activation Git Hook: 적용하지 않음
+ */
+module.exports = {
   "ci": {
     "collect": {
       "startServerCommand": "npm run start:standalone",
@@ -38,4 +45,4 @@
       }
     }
   }
-}
+};

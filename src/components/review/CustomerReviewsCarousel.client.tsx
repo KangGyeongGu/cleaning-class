@@ -27,7 +27,7 @@ function ReviewItem({ card }: { card: ReviewCardData }): React.ReactElement {
               {card.rating.toFixed(1)}
             </span>
           </div>
-          <span className="text-xs text-slate-400">{card.relativeDate}</span>
+          <span className="text-xs text-slate-600">{card.relativeDate}</span>
         </div>
         <p className="line-clamp-5 text-sm leading-relaxed text-slate-700">
           {card.comment}
@@ -38,10 +38,10 @@ function ReviewItem({ card }: { card: ReviewCardData }): React.ReactElement {
         <span className="text-xs font-medium text-slate-900">익명</span>
         {card.serviceType && (
           <>
-            <span className="text-slate-300" aria-hidden="true">
+            <span className="text-slate-500" aria-hidden="true">
               ·
             </span>
-            <span className="text-xs text-slate-400">{card.serviceType}</span>
+            <span className="text-xs text-slate-600">{card.serviceType}</span>
           </>
         )}
       </div>

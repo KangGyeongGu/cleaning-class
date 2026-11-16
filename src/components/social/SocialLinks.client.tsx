@@ -24,13 +24,13 @@ const ICONS = {
 
 const LINK_CLASSES = {
   navbar:
-    "group relative inline-flex text-slate-400 transition-colors hover:text-slate-900",
+    "group relative inline-flex text-slate-600 transition-colors hover:text-slate-900",
   footer:
     "inline-flex min-h-11 items-center gap-2 transition-colors hover:text-slate-900 md:min-h-0",
   reviews_section:
     "inline-flex items-center gap-1.5 text-sm font-medium tracking-wide text-slate-500 transition-colors hover:text-slate-900",
   contact_aside:
-    "inline-flex text-slate-400 transition-colors hover:text-slate-900",
+    "inline-flex text-slate-600 transition-colors hover:text-slate-900",
 } satisfies Record<SnsClickLocation, string>;
 
 interface SocialLinksProps {

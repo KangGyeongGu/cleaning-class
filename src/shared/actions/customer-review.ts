@@ -2,14 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/server";
 import { createStaticClient } from "@/shared/lib/supabase/static";
 import { withAuthAction } from "@/shared/lib/server/with-auth-action";
-import { publicReviewFormSchema } from "@/shared/lib/schema/index";
+import { publicReviewFormSchema, uuidSchema } from "@/shared/lib/schema/index";
 import { checkRateLimit } from "@/shared/lib/server/rate-limit";
-
-const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
 const REVALIDATE_PATHS = ["/", "/admin/customer-reviews"] as const;
 const REVIEW_RATE_LIMIT = 5;

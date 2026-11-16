@@ -263,7 +263,6 @@
 }
 
 @layer components {
-
   .text-display {
     @apply text-3xl leading-tight font-black tracking-tighter text-slate-900;
   }
@@ -319,7 +318,6 @@
     @apply text-xs;
   }
 
-
   .btn-primary {
     @apply bg-slate-900 text-sm font-bold tracking-widest text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70;
   }
@@ -364,8 +362,7 @@
     @apply text-sm text-green-600;
   }
 
-
   .tag-pill {
-    @apply text-xs whitespace-nowrap text-slate-400;
+    @apply text-xs whitespace-nowrap text-slate-600;
   }
 }

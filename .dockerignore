@@ -1,3 +1,8 @@
+# @file .dockerignore
+# @description Docker 빌드 컨텍스트의 의존성·로컬 환경변수·불필요 파일 제외 규칙
+# @activation Docker: 프로젝트 빌드 컨텍스트 전송 시 적용
+# @activation CI: Docker 이미지 빌드 시 적용
+# @activation Git 추적·일반 테스트: 적용하지 않음
 node_modules
 .next
 .git

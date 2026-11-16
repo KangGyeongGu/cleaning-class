@@ -18,7 +18,7 @@ export function ContactMessageField({
       <label htmlFor="message" className="form-label-sm">
         문의사항
         <span className="ml-1 text-red-500">*</span>
-        <span className="ml-2 text-xs font-normal text-slate-400">
+        <span className="ml-2 text-xs font-normal text-slate-600">
           50자 이상 필수
         </span>
       </label>
@@ -36,7 +36,7 @@ export function ContactMessageField({
       />
       <div className="mt-1 flex justify-between">
         <div>{error && <p className="form-error">{error}</p>}</div>
-        <span className="text-xs text-slate-400">{value.length}/1000</span>
+        <span className="text-xs text-slate-600">{value.length}/1000</span>
       </div>
     </div>
   );

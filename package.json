@@ -7,19 +7,19 @@
     "build": "next build",
     "start": "next start",
     "start:standalone": "cp -R public .next/standalone/ 2>/dev/null; cp -R .next/static .next/standalone/.next/ 2>/dev/null; node .next/standalone/server.js",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
+    "lint": "eslint --config config/eslint.config.mjs",
+    "lint:fix": "eslint --config config/eslint.config.mjs --fix",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
     "format:check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
-    "test": "vitest run --project node",
-    "test:browser": "vitest run --project browser",
-    "test:coverage": "vitest run --project node --coverage",
-    "test:e2e": "playwright test",
-    "lighthouse:mobile": "npm run build && lhci autorun --config=lighthouserc.mobile.json",
-    "lighthouse:desktop": "npm run build && lhci autorun --config=lighthouserc.desktop.json",
+    "test": "vitest run --config config/vitest.config.mts --project node",
+    "test:browser": "vitest run --config config/vitest.config.mts --project browser",
+    "test:coverage": "vitest run --config config/vitest.config.mts --project node --coverage",
+    "test:e2e": "playwright test --config config/playwright.config.ts",
+    "lighthouse:mobile": "npm run build && lhci autorun --config=config/lighthouse/mobile.js",
+    "lighthouse:desktop": "npm run build && lhci autorun --config=config/lighthouse/desktop.js",
     "lighthouse": "rm -rf .lighthouseci && npm run lighthouse:mobile && npm run lighthouse:desktop",
-    "security:semgrep": "semgrep --config .semgrep/ --config p/typescript src/ --no-git-ignore --error",
+    "security:semgrep": "semgrep --config config/semgrep/ --config p/typescript src/ --no-git-ignore --error",
     "check:fast": "npm run typecheck && npm run lint && npm run format:check",
     "verify": "npm run check:fast && npm run test:coverage && npm run security:semgrep",
     "verify:full": "npm run verify && npm run test:browser && npm run build && npm run test:e2e && npm run lighthouse",
@@ -29,7 +29,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix --max-warnings=0"
+      "eslint --config config/eslint.config.mjs --fix --max-warnings=0"
     ]
   },
   "overrides": {
@@ -49,20 +49,20 @@
     "lucide-react": "^0.575.0",
     "motion": "^12.38.0",
     "next": "^16.2.7",
-    "nodemailer": "^9.0.3",
+    "nodemailer": "^10.6.0",
     "react": "19.2.3",
     "react-advanced-cropper": "^0.20.1",
     "react-daum-postcode": "^4.0.0",
     "react-dom": "19.2.3",
     "recharts": "^3.8.1",
-    "zod": "^3.24.1"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
     "@eslint-react/eslint-plugin": "^1.18.5",
-    "@lhci/cli": "^0.15.1",
+    "@lhci/cli": "0.16.1",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.0",
@@ -71,12 +71,12 @@
     "@types/nodemailer": "^6.4.23",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/browser": "^4.1.8",
-    "@vitest/browser-playwright": "^4.1.8",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@vitest/browser": "4.1.12",
+    "@vitest/browser-playwright": "4.1.12",
+    "@vitest/coverage-v8": "4.1.12",
     "@vitest/eslint-plugin": "^1.6.13",
-    "@vitest/ui": "^4.1.8",
+    "@vitest/ui": "4.1.12",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "eslint-plugin-better-tailwindcss": "^4.3.2",
@@ -90,7 +90,6 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.1.8"
+    "vitest": "4.1.12"
   }
 }

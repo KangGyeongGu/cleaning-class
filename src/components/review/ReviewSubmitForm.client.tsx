@@ -155,17 +155,17 @@ export function ReviewSubmitForm() {
                 {rating.toFixed(1)}
               </span>
             </div>
-            <span className="text-xs text-slate-400">방금 전</span>
+            <span className="text-xs text-slate-600">방금 전</span>
           </div>
           <p className="text-sm leading-relaxed text-slate-700">{comment}</p>
           <div className="mt-3 flex items-center gap-1.5">
             <span className="text-xs font-medium text-slate-900">익명</span>
             {serviceType && (
               <>
-                <span className="text-slate-300" aria-hidden="true">
+                <span className="text-slate-500" aria-hidden="true">
                   ·
                 </span>
-                <span className="text-xs text-slate-400">{serviceType}</span>
+                <span className="text-xs text-slate-600">{serviceType}</span>
               </>
             )}
           </div>
@@ -177,7 +177,7 @@ export function ReviewSubmitForm() {
   return (
     <>
       <div className="mb-10 text-center">
-        <p className="text-xs font-medium tracking-widest text-slate-400 uppercase">
+        <p className="text-xs font-medium tracking-widest text-slate-600 uppercase">
           청소클라쓰
         </p>
         <h1 className="text-heading-1 mt-2">고객 리뷰</h1>
@@ -264,7 +264,7 @@ export function ReviewSubmitForm() {
               onInput={(e) => setComment(e.currentTarget.value)}
             />
             <div className="mt-1 flex justify-end">
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-600">
                 {comment.length}/500
               </span>
             </div>

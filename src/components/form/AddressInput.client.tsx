@@ -77,7 +77,7 @@ export function AddressInput({
             onClick={() => setPickerOpen(true)}
             aria-label="주소 검색"
             title="주소 검색"
-            className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="flex h-8 w-8 items-center justify-center rounded text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <Search size={14} />
           </button>

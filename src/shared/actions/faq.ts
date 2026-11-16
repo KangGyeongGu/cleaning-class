@@ -4,10 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/server";
 import { withAuthAction } from "@/shared/lib/server/with-auth-action";
-import { faqFormSchema } from "@/shared/lib/schema/index";
+import { faqFormSchema, uuidSchema } from "@/shared/lib/schema/index";
 import type { FaqInsert, FaqUpdate } from "@/shared/types/database";
-
-const uuidSchema = z.string().uuid("올바른 ID 형식이 아닙니다.");
 
 function parseDisplayOrder(formData: FormData): number {
   const raw = formData.get("display_order");

@@ -1,5 +1,10 @@
+# @file .husky/commit-msg
+# @description Co-Authored-By 차단 및 commitlint 커밋 메시지 형식 검사
+# @activation Git Hook: Husky 활성화 환경의 git commit 메시지 검사 시 자동 실행
+# @activation 실패 결과: 커밋 차단
+# @activation 일반 테스트·Agent Skill: 자동 실행 없음
 if grep -qi 'co-authored-by' "$1"; then
   echo "❌ commit-msg: Co-Authored-By 라인은 사용 금지 — 메시지에서 제거 후 다시 시도하세요." >&2
   exit 1
 fi
-npx --no -- commitlint --edit "$1"
+npx --no -- commitlint --config config/commitlint.config.js --edit "$1"
