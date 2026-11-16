@@ -144,17 +144,18 @@ Google GA4, MS Clarity, Cloudflare, GoAccess 통계 지표 및 자체 통계 데
 
 ## 릴리즈 노트
 
-| 버전 | 날짜 | 주요 내용                                                                             | 노트 |
-|------|------|-----------------------------------------------------------------------------------|------|
+| 버전 | 날짜 | 주요 내용                                                                          | 노트 |
+|------|------|--------------------------------------------------------------------------------|------|
+| [v1.4.1](docs/releases/v1.4.1.md) | 2026-11-17 | 공개 UI 접근성 대비 개선 · E2E·검사 체계 정리 · 의존성 보안 업데이트 | [→](docs/releases/v1.4.1.md) |
 | [v1.4.0](docs/releases/v1.4.0.md) | 2026-10-30 | 관리자 대시보드·관리 폼 개편 · 메인 서비스·작업 사례 탐색 개선 · 공개 페이지 ISR·렌더링 최적화 · 견적 제출 요청 집계 | [→](docs/releases/v1.4.0.md) |
 | [v1.3.0](docs/releases/v1.3.0.md) | 2026-07-01 | 내부 코드 품질·구조 개선(공통 UI 프리미티브·공유 훅 도입, 관리자 라우트 그룹화, 중복 제거) · nodemailer 보안 업데이트 | [→](docs/releases/v1.3.0.md) |
-| [v1.2.2](docs/releases/v1.2.2.md) | 2026-06-28 | 업체 로고 교체 · 관리자 메뉴 재정렬 및 레이블 변경 · 대시보드 통계 카드 제거 · 히어로 섹션 전화번호 레이아웃 수정              | [→](docs/releases/v1.2.2.md) |
+| [v1.2.2](docs/releases/v1.2.2.md) | 2026-06-28 | 업체 로고 교체 · 관리자 메뉴 재정렬 및 레이블 변경 · 대시보드 통계 카드 제거 · 히어로 섹션 전화번호 레이아웃 수정           | [→](docs/releases/v1.2.2.md) |
 | [v1.2.1](docs/releases/v1.2.1.md) | 2026-06-19 | GA4·Microsoft Clarity 클라이언트 추적 재도입(자체 DB와 dual-write) · 견적폼 PII 마스킹 · 관리자 콘솔 바로가기 | [→](docs/releases/v1.2.1.md) |
-| [v1.2.0](docs/releases/v1.2.0.md) | 2026-06-16 | 관리자 트래픽 분석 대시보드 추가(Cloudflare·GoAccess) · 배포 빌드 인자 누락 수정 · npm audit 해결           | [→](docs/releases/v1.2.0.md) |
-| [v1.1.1](docs/releases/v1.1.1.md) | 2026-06-14 | 푸터 노마드랩스 외부 링크 추가 · 견적 CTA 공유 컴포넌트화(FAQ 적용) · 주소 GPS 제거 · middleware→proxy 전환     | [→](docs/releases/v1.1.1.md) |
-| [v1.1.0](docs/releases/v1.1.0.md) | 2026-06-07 | 견적폼 청소/이사 분리 + 가격표 자동 연동, HEIC 변환·정책 v20260607 갱신·GA4/Clarity 제거                  | [→](docs/releases/v1.1.0.md) |
-| [v1.0.1](docs/releases/v1.0.1.md) | 2026-05-19 | 고객 리뷰 평점 카운트업 애니메이션 회귀 수정 + 단위 테스트 100% 커버리지·검증 게이트 강화                            | [→](docs/releases/v1.0.1.md) |
-| [v1.0.0](docs/releases/v1.0.0.md) | 2026-05-19 | 청소클라쓰 공식 사이트 첫 출시 — 공개 사이트(서비스/리뷰/가격표/견적) + 관리자 대시보드(GA4 연동 + CRUD)               | [→](docs/releases/v1.0.0.md) |
+| [v1.2.0](docs/releases/v1.2.0.md) | 2026-06-16 | 관리자 트래픽 분석 대시보드 추가(Cloudflare·GoAccess) · 배포 빌드 인자 누락 수정 · npm audit 해결        | [→](docs/releases/v1.2.0.md) |
+| [v1.1.1](docs/releases/v1.1.1.md) | 2026-06-14 | 푸터 노마드랩스 외부 링크 추가 · 견적 CTA 공유 컴포넌트화(FAQ 적용) · 주소 GPS 제거 · middleware→proxy 전환  | [→](docs/releases/v1.1.1.md) |
+| [v1.1.0](docs/releases/v1.1.0.md) | 2026-06-07 | 견적폼 청소/이사 분리 + 가격표 자동 연동, HEIC 변환·정책 v20260607 갱신·GA4/Clarity 제거               | [→](docs/releases/v1.1.0.md) |
+| [v1.0.1](docs/releases/v1.0.1.md) | 2026-05-19 | 고객 리뷰 평점 카운트업 애니메이션 회귀 수정 + 단위 테스트 100% 커버리지·검증 게이트 강화                         | [→](docs/releases/v1.0.1.md) |
+| [v1.0.0](docs/releases/v1.0.0.md) | 2026-05-19 | 청소클라쓰 공식 사이트 첫 출시 — 공개 사이트(서비스/리뷰/가격표/견적) + 관리자 대시보드(GA4 연동 + CRUD)            | [→](docs/releases/v1.0.0.md) |
 
 <br/>
 
